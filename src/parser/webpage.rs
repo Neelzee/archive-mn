@@ -1,6 +1,12 @@
 use scraper::{self, Html, selector::Selector, error::SelectorErrorKind};
 
-use super::{Link, Sok};
+use super::sok::Sok;
+
+pub struct Link {
+    parent_id: usize,
+    url: String,
+}
+
 
 pub struct Webpage {
     id: usize,
@@ -13,6 +19,14 @@ pub struct Webpage {
 impl Webpage {
     pub fn from_html(id: usize, url: String, content: Html, medium: String) -> Webpage {
         Webpage { id, url, content, medium }
+    }
+
+    pub fn get_content(&self) -> Html {
+        self.content.clone()
+    }
+
+    pub fn get_url(&self) -> String {
+        self.url.clone()
     }
 
     pub fn get_links(&self) -> Vec<Link> {

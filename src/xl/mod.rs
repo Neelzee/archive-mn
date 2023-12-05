@@ -1,6 +1,6 @@
 use std::fmt::format;
 
-use super::parser::Sok;
+use super::parser::sok::Sok;
 use rust_xlsxwriter::Format;
 use rust_xlsxwriter::{Workbook, XlsxError};
 
@@ -35,9 +35,9 @@ impl Sok {
             let sheet = wb.add_worksheet();
             sheet.set_name(&t.name)?;
             for r in 0..t.rows.len() {
-                for c in 0..t.columns.len() {
-                    sheet.write(r as u32, c as u16, 0)?;
-                }
+                //for c in 0..t.columns.len() {
+                    //sheet.write(r as u32, c as u16, 0)?;
+                //}
             }
         }
 
