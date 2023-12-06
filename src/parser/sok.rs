@@ -1,4 +1,5 @@
 
+#[derive(Debug)]
 pub struct Table {
     pub parent_id: usize,
     pub name: String,
@@ -14,6 +15,40 @@ impl Table {
             header: Vec::new(),
             rows: Vec::new(),
         }
+    }
+
+    /// Prints the table, adds ` ,` between every element.
+    pub fn show(&self) {
+        let header = self.header
+            .iter()
+            .fold(
+                String::new(), 
+                |mut acc, e| {
+                    acc += &e.iter().fold(String::new(), |mut ac, x| {
+                        ac += x;
+                        ac += ", ";
+                        ac
+                    });
+                    acc += "\n";
+                    acc
+                });
+        
+        let rows = self.rows
+            .iter()
+            .fold(
+                String::new(), 
+                |mut acc, e| {
+                    acc += &e.iter().fold(String::new(), |mut ac, x| {
+                        ac += x;
+                        ac += ", ";
+                        ac
+                    });
+                    acc += "\n";
+                    acc
+                });
+        println!("{}", self.name);
+        println!("{}", header);
+        println!("{}", rows);
     }
 }
 

@@ -39,9 +39,9 @@ pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
     Ok(sok)
 }
 
-fn get_table(sok_page: &Webpage) -> Result<Table, SelectorErrorKind> {
+pub fn get_table(sok_page: &Webpage) -> Result<Vec<Table>, SelectorErrorKind> {
 
-    let mut table = Table::new();
+    let mut tables = Vec::new();
 
     let div_sok_selector = Selector::parse("div[id=sokResult]")?;
 
@@ -58,32 +58,42 @@ fn get_table(sok_page: &Webpage) -> Result<Table, SelectorErrorKind> {
     
     let div_sok = content.select(&div_sok_selector).next().unwrap();
 
+
+
     // Getting title
     // Should just be one h4, inside this div, if not we dont care.
-    table.name = div_sok.select(&header_selector).next().unwrap().text().collect::<String>();
+    let name = div_sok
+        .select(&header_selector).next().unwrap()
+        .text().collect::<String>()
+        .trim().to_owned();
 
     // Getting rows
     for t in div_sok.select(&table_selector) {
-        table.header =  t.select(&table_header_selector)
-            .map(|th| {
-                th.text()
-                .map(|u| u.to_owned())
+        let mut table = Table::new();
+        table.name = name.clone();
+        // TODO: This is wrong, as the header-row, is a tr, with th-cells
+        table.header.push(
+            t.select(&table_header_selector)
+                .map(|th| {
+                    th.text()
+                    .map(|u| u.trim().to_owned())
+                    .collect::<String>()
+                })
                 .collect::<Vec<String>>()
-            })
-            .collect::<Vec<Vec<String>>>();
+            );
 
         table.rows = t.select(&table_row_selector)
-            .map(|th| {
-                th.text()
-                .map(|u| u.to_owned())
+            .map(|tr| {
+                tr.text()
+                .map(|u| u.trim().to_owned())
+                .filter(|u| u.len() != 0)
                 .collect::<Vec<String>>()
             })
+            .filter(|v| v.len() != 0)
             .collect::<Vec<Vec<String>>>();
-
-        return Ok(table);
+        
+        tables.push(table);
     }
 
-
-
-    Ok(table)
+    Ok(tables)
 }
