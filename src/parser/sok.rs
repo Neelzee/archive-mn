@@ -11,13 +11,14 @@ impl Table {
     pub fn new() -> Table {
         Table {
             parent_id: 0,
+            // TODO: Change to Vec<String>
             name: String::new(),
             header: Vec::new(),
             rows: Vec::new(),
         }
     }
 
-    /// Prints the table, adds ` ,` between every element.
+    /// Prints the table, adds `' ,'` between every element.
     pub fn show(&self) {
         let header = self.header
             .iter()
@@ -61,6 +62,7 @@ pub struct Sok {
     pub tables: Vec<Table>,
     pub merknad: Vec<String>,
     pub kilde: Vec<String>,
+    pub metode: Vec<String>,
 }
 
 
@@ -75,6 +77,7 @@ impl Sok {
             tables: Vec::new(),
             merknad: Vec::new(),
             kilde: Vec::new(),
+            metode: Vec::new()
         }
     }
 }
