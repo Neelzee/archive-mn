@@ -1,5 +1,5 @@
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Table {
     pub parent_id: usize,
     pub name: String,
