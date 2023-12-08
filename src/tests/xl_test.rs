@@ -128,7 +128,7 @@ fn test_save() {
     }
     
     if res_2.is_err() {
-        eprintln!("{}", res_2.as_ref().unwrap_err());
+        eprintln!("{:#?}", res_2.as_ref().unwrap_err());
     }
 
     assert!(res.is_ok());

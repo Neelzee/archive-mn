@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum ArchiveError<'a> {
     ScraperError(reqwest::Error),
     XlError(rust_xlsxwriter::XlsxError),

@@ -1,6 +1,8 @@
 use std::cmp::min;
 use std::fmt::format;
 
+use crate::error::ArchiveError;
+
 use super::parser::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};
 use rust_xlsxwriter::{Workbook, XlsxError};
@@ -94,7 +96,7 @@ impl Sok {
 }
 
 
-pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), XlsxError> {
+pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
     let mut wb = Workbook::new();
     let wb_path: String;
     if path.len() != 0 {
@@ -123,36 +125,6 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), XlsxError> {
             front_sheet.write_with_format(r, 0, &line, &wrap_text)?;
             front_sheet.set_row_height_pixels(r, 70)?;
         }
-
-        // Merknad
-        r += 1;
-        front_sheet.write_with_format(r, 0, "Merknad", &bold)?;
-        r += 1;
-        for s in soks.get(0).unwrap().merknad.clone() {
-            front_sheet.write_with_format(r, 0, s, &wrap_text)?;
-            front_sheet.set_row_height_pixels(r, 70)?;
-            r += 1;
-        }
-
-        // Metode
-        r += 1;
-        front_sheet.write_with_format(r, 0, "Metode", &bold)?;
-        r += 1;
-        for s in soks.get(0).unwrap().metode.clone() {
-            front_sheet.write_with_format(r, 0, s, &wrap_text)?;
-            front_sheet.set_row_height_pixels(r, 70)?;
-            r += 1;
-        }
-
-        // Kilde
-        r += 1;
-        front_sheet.write_with_format(r, 0, "Kilde", &bold)?;
-        r += 1;
-        for s in soks.get(0).unwrap().kilde.clone() {
-            front_sheet.write_with_format(r, 0, s, &wrap_text)?;
-            front_sheet.set_row_height_pixels(r, 70)?;
-            r += 1;
-        }
     }
 
     for sub_sok in soks {
@@ -177,8 +149,39 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), XlsxError> {
                 r += 1;
             }
         }
+
+
+        // Merknad
+        r += 1;
+        sheet.write_with_format(r, 0, "Merknad", &bold)?;
+        r += 1;
+        for s in sub_sok.merknad {
+            sheet.write(r, 0, s)?;
+            sheet.set_row_height_pixels(r, 70)?;
+            r += 1;
+        }
+
+        // Metode
+        r += 1;
+        sheet.write_with_format(r, 0, "Metode", &bold)?;
+        r += 1;
+        for s in sub_sok.metode {
+            sheet.write(r, 0, s)?;
+            r += 1;
+        }
+
+        // Kilde
+        r += 1;
+        sheet.write_with_format(r, 0, "Kilde", &bold)?;
+        r += 1;
+        for s in sub_sok.kilde {
+            sheet.write(r, 0, s)?;
+            r += 1;
+        }
     }
 
     
-    wb.save(wb_path)    
+    wb.save(wb_path)?;
+
+    Ok(())    
 }
