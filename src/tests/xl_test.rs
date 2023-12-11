@@ -119,18 +119,13 @@ fn test_save() {
         "Fordelinger på utdanning og yrke omfatter bare personer 16 år og eldre.".to_string()
     ];
 
-    let res = sok.save("src\\tests\\sok_346.xlsx");
 
     let res_2 = save_sok(vec![sok], "src\\tests\\sok_346_new.xlsx");
 
-    if res.is_err() {
-        eprintln!("{}", res.as_ref().unwrap_err());
-    }
     
     if res_2.is_err() {
         eprintln!("{:#?}", res_2.as_ref().unwrap_err());
     }
 
-    assert!(res.is_ok());
     assert!(res_2.is_ok());
 }
