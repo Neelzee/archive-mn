@@ -1,4 +1,4 @@
-use crate::{parser::sok::{Sok, Table}, xl::save_sok};
+use crate::{parser::sok::{Sok, Table}, xl::{save_sok, split_string, MAX_STR_LEN}};
 
 #[test]
 fn test_save() {
@@ -119,6 +119,30 @@ fn test_save() {
         "Fordelinger på utdanning og yrke omfatter bare personer 16 år og eldre.".to_string()
     ];
 
+
+    for line in sok.kilde.clone() {
+        for l in split_string(line) {
+            assert!(l.len() <= MAX_STR_LEN);
+            assert!(l.len() != 0);
+            println!("{}", l);
+        }
+    }
+    
+    for line in sok.merknad.clone() {
+        for l in split_string(line) {
+            assert!(l.len() <= MAX_STR_LEN);
+            assert!(l.len() != 0);
+            println!("{}", l);
+        }
+    }
+    
+    for line in sok.metode.clone() {
+        for l in split_string(line) {
+            assert!(l.len() <= MAX_STR_LEN);
+            assert!(l.len() != 0);
+            println!("{}", l);
+        }
+    }
 
     let res_2 = save_sok(vec![sok], "src\\tests\\sok_346_new.xlsx");
 

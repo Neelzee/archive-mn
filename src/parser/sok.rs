@@ -53,6 +53,7 @@ impl Table {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Sok {
     pub parent_id: usize,
     pub id: usize,
