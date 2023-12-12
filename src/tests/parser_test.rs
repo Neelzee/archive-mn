@@ -26,9 +26,6 @@ fn test_get_table() {
 
         let tables =  res.unwrap();
         
-        for t in tables {
-            assert_eq!("Andel med avisabonnement hjemme, fordelt på alle (prosent)", &t.name);
-        }
 
     }
 }

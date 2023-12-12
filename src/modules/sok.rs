@@ -1,39 +1,20 @@
 
 #[derive(Debug, Clone)]
 pub struct Table {
-    pub parent_id: usize,
-    pub name: String,
-    pub header: Vec<Vec<String>>,
     pub rows: Vec<Vec<String>>,
+    pub styles: Vec<String>,
 }
 
 impl Table {
     pub fn new() -> Table {
         Table {
-            parent_id: 0,
-            // TODO: Change to Vec<String>
-            name: String::new(),
-            header: Vec::new(),
             rows: Vec::new(),
+            styles: Vec::new(),
         }
     }
 
     /// Prints the table, adds `' ,'` between every element.
     pub fn show(&self) {
-        let header = self.header
-            .iter()
-            .fold(
-                String::new(), 
-                |mut acc, e| {
-                    acc += &e.iter().fold(String::new(), |mut ac, x| {
-                        ac += x;
-                        ac += ", ";
-                        ac
-                    });
-                    acc += "\n";
-                    acc
-                });
-        
         let rows = self.rows
             .iter()
             .fold(
@@ -47,38 +28,72 @@ impl Table {
                     acc += "\n";
                     acc
                 });
-        println!("{}", self.name);
-        println!("{}", header);
         println!("{}", rows);
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Sok {
-    pub parent_id: usize,
+    pub title: String,
+    pub tables: Vec<Table>,
+}
+
+
+impl Sok {
+    pub fn new() -> Sok {
+        Sok {
+            title: String::new(),
+            tables: Vec::new(),
+        }
+    }
+}
+
+pub struct SokCollection {
     pub id: usize,
     pub medium: String,
     pub title: String,
     pub text: Vec<String>,
-    pub tables: Vec<Table>,
+    pub sok: Vec<Sok>,
     pub merknad: Vec<String>,
     pub kilde: Vec<String>,
     pub metode: Vec<String>,
 }
 
-
-impl Sok {
-    pub fn new(parent_id: usize, medium: String) -> Sok {
-        Sok {
-            parent_id,
-            id: 0,
+impl SokCollection {
+    pub fn new(id: usize, medium: String) -> SokCollection {
+        SokCollection {
+            id,
             medium,
-            title: String::from("No title"),
+            title: String::new(),
             text: Vec::new(),
-            tables: Vec::new(),
+            sok: Vec::new(),
             merknad: Vec::new(),
             kilde: Vec::new(),
-            metode: Vec::new()
+            metode: Vec::new(),
         }
+    }
+
+    pub fn set_title(&mut self, title: String) {
+        self.title = title;
+    }
+
+    pub fn add_text(&mut self, text: String) {
+        self.text.push(text);
+    }
+
+    pub fn add_sok(&mut self, sok: Sok) {
+        self.sok.push(sok);
+    }
+
+    pub fn add_merknad(&mut self, merknad: String) {
+        self.merknad.push(merknad);
+    }
+
+    pub fn add_kilde(&mut self, kilde: String) {
+        self.kilde.push(kilde);
+    }
+
+    pub fn add_metode(&mut self, metode: String) {
+        self.metode.push(metode);
     }
 }

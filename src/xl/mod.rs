@@ -1,6 +1,7 @@
 use std::cmp::min;
 
 use crate::error::ArchiveError;
+use crate::modules::sok::SokCollection;
 
 use super::modules::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};
@@ -8,13 +9,14 @@ use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
 
-pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
+pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     let mut wb = Workbook::new();
     let wb_path: String;
     if path.len() != 0 {
         wb_path = path.to_string();
     } else {
-        wb_path = format!("{}\\sok_{}.xlsx", soks.get(0).unwrap().medium.clone(), soks.get(0).unwrap().id.clone());
+        //wb_path = format!("{}\\sok_{}.xlsx", soks.get(0).unwrap().medium.clone(), soks.get(0).unwrap().id.clone());
+        wb_path = String::from("aodihad");
     }
 
     let bold = Format::new().set_bold();
@@ -24,18 +26,18 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
         .set_align(FormatAlign::Left);
 
 
-    for sub_sok in soks {
+    for sub_sok in soks.sok {
         let sheet = wb.add_worksheet();
         let mut r = 0;
         
         // Title
-        sheet.write_with_format(r, 0, &format!("Søk: {}", sub_sok.id), &bold)?;
+        sheet.write_with_format(r, 0, &format!("Søk: {}", soks.id.clone()), &bold)?;
         r += 1;
         sheet.write_with_format(r, 0, &format!("Tittel: {}", sub_sok.title), &bold)?;
         r += 1;
         
         // Content
-        for line in sub_sok.text {
+        for line in soks.text.clone() {
             for l in split_string(line) {
                 sheet.write(r, 0, l)?;
                 r += 1;
@@ -45,7 +47,7 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
         
 
         sheet.set_column_width_pixels(0, 120)?;
-        let full_name = sub_sok.tables.get(0).unwrap().name.clone();
+        let full_name = sub_sok.title.clone();
         let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
         sheet.set_name(partial_name)?;
 
@@ -67,7 +69,7 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Merknad", &bold)?;
         r += 1;
-        for s in sub_sok.merknad {
+        for s in soks.merknad.clone() {
             for l in split_string(s) {
                 sheet.write(r, 0, l)?;
                 r += 1;
@@ -79,7 +81,7 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
-        for s in sub_sok.metode {
+        for s in soks.metode.clone() {
             for l in split_string(s) {
                 sheet.write(r, 0, l)?;
                 r += 1;
@@ -91,7 +93,7 @@ pub fn save_sok(soks: Vec<Sok>, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
-        for s in sub_sok.kilde {
+        for s in soks.kilde.clone() {
             for l in split_string(s) {
                 sheet.write(r, 0, l)?;
                 r += 1;

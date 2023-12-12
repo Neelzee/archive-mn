@@ -29,7 +29,7 @@ pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
         medium = _medium.to_owned().to_owned();
     }
 
-    sok = Sok::new(id, medium);
+    sok = Sok::new();
 
     // TODO: Add good error handling
     let table = get_table(&sok_page);
@@ -68,18 +68,7 @@ pub fn get_table(sok_page: &Webpage) -> Result<Vec<Table>, SelectorErrorKind> {
     // Getting rows
     for t in div_sok.select(&table_selector) {
         let mut table = Table::new();
-        table.name = name.clone();
         // TODO: This is wrong, as the header-row, is a tr, with th-cells
-        table.header.push(
-            t.select(&table_header_selector)
-                .map(|th| {
-                    th.text()
-                    .map(|u| u.trim().to_owned())
-                    .collect::<String>()
-                })
-                .collect::<Vec<String>>()
-            );
-
         table.rows = t.select(&table_row_selector)
             .map(|tr| {
                 tr.text()

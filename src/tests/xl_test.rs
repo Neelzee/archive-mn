@@ -1,11 +1,10 @@
-use crate::{modules::sok::{Sok, Table}, xl::{save_sok, split_string, MAX_STR_LEN}};
+use crate::{modules::sok::{Sok, Table, SokCollection}, xl::{save_sok, split_string, MAX_STR_LEN}};
 
 #[test]
 fn test_save() {
-    let mut sok = Sok::new(0, "avis".to_string());
-    sok.id = 346;
+    let mut sok = Sok::new();
+    let mut sok_collection = SokCollection::new(0, "avis".to_string());
     let mut table_1 = Table::new();
-    table_1.name = "Andel med avisabonnement hjemme, fordelt på alle (prosent)".to_string();
     table_1.rows = vec![
         vec![
             "Alle".to_string(),
@@ -37,7 +36,6 @@ fn test_save() {
     assert_eq!(table_1.rows.get(0).unwrap().len(), table_1.rows.get(1).unwrap().len());
 
     let mut table_2 = Table::new();
-    table_2.name = "Andel med avisabonnement hjemme, fordelt på alle (prosent)".to_string();
     table_2.rows = vec![
         vec![
             "Alle".to_string(),
@@ -69,7 +67,6 @@ fn test_save() {
     assert_eq!(table_2.rows.get(0).unwrap().len(), table_2.rows.get(1).unwrap().len());
 
     let mut table_3 = Table::new();
-    table_3.name = "Andel med avisabonnement hjemme, fordelt på alle (prosent)".to_string();
     table_3.rows = vec![
         vec![
             "Alle".to_string(),
@@ -90,14 +87,14 @@ fn test_save() {
 
     sok.title = "Andel med papiravisabonnement og antall abonnement".to_string();
 
-    sok.text = vec![
+    sok_collection.text = vec![
         "Statistisk sentralbyrå har gjennomført mediebruksundersøkelser hvert år siden 1991 (med unntak av 1993). Undersøkelsene er i hovedsak finansiert av Kulturdepartementet og formålet er å kartlegge bruken av ulike medier i Norge. I 1995 fikk undersøkelsene navnet Norsk mediebarometer.".to_string(),
         "I 2022 ble undersøkelsen utvidet og endret, slik at dataene ikke er helt sammenlignbare med tidligere år. Utvalget som besvarte undersøkelsen er doblet, og det er lagt til en ny alderskategori: 80 år og eldre. Utvidelsen i alder innvirker på resultatene, siden eldre generelt bruker mer tradisjonelle medier enn yngre. I tillegg har spørreskjema på nett erstattet telefonintervju som hovedmetode for datainnsamling, og selve spørreskjemaet har gjennomgått flere endringer.".to_string(),
         "Her kan du finne tall for andel som har abonnement på papiravis hjemme, samt gjennomsnittlig antall abonnement i den norske befolkningen. Bruk menyen til høyre for å velge. I samme meny kan du også velge å få tallene fra 2006 og framover fordelt på ulike bakgrunnsvariabler, som kjønn, alder og utdanning. Det finnes egne tall for andel med nettavisabonnement hjemme.".to_string(),
         "Resultater fra andre deler av Norsk mediebarometer finner du i denne menyen. Rapport for undersøkelsen i sin helhet finner du på nettsidene hos Statistisk sentralbyrå.".to_string()
     ];
 
-    sok.merknad = vec![
+    sok_collection.merknad = vec![
         "Fra og med 2022 er ikke gjennomsnittelig antall abonnement lenger inkludert i undersøkelsen.".to_string(),
         "Fra og med 2022 er aldersutvalget for undersøkelsen endret fra 9-79 år til 9 år pluss. Inkluderingen av personer fra 80 år og oppover har innvirkning på resultatene, siden eldre generelt bruker mer tradisjonelle medier enn yngre. Samtidig er utvalget for undersøkelsen doblet i størrelse og spørreskjema på nett har erstattet telefonintervju som hovedmetode for innsamling av data. Spørreskjemaet er også endret i forhold til tidligere år.".to_string(),
         "SSB har i 2020 gjort endringer i inndelingen av landsdeler.".to_string(),
@@ -105,11 +102,11 @@ fn test_save() {
         "Fordelinger på utdanning og yrke gjelder aldersgruppen 16 år og eldre.".to_string()
     ];
 
-    sok.kilde = vec![
+    sok_collection.kilde = vec![
         "Statistisk sentralbyrå".to_string()
     ];
 
-    sok.metode = vec![
+    sok_collection.metode = vec![
         "Statistisk sentralbyrå gjennomførte kultur- og mediebruksundersøkelser i 1991, 1992 og 1994. F.o.m. 1995 ble mediedelen av undersøkelsene videreført årlig under navnet Norsk mediebarometer. Kulturdelen videreføres som Norsk kulturbarometer.".to_string(),
         "Undersøkelsene har fram til 2022 vært gjennomført via telefonintervju, med fordeling av intervjuene på alle ukedager og på fire perioder i året: mars, juni, september og desember. Dette er gjort for at svarene kunne gi et representativt bilde av mediebruk på årsbasis.".to_string(),
         "I 2022 ble undersøkelsen endret på flere måter: Utvalget ble utvidet fra rundt 3000 personer til 6000. Samtidig ble aldergrensen på 79 år fjernet, slik at også personer 80 år og eldre deltok i undersøkelsen. Endringen i alderssammensetning påvirker resultatene, da eldre gjerne har mer tradisjonell mediebruk enn yngre.".to_string(),
@@ -120,7 +117,7 @@ fn test_save() {
     ];
 
 
-    for line in sok.kilde.clone() {
+    for line in sok_collection.kilde.clone() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
@@ -128,7 +125,7 @@ fn test_save() {
         }
     }
     
-    for line in sok.merknad.clone() {
+    for line in sok_collection.merknad.clone() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
@@ -136,7 +133,7 @@ fn test_save() {
         }
     }
     
-    for line in sok.metode.clone() {
+    for line in sok_collection.metode.clone() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
@@ -144,7 +141,7 @@ fn test_save() {
         }
     }
 
-    let res_2 = save_sok(vec![sok], "src\\tests\\sok_346_new.xlsx");
+    let res_2 = save_sok(sok_collection, "src\\tests\\sok_346_new.xlsx");
 
     
     if res_2.is_err() {
