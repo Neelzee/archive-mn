@@ -2,8 +2,8 @@ use crate::{modules::sok::{Sok, Table, SokCollection}, xl::{save_sok, split_stri
 
 #[test]
 fn test_save() {
-    let mut sok = Sok::new();
     let mut sok_collection = SokCollection::new(0, "avis".to_string());
+    let mut sok = Sok::new();
     let mut table_1 = Table::new();
     table_1.rows = vec![
         vec![
@@ -85,7 +85,10 @@ fn test_save() {
 
     sok.tables = vec![table_1, table_2, table_3];
 
-    sok.title = "Andel med papiravisabonnement og antall abonnement".to_string();
+    sok.title = "Andel med avisabonnement hjemme, fordelt på alle (prosent)".to_string();
+    sok_collection.title = "Andel med papiravisabonnement og antall abonnement".to_string();
+
+    sok_collection.add_sok(sok);
 
     sok_collection.text = vec![
         "Statistisk sentralbyrå har gjennomført mediebruksundersøkelser hvert år siden 1991 (med unntak av 1993). Undersøkelsene er i hovedsak finansiert av Kulturdepartementet og formålet er å kartlegge bruken av ulike medier i Norge. I 1995 fikk undersøkelsene navnet Norsk mediebarometer.".to_string(),
@@ -121,7 +124,6 @@ fn test_save() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
-            println!("{}", l);
         }
     }
     
@@ -129,7 +131,6 @@ fn test_save() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
-            println!("{}", l);
         }
     }
     
@@ -137,11 +138,10 @@ fn test_save() {
         for l in split_string(line) {
             assert!(l.len() <= MAX_STR_LEN);
             assert!(l.len() != 0);
-            println!("{}", l);
         }
     }
 
-    let res_2 = save_sok(sok_collection, "src\\tests\\sok_346_new.xlsx");
+    let res_2 = save_sok(sok_collection, "src\\tests");
 
     
     if res_2.is_err() {

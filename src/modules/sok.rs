@@ -48,6 +48,7 @@ impl Sok {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct SokCollection {
     pub id: usize,
     pub medium: String,

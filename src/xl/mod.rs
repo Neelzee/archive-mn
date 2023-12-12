@@ -2,6 +2,7 @@ use std::cmp::min;
 
 use crate::error::ArchiveError;
 use crate::modules::sok::SokCollection;
+use crate::utils::capitalize_first;
 
 use super::modules::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};
@@ -13,10 +14,9 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     let mut wb = Workbook::new();
     let wb_path: String;
     if path.len() != 0 {
-        wb_path = path.to_string();
+        wb_path = format!("{}\\{}.xlsx", path.to_string(), soks.title.clone());
     } else {
-        //wb_path = format!("{}\\sok_{}.xlsx", soks.get(0).unwrap().medium.clone(), soks.get(0).unwrap().id.clone());
-        wb_path = String::from("aodihad");
+        wb_path = format!("{}\\{}.xlsx", soks.medium.clone(), soks.title.clone());
     }
 
     let bold = Format::new().set_bold();
@@ -31,8 +31,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         let mut r = 0;
         
         // Title
-        sheet.write_with_format(r, 0, &format!("Søk: {}", soks.id.clone()), &bold)?;
-        r += 1;
         sheet.write_with_format(r, 0, &format!("Tittel: {}", sub_sok.title), &bold)?;
         r += 1;
         
@@ -48,8 +46,15 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         sheet.set_column_width_pixels(0, 120)?;
         let full_name = sub_sok.title.clone();
-        let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
-        sheet.set_name(partial_name)?;
+
+        if let Some(l) = full_name.split_terminator(",").last() {
+            let partial_name = l.trim();
+            sheet.set_name(capitalize_first(partial_name))?;
+        } else {
+            let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
+            sheet.set_name(partial_name)?;
+        }
+
 
         // Tables
         for t in sub_sok.tables {
