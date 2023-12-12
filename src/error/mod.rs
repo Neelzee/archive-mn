@@ -3,7 +3,8 @@ pub enum ArchiveError<'a> {
     ScraperError(reqwest::Error),
     XlError(rust_xlsxwriter::XlsxError),
     ParserError(scraper::error::SelectorErrorKind<'a>),
-    UrlParseError(std::num::ParseIntError)
+    UrlParseError(std::num::ParseIntError),
+    MissingTitle
 }
 
 impl From<reqwest::Error> for ArchiveError<'static> {

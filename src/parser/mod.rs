@@ -1,7 +1,8 @@
 use scraper::{Selector, error::SelectorErrorKind};
 
-use crate::modules::{webpage::Webpage, sok::{Sok, Table}};
+use crate::{modules::{webpage::{Webpage, Link}, sok::{Sok, Table}}, error::ArchiveError};
 
+mod wp;
 
 pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
     let mut sok: Sok;
@@ -84,3 +85,5 @@ pub fn get_table(sok_page: &Webpage) -> Result<Vec<Table>, SelectorErrorKind> {
 
     Ok(tables)
 }
+
+

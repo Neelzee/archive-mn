@@ -30,9 +30,9 @@
   - [ ] Get title
   - [ ] Get text
   - [ ] Get forms
-  - [ ] Get all links
-    - [ ] Seperate into external and internal
-    - [ ] Seperate internal into sok and non-sok
+  - [x] Get all links
+    - [x] Seperate into external and internal
+    - [x] Seperate internal into sok and non-sok
   - [ ] Get all tables
   - [ ] Get metoder
   - [ ] Get kilder

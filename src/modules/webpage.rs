@@ -2,9 +2,31 @@ use scraper::{self, Html, selector::Selector, error::SelectorErrorKind};
 
 use super::sok::Sok;
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Link {
-    parent_id: usize,
     url: String,
+}
+
+impl Link {
+    pub fn new(url: String) -> Link {
+        Link { url }
+    }
+
+    pub fn is_partial(&self) -> bool {
+        self.url.contains("www") || self.url.contains("http")
+    }
+
+    pub fn is_external(&self) -> bool {
+        !self.url.contains("medienorge") || !self.url.contains("uib")
+    }
+
+    pub fn is_internal(&self) -> bool {
+        !self.is_external()
+    }
+
+    pub fn is_sok(&self) -> bool {
+        self.url.contains("medium") || self.url.contains("statestikk")
+    }
 }
 
 
@@ -28,20 +50,5 @@ impl Webpage {
     pub fn get_url(&self) -> String {
         self.url.clone()
     }
-
-    pub fn get_links(&self) -> Vec<Link> {
-        let mut links = Vec::new();
-
-        if let Ok(a_selector) = Selector::parse("a") {
-            links = self.content
-                .select(&a_selector)
-                .filter_map(|a| a.attr("href"))
-                .map(|a| Link { parent_id: self.id, url: a.to_owned() })
-                .collect::<Vec<Link>>();
-        }
-            
-        links
-    }
-
 }
 
