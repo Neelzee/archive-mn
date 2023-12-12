@@ -1,4 +1,5 @@
 mod error;
+mod modules;
 mod parser;
 mod scraper;
 mod xl;

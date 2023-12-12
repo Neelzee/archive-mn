@@ -1,11 +1,10 @@
 use std::cmp::min;
-use std::fmt::format;
 
 use crate::error::ArchiveError;
 
-use super::parser::sok::Sok;
+use super::modules::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};
-use rust_xlsxwriter::{Workbook, XlsxError};
+use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
 

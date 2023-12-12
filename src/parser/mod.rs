@@ -1,9 +1,7 @@
 use scraper::{Selector, error::SelectorErrorKind};
 
-use self::{webpage::Webpage, sok::{Sok, Table}};
+use crate::modules::{webpage::Webpage, sok::{Sok, Table}};
 
-pub mod webpage;
-pub mod sok;
 
 pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
     let mut sok: Sok;

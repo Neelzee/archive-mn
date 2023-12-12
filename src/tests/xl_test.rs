@@ -1,4 +1,4 @@
-use crate::{parser::sok::{Sok, Table}, xl::{save_sok, split_string, MAX_STR_LEN}};
+use crate::{modules::sok::{Sok, Table}, xl::{save_sok, split_string, MAX_STR_LEN}};
 
 #[test]
 fn test_save() {

@@ -4,7 +4,7 @@ use std::fs::File;
 use scraper::Html;
 
 use crate::parser::get_table;
-use crate::parser::webpage::Webpage;
+use crate::modules::webpage::Webpage;
 
 fn get_html_content() -> Result<Html, Error> {
     let mut content = String::new();

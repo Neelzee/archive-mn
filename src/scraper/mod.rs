@@ -7,7 +7,7 @@ use std::os::raw;
 use reqwest::Client;
 use scraper::Html;
 
-use crate::{parser::webpage::Webpage, error::ArchiveError};
+use crate::{modules::webpage::Webpage, error::ArchiveError};
 
 
 pub async fn get_html_content(client: &Client, url: String) -> Result<String, reqwest::Error> {
