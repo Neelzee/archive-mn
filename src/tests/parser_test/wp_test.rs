@@ -6,7 +6,7 @@ use std::{fs::File, io::Read, iter::zip};
 
 use scraper::Html;
 
-use crate::{modules::webpage::Webpage, parser::wp::get_metode};
+use crate::{modules::webpage::Webpage, parser::wp::{get_metode, get_kilde}};
 
 fn get_webpage() -> Result<Webpage, std::io::Error> {
     let mut content = String::new();
@@ -164,6 +164,23 @@ async fn test_get_metode() {
         assert!(merknad.len() == 1);
 
         println!("{:?}", merknad);
+    } else {
+        panic!("Could not get webpage to test");
+    }
+}
+
+#[tokio::test]
+async fn test_get_kilde() {
+    if let Ok(wp) = get_webpage() {
+        let res = get_kilde(&wp).await;
+
+        assert!(res.is_ok());
+
+        let kilde = res.unwrap();
+
+        assert!(kilde.len() == 1);
+
+        println!("{:?}", kilde);
     } else {
         panic!("Could not get webpage to test");
     }

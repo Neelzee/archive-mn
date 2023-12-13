@@ -240,3 +240,47 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
 
     Ok(metoder)
 }
+
+pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
+    let mut kilder: Vec<(String, Vec<String>)> = Vec::new();
+
+    let mut links = Vec::new();
+
+    let a_selector = Selector::parse("a.bold-text[href][onclick]")?;
+    let div_selector = Selector::parse(".brodtekst")?;
+    let h2_selector = Selector::parse("h2")?;
+
+    // Kilde
+    for el in wp.get_content().select(&a_selector) {
+        if let Some(a) = el.attr("href") {
+            links.push(Link::new(a.to_owned()));
+        }
+    }
+
+    links.sort();
+    links.dedup();
+
+    for l in links {
+        let url = l.create_full().to_string();
+        let mut title = String::new();
+        let content = get_html_content(&Client::default(), url).await?;
+        for h in Html::parse_document(&content).select(&h2_selector) {
+            title = trim_string(&h.text().collect::<String>());
+            break;   
+        }
+
+        kilder.push(
+            (
+                title,
+                Html::parse_document(&content)
+                    .select(&div_selector)
+                    .map(|p| trim_string(&p.text().collect::<String>()))
+                    .collect::<Vec<String>>()
+            )
+        );
+
+    }
+
+
+    Ok(kilder)
+}

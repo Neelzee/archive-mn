@@ -35,7 +35,7 @@
     - [x] Seperate internal into sok and non-sok
     - [x] Seperate into partial and full URLs
   - [x] Get all tables
-  - [ ] Get metoder - Must be scraped from external page
+  - [x] Get metoder - Must be scraped from external page
   - [ ] Get kilder - Must be scraped from external page
   - [x] Get merknad
 - [ ] Handle parsing errors and unexpected HTML structures.
