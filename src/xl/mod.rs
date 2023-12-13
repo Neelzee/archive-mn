@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use crate::error::ArchiveError;
 use crate::modules::sok::SokCollection;
-use crate::utils::capitalize_first;
+use crate::utils::funcs::capitalize_first;
 
 use super::modules::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};

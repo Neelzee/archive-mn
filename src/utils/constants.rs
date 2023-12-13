@@ -1,0 +1,1 @@
+pub const ROOT_URL: &str = "https://medienorge.uib.no";

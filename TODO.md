@@ -27,19 +27,19 @@
   - [ ] Get medium
   - [ ] Get id
 - [ ] Develop functions to parse HTML content
-  - [ ] Get title
-  - [ ] Get text
+  - [x] Get title
+  - [x] Get text
   - [ ] Get forms
   - [x] Get all links
     - [x] Seperate into external and internal
     - [x] Seperate internal into sok and non-sok
+    - [x] Seperate into partial and full URLs
   - [ ] Get all tables
   - [ ] Get metoder
   - [ ] Get kilder
   - [ ] Get merknad
 - [ ] Handle parsing errors and unexpected HTML structures.
   - [ ] Add logging?
-
 
 ## Excel Conversion Module (xl)
 
