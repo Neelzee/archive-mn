@@ -1,6 +1,6 @@
 use scraper::Selector;
 
-use crate::{modules::webpage::{Webpage, Link}, error::ArchiveError, utils::funcs::trim_string};
+use crate::{modules::{webpage::{Webpage, Link}, form::Form}, error::ArchiveError, utils::funcs::trim_string};
 
 impl Webpage {
     pub fn get_links(&self) -> Result<Vec<Link>, ArchiveError> {
@@ -59,5 +59,34 @@ impl Webpage {
                 .map(|e| trim_string(&e.text().collect::<String>()))
                 .collect::<Vec<String>>()
         )
+    }
+
+    pub fn get_forms(&self) -> Result<Form, ArchiveError> {
+        let select_selector = Selector::parse("select")?;
+        let option_selector = Selector::parse("option")?;
+
+        let mut form = Form::new();
+
+        for select in self.get_content().select(&select_selector) {
+            if let Some(option_name) = select.attr("name") {
+                let mut options: Vec<(String, String)> = Vec::new();
+
+                for option in self.get_content().select(&option_selector) {
+                    if let Some(p) = option.parent() {
+                        if p.id() != select.id() {
+                            continue;
+                        }
+
+                        if let Some(v) = option.attr("value") {
+                            options.push((v.to_owned(), trim_string(&option.text().collect::<String>())));
+                        }
+                    }
+                }
+
+                form.add_options(option_name.to_owned(), options);
+            }
+        }
+
+        Ok(form)
     }
 }

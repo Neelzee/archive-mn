@@ -86,3 +86,19 @@ fn test_get_text() {
         panic!("Could not get webpage to test");
     }
 }
+
+
+#[test]
+fn test_get_forms() {
+    if let Ok(wp) = get_webpage() {
+        let res = wp.get_forms();
+
+        assert!(res.is_ok());
+
+        let form = res.unwrap();
+
+        println!("{:?}", form);
+    } else {
+        panic!("Could not get webpage to test");
+    }
+}
