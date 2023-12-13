@@ -18,6 +18,7 @@
 
 - [ ] Implement the HTTP request function to fetch HTML content.
   - [ ] Check all a-tags, one layer for content
+    - [ ] Create request from form data
     - [ ] Get content from forms/POST-requests
 - [ ] Add error handling
 
