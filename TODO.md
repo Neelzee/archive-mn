@@ -23,10 +23,10 @@
 
 ## Parser Module (parser)
 
-- [ ] Parse URL
-  - [ ] Get medium
-  - [ ] Get id
-- [ ] Develop functions to parse HTML content
+- [x] Parse URL
+  - [x] Get medium
+  - [x] Get id
+- [x] Develop functions to parse HTML content
   - [x] Get title
   - [x] Get text
   - [x] Get forms
@@ -36,7 +36,7 @@
     - [x] Seperate into partial and full URLs
   - [x] Get all tables
   - [x] Get metoder - Must be scraped from external page
-  - [ ] Get kilder - Must be scraped from external page
+  - [x] Get kilder - Must be scraped from external page
   - [x] Get merknad
 - [ ] Handle parsing errors and unexpected HTML structures.
   - [ ] Add logging?

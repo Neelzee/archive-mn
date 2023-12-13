@@ -61,6 +61,14 @@ impl Webpage {
         Webpage { id, url, content, medium }
     }
 
+    pub fn get_id(&self) -> usize {
+        self.id.clone()
+    }
+
+    pub fn get_medium(&self) -> String {
+        self.medium.clone()
+    }
+
     pub async fn from_link(link: Link) -> Result<Webpage, ArchiveError<'static>> {
         let url = link.create_full().to_string();
         let raw_content = get_html_content(&Client::default(), url.clone()).await?;

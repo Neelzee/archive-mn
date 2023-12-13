@@ -76,9 +76,9 @@ pub struct SokCollection {
     pub title: String,
     pub text: Vec<String>,
     pub sok: Vec<Sok>,
-    pub merknad: Vec<String>,
-    pub kilde: Vec<String>,
-    pub metode: Vec<String>,
+    pub merknad: Vec<Merknad>,
+    pub kilde: Vec<Kilde>,
+    pub metode: Vec<Metode>,
 }
 
 impl SokCollection {
@@ -107,15 +107,49 @@ impl SokCollection {
         self.sok.push(sok);
     }
 
-    pub fn add_merknad(&mut self, merknad: String) {
+    pub fn add_merknad(&mut self, merknad: Merknad) {
         self.merknad.push(merknad);
     }
 
-    pub fn add_kilde(&mut self, kilde: String) {
+    pub fn add_kilde(&mut self, kilde: Kilde) {
         self.kilde.push(kilde);
     }
 
-    pub fn add_metode(&mut self, metode: String) {
+    pub fn add_metode(&mut self, metode: Metode) {
         self.metode.push(metode);
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct Merknad {
+    pub title: String,
+    pub content: Vec<String>
+}
+
+#[derive(Debug, Clone)]
+pub struct Kilde {
+    pub title: String,
+    pub content: Vec<String>
+}
+
+#[derive(Debug, Clone)]
+pub struct Metode {
+    pub title: String,
+    pub content: Vec<String>
+}
+
+type ArchiveContent = (String, Vec<String>);
+
+macro_rules! impl_ac {
+    ($struct_name:ident) => {
+        impl From<ArchiveContent> for $struct_name {
+            fn from((title, content): (String, Vec<String>)) -> Self {
+                $struct_name { title, content }
+            }
+        }
+    };
+}
+
+impl_ac!(Merknad);
+impl_ac!(Metode);
+impl_ac!(Kilde);

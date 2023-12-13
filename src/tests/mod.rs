@@ -1,4 +1,7 @@
 #[cfg(test)]
+mod combined;
+
+#[cfg(test)]
 mod scraper_test;
 
 #[cfg(test)]

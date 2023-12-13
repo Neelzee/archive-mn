@@ -1,7 +1,7 @@
 use reqwest::Client;
 use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
+use crate::{modules::{webpage::{Webpage, Link, self}, form::Form, sok::{Sok, Table, SokCollection, self, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
 
 // TODO: Change these from methods to functions
 impl Webpage {
@@ -283,4 +283,38 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
 
 
     Ok(kilder)
+}
+
+pub async fn get_sok_collection(wp: &Webpage) -> Result<SokCollection, ArchiveError> {
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+
+    let _form = wp.get_forms()?;
+     /*
+    TODO:
+    Create a way to iterate for each form.
+    Can do this by reusing the following code
+     */
+
+    sok_collection.title = wp.get_title()?;
+    let _ = wp.get_text()?
+        .into_iter()
+        .map(|e| sok_collection.add_text(e))
+        .collect::<Vec<_>>();
+    sok_collection.add_sok(wp.get_sok()?);
+
+    for metode in get_metode(wp).await? {
+        sok_collection.add_metode(metode.into());
+    }
+
+    for kilde in get_kilde(wp).await? {
+        sok_collection.add_kilde(kilde.into());
+    }
+
+    sok_collection.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
+
+
+
+
+    Ok(sok_collection)
 }

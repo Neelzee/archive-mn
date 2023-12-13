@@ -74,8 +74,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Merknad", &bold)?;
         r += 1;
-        for s in soks.merknad.clone() {
-            for l in split_string(s) {
+        for merknad in soks.merknad.clone() {
+            for l in merknad.content.into_iter().flat_map(|e| split_string(e)) {
                 sheet.write(r, 0, l)?;
                 r += 1;
             }
@@ -86,8 +86,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
-        for s in soks.metode.clone() {
-            for l in split_string(s) {
+        for metode in soks.metode.clone() {
+            for l in metode.content.into_iter().flat_map(|e| split_string(e)) {
                 sheet.write(r, 0, l)?;
                 r += 1;
             }
@@ -98,8 +98,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         r += 1;
         sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
-        for s in soks.kilde.clone() {
-            for l in split_string(s) {
+        for kilde in soks.kilde.clone() {
+            for l in kilde.content.into_iter().flat_map(|e| split_string(e)) {
                 sheet.write(r, 0, l)?;
                 r += 1;
             }
