@@ -29,12 +29,12 @@
 - [ ] Develop functions to parse HTML content
   - [x] Get title
   - [x] Get text
-  - [ ] Get forms
+  - [x] Get forms
   - [x] Get all links
     - [x] Seperate into external and internal
     - [x] Seperate internal into sok and non-sok
     - [x] Seperate into partial and full URLs
-  - [ ] Get all tables
+  - [x] Get all tables
   - [ ] Get metoder
   - [ ] Get kilder
   - [ ] Get merknad

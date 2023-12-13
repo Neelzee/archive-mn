@@ -1,20 +1,38 @@
+use std::cmp::max;
+
 
 #[derive(Debug, Clone)]
 pub struct Table {
+    pub header: Vec<Vec<String>>,
+    pub styles: Vec<Vec<String>>,
     pub rows: Vec<Vec<String>>,
-    pub styles: Vec<String>,
 }
 
 impl Table {
     pub fn new() -> Table {
         Table {
-            rows: Vec::new(),
+            header: Vec::new(),
             styles: Vec::new(),
+            rows: Vec::new(),
         }
     }
 
     /// Prints the table, adds `' ,'` between every element.
     pub fn show(&self) {
+        let header = self.header
+        .iter()
+        .fold(
+            String::new(), 
+            |mut acc, e| {
+                acc += &e.iter().fold(String::new(), |mut ac, x| {
+                    ac += x;
+                    ac += ", ";
+                    ac
+                });
+                acc += "\n";
+                acc
+            });
+
         let rows = self.rows
             .iter()
             .fold(
@@ -28,7 +46,10 @@ impl Table {
                     acc += "\n";
                     acc
                 });
+        println!("{}", "=".repeat(max(header.len(), rows.len())));
+        println!("{}", header);
         println!("{}", rows);
+        println!("{}", "=".repeat(max(header.len(), rows.len())));
     }
 }
 

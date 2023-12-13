@@ -102,3 +102,22 @@ fn test_get_forms() {
         panic!("Could not get webpage to test");
     }
 }
+
+#[test]
+fn test_get_sok() {
+    if let Ok(wp) = get_webpage() {
+        let res = wp.get_sok();
+
+        assert!(res.is_ok());
+
+        let sok = res.unwrap();
+
+        for t in sok.clone().tables {
+            t.show();
+        }
+
+        println!("{:?}", sok);
+    } else {
+        panic!("Could not get webpage to test");
+    }
+}

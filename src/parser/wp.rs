@@ -1,6 +1,7 @@
-use scraper::Selector;
+use ego_tree::NodeId;
+use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, form::Form}, error::ArchiveError, utils::funcs::trim_string};
+use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}};
 
 impl Webpage {
     pub fn get_links(&self) -> Result<Vec<Link>, ArchiveError> {
@@ -88,5 +89,93 @@ impl Webpage {
         }
 
         Ok(form)
+    }
+
+    pub fn get_sok(&self) -> Result<Sok, ArchiveError> {
+        let mut sok = Sok::new();
+
+        let title_selector = Selector::parse(r#"div[id="sokResult"] h4"#)?;
+
+        let table_selector = Selector::parse(r#"div[id="sokResult"] table"#)?;
+
+        let tr_selector = Selector::parse(r#"div[id="sokResult"] tr"#)?;
+        let th_selector = Selector::parse(r#"div[id="sokResult"] th"#)?;
+        let td_selector = Selector::parse(r#"div[id="sokResult"] td"#)?;
+
+        for t in self.get_content().select(&title_selector) {
+            sok.title = trim_string(&t.text().collect::<String>());
+            break;
+        }
+
+        let mut tables: Vec<Table> = Vec::new();
+
+        for table in self.get_content().select(&table_selector) {
+            let mut cur_table = Table::new();
+
+            // Header
+            // Rows
+            let mut headers: Vec<Vec<String>> = Vec::new();
+            for tr in self.get_content().select(&tr_selector) {
+                // This row belongs to the current table
+                if has_ancestor(*tr, table.id()) {
+                    // Iterating over all cells
+                    let mut row: Vec<String> = Vec::new();
+                    for td in self.get_content().select(&th_selector) {
+                        // This cell belongs to the current row
+                        if has_ancestor(*td, tr.id()) {
+                            let txt = trim_string(&td.text().collect::<String>());
+
+                            if txt.len() == 0 || txt.contains('\u{a0}') {
+                                continue;
+                            }
+
+                            row.push(txt);
+                        }
+                    }
+
+                    if row.len() != 0 {
+                        headers.push(row);
+                    }
+                }
+            }
+
+            cur_table.header = headers;
+
+            // Rows
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            for tr in self.get_content().select(&tr_selector) {
+                // This row belongs to the current table
+                if has_ancestor(*tr, table.id()) {
+                    // Iterating over all cells
+                    let mut row: Vec<String> = Vec::new();
+                    for td in self.get_content().select(&td_selector) {
+                        // This cell belongs to the current row
+                        if has_ancestor(*td, tr.id()) {
+                            let txt = trim_string(&td.text().collect::<String>());
+
+                            if txt.len() == 0 || txt.contains('\u{a0}') {
+                                continue;
+                            }
+
+                            row.push(txt);
+                        }
+                    }
+                    if row.len() != 0 {
+                        rows.push(row);
+                    }
+                }
+            }
+
+            cur_table.rows = rows;
+
+            // TODO: Get style aswell.
+
+            tables.push(cur_table);
+
+        }
+
+        sok.tables = tables;
+
+        Ok(sok)
     }
 }
