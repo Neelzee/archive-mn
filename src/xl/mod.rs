@@ -46,14 +46,17 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         sheet.set_column_width_pixels(0, 120)?;
         let full_name = sub_sok.title.clone();
+        let name: String;
 
         if let Some(l) = full_name.split_terminator(",").last() {
             let partial_name = l.trim();
-            sheet.set_name(capitalize_first(partial_name))?;
+            let (n, _) = partial_name.split_at(min(31, partial_name.len()));
+            name = n.to_owned();
         } else {
             let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
-            sheet.set_name(partial_name)?;
+            name = partial_name.trim().to_owned();
         }
+        sheet.set_name(capitalize_first(&name))?;
 
 
         // Tables
