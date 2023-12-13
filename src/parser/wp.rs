@@ -1,8 +1,9 @@
-use ego_tree::NodeId;
+use reqwest::Client;
 use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}};
+use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
 
+// TODO: Change these from methods to functions
 impl Webpage {
     pub fn get_links(&self) -> Result<Vec<Link>, ArchiveError> {
         let mut links = Vec::new();
@@ -178,4 +179,64 @@ impl Webpage {
 
         Ok(sok)
     }
+
+    pub fn get_merknad(&self) -> Result<Vec<String>, ArchiveError> {
+        let mut merknad = Vec::new();
+
+        let merknad_selector = Selector::parse(r#"p[class="merknadTekst"]"#)?;
+
+        for p in self.get_content().select(&merknad_selector) {
+            merknad.push(trim_string(&p.text().collect::<String>()));
+        }
+
+        Ok(merknad)
+    }
+}
+
+
+pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
+    let mut metoder: Vec<(String, Vec<String>)> = Vec::new();
+
+    let mut links = Vec::new();
+
+    let merknad_head_selector = Selector::parse(".merknadHeader")?;
+    let p_selector = Selector::parse("p")?;
+    let h3_selector = Selector::parse("h3")?;
+
+    // METODE
+    for a in wp.get_content().select(&merknad_head_selector).filter_map(|e| e.parent()) {
+        for child in a.children() {
+            if let Some(el) = child.value().as_element() {
+                if el.name() == "a" {
+                    if let Some(a) = el.attr("href") {
+                        links.push(Link::new(a.to_owned()));
+                    }
+                }
+            }
+        }
+    }
+
+    for l in links {
+        let url = l.create_full().to_string();
+        let mut title = String::new();
+        let content = get_html_content(&Client::default(), url).await?;
+        for h in Html::parse_document(&content).select(&h3_selector) {
+            title = trim_string(&h.text().collect::<String>());
+            break;   
+        }
+
+        metoder.push(
+            (
+                title,
+                Html::parse_document(&content)
+                    .select(&p_selector)
+                    .map(|p| trim_string(&p.text().collect::<String>()))
+                    .collect::<Vec<String>>()
+            )
+        );
+
+    }
+
+
+    Ok(metoder)
 }

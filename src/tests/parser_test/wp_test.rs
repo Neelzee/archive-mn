@@ -6,7 +6,7 @@ use std::{fs::File, io::Read, iter::zip};
 
 use scraper::Html;
 
-use crate::modules::webpage::Webpage;
+use crate::{modules::webpage::Webpage, parser::wp::get_metode};
 
 fn get_webpage() -> Result<Webpage, std::io::Error> {
     let mut content = String::new();
@@ -32,6 +32,18 @@ fn test_get_links() {
         let links = res.unwrap();
 
         assert!(links.len() != 0);
+
+        assert_eq!(
+            "https://medienorge.uib.no/files/institusjon.cfm?institusjon_id=38".to_owned(),
+            links.get(0).unwrap().create_full().to_string()
+        );
+
+        assert_eq!(
+            "https://medienorge.uib.no/metode/346".to_owned(),
+            links.get(1).unwrap().create_full().to_string()
+        );
+
+        println!("{:?}", links);
     } else {
         panic!("Could not get webpage to test");
     }
@@ -117,6 +129,41 @@ fn test_get_sok() {
         }
 
         println!("{:?}", sok);
+    } else {
+        panic!("Could not get webpage to test");
+    }
+}
+
+
+#[test]
+fn test_get_merknad() {
+    if let Ok(wp) = get_webpage() {
+        let res = wp.get_merknad();
+
+        assert!(res.is_ok());
+
+        let merknad = res.unwrap();
+
+        assert!(merknad.len() != 0);
+
+        println!("{:?}", merknad);
+    } else {
+        panic!("Could not get webpage to test");
+    }
+}
+
+#[tokio::test]
+async fn test_get_metode() {
+    if let Ok(wp) = get_webpage() {
+        let res = get_metode(&wp).await;
+
+        assert!(res.is_ok());
+
+        let merknad = res.unwrap();
+
+        assert!(merknad.len() == 1);
+
+        println!("{:?}", merknad);
     } else {
         panic!("Could not get webpage to test");
     }
