@@ -110,6 +110,48 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
     }
 
+    // Info
+    {
+        let info_sheet = wb.add_worksheet();
+        info_sheet.set_name("Informasjon")?;
+
+        // Merknad
+        let mut r = 0;
+        info_sheet.write_with_format(r, 0, "Merknad", &bold)?;
+        r += 1;
+        for merknad in soks.merknad.clone() {
+            for l in merknad.content.into_iter().flat_map(|e| split_string(e)) {
+                info_sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+
+        // Metode
+        r += 1;
+        info_sheet.write_with_format(r, 0, "Metode", &bold)?;
+        r += 1;
+        for metode in soks.metode.clone() {
+            for l in metode.content.into_iter().flat_map(|e| split_string(e)) {
+                info_sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+
+        // Kilde
+        r += 1;
+        info_sheet.write_with_format(r, 0, "Kilde", &bold)?;
+        r += 1;
+        for kilde in soks.kilde.clone() {
+            for l in kilde.content.into_iter().flat_map(|e| split_string(e)) {
+                info_sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+    }
+
     
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(()),
