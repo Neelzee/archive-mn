@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Form {
@@ -22,16 +23,6 @@ impl FormOption {
     }
 }
 
-/*
-impl Iterator for Form {
-    type Item = Vec<String>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.options.pop()
-    }
-}
-*/
-
 impl Form {
     pub fn new() -> Form {
         Form { options: Vec::new() }
@@ -41,13 +32,19 @@ impl Form {
         self.options.push(FormOption { option_name, options });
     }
 
-    /*
-    pub fn all_combinations(self) -> impl Iterator {
-        let n = self.options.len();
+    pub fn combinations(&self) -> impl Iterator<Item = HashMap<String, String>> + '_ {
+        let options_vec: Vec<Vec<(String, String)>> = self.options.iter()
+            .map(|opt| opt.options.clone())
+            .collect();
 
-        self.options
-            .into_iter()
-            .combinations(n)
+        let product_iter = options_vec.into_iter().multi_cartesian_product();
+
+        product_iter.map(move |product| {
+            let mut form_data = HashMap::new();
+            for (i, option) in self.options.iter().enumerate() {
+                form_data.insert(option.option_name.clone(), product[i].0.clone());
+            }
+            form_data
+        })
     }
-     */
 }

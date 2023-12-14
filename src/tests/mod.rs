@@ -9,3 +9,6 @@ mod parser_test;
 
 #[cfg(test)]
 mod xl_test;
+
+#[cfg(test)]
+mod form_test;

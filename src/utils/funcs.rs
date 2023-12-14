@@ -1,10 +1,16 @@
 use std::fs;
-use std::io;
+use std::fs::File;
+use std::io::{self, Read, Error};
 use std::path::Path;
 use rand::Rng;
 use rand::distributions::Uniform;
 use ego_tree::{NodeId, NodeRef};
+use scraper::Html;
 use scraper::{Node, ElementRef};
+
+use crate::modules::webpage::Webpage;
+
+use super::constants::ROOT_URL;
 
 pub fn capitalize_first(s: &str) -> String {
     let mut c = s.chars();
@@ -14,6 +20,13 @@ pub fn capitalize_first(s: &str) -> String {
     }
 }
 
+pub fn get_html_content_test() -> Result<Html, Error> {
+    let mut content = String::new();
+    let mut file = File::open("src\\tests\\html\\346")?;
+    file.read_to_string(&mut content)?;
+
+    Ok(Html::parse_document(&content))
+}
 
 pub fn trim_string(str: &str) -> String {
     return str.split_ascii_whitespace().collect::<Vec<&str>>().join(" ");
@@ -34,6 +47,26 @@ pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
     node.ancestors().into_iter().flat_map(|e| e.ancestors()).any(|e| has_ancestor(e, id))
 }
 
+pub fn get_random_webpage() -> Option<Webpage> {
+    if let Ok((file_name, raw_content)) = get_random_file_and_contents("src\\tests\\html".to_string()) {
+
+        let url = format!("{}/{}", ROOT_URL, file_name.clone());
+        let content = Html::parse_document(&raw_content);
+
+        let mut id = 0;
+        let medium = String::from("MEDIUM");
+
+        if let Ok(i) = file_name.parse::<usize>() {
+            id = i;
+        } else {
+            return None;
+        }
+
+        Some(Webpage::from_html(id, url, content, medium))
+    } else {
+        None
+    }
+}
 
 pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, String)> {
     // Read the contents of the folder
