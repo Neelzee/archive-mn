@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{self, Read, Error};
@@ -100,4 +101,18 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
     } else {
         Err(io::Error::new(io::ErrorKind::NotFound, "No files found in the folder"))
     }
+}
+
+pub fn format_form_to_title(form: HashMap<String, String>) -> String {
+    let mut title = String::new();
+
+    for c in format!("{:?}", form).chars() {
+        if c != '{' || c != '}' {
+            title.push(c);
+        }
+    }
+
+
+
+    title
 }

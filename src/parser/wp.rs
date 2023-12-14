@@ -1,7 +1,7 @@
 use reqwest::Client;
 use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link, self}, form::Form, sok::{Sok, Table, SokCollection, self, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
+use crate::{modules::{webpage::{Webpage, Link, self}, form::Form, sok::{Sok, Table, SokCollection, self, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor, format_form_to_title}, scraper::get_html_content};
 
 // TODO: Change these from methods to functions
 impl Webpage {
@@ -288,20 +288,47 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
 pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
+    sok_collection.add_sok(wp.get_sok()?);
 
-    let _form = wp.get_forms()?;
-     /*
-    TODO:
-    Create a way to iterate for each form.
-    Can do this by reusing the following code
-     */
+    let client = Client::default();
+
+    let request = client
+        .post(wp.get_url());
+
+    for mut form in wp.get_forms()?.combinations() {
+        let title = format_form_to_title(form.clone());
+        form.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+        let req = request
+                .try_clone().expect("Should not be a stream")
+                .form(&form).build()?;
+
+        match client.execute(req).await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    let raw_html = response.text().await?;
+            
+                    let html = Html::parse_document(&raw_html);
+            
+                    let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+            
+                    let mut sok = sub_wp.get_sok()?;
+                    sok.title = title;
+                    sok_collection.add_sok(sok);
+                } else {
+                    println!("Code: {:?}", response.status());
+                }
+            }
+            Err(err) => println!("Error: {:?}", err),
+        }
+
+    }
 
     sok_collection.title = wp.get_title()?;
     let _ = wp.get_text()?
         .into_iter()
         .map(|e| sok_collection.add_text(e))
         .collect::<Vec<_>>();
-    sok_collection.add_sok(wp.get_sok()?);
 
     for metode in get_metode(&wp).await? {
         sok_collection.add_metode(metode.into());
