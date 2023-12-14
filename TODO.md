@@ -12,14 +12,13 @@
 - [ ] Document each struct and its fields.
 - [ ] Write comprehensive documentation for each module.
 - [ ] Document public functions and structs.
-- [ ] Create a README file with project setup and usage instructions.
 
 ## Scraper Module (scraper)
 
-- [ ] Implement the HTTP request function to fetch HTML content.
-  - [ ] Check all a-tags, one layer for content
-    - [ ] Create request from form data
-    - [ ] Get content from forms/POST-requests
+- [x] Implement the HTTP request function to fetch HTML content.
+  - [x] Create request from form data
+  - [x] Get content from forms/POST-requests
+  ~~- [] Check all a-tags, one layer for content~~
 - [ ] Add error handling
 
 ## Parser Module (parser)
@@ -45,6 +44,7 @@
 ## Excel Conversion Module (xl)
 
 - [ ] Create functions to format data into Excel sheets.
+  - [ ] Parse strings to ints/floats
 - [ ] Implement different data types and formatting requirements handling.
 - [ ] Add error handling for Excel file writing and formatting issues.
 
