@@ -26,7 +26,7 @@ fn get_random_webpage() -> Option<Webpage> {
 #[tokio::test]
 async fn test_parsing_saving() {
     if let Some(wp) = get_random_webpage() {
-        let res = get_sok_collection(&wp).await;
+        let res = get_sok_collection(wp).await;
 
         assert!(res.is_ok());
 

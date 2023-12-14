@@ -111,9 +111,12 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     }
 
     
-    wb.save(wb_path)?;
-
-    Ok(())    
+    match wb.save(wb_path.clone()) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            Err(ArchiveError::XlSaveError(err, wb_path))
+        },
+    }
 }
 
 pub fn split_string(input: String) -> Vec<String> {

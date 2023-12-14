@@ -1,8 +1,6 @@
 // # Scraper module
 // 
-// CURLs a given URL for its HTML content
-
-use std::os::raw;
+// `CURL`s a given URL for its HTML content
 
 use reqwest::Client;
 use scraper::Html;

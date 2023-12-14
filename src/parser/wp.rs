@@ -80,12 +80,12 @@ impl Webpage {
                         }
 
                         if let Some(v) = option.attr("value") {
-                            options.push((v.to_owned(), trim_string(&option.text().collect::<String>())));
+                            options.push((v.to_string(), trim_string(&option.text().collect::<String>())));
                         }
                     }
                 }
 
-                form.add_options(option_name.to_owned(), options);
+                form.add_options(option_name.to_string(), options);
             }
         }
 
@@ -285,7 +285,7 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
     Ok(kilder)
 }
 
-pub async fn get_sok_collection(wp: &Webpage) -> Result<SokCollection, ArchiveError> {
+pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
 
@@ -303,11 +303,11 @@ pub async fn get_sok_collection(wp: &Webpage) -> Result<SokCollection, ArchiveEr
         .collect::<Vec<_>>();
     sok_collection.add_sok(wp.get_sok()?);
 
-    for metode in get_metode(wp).await? {
+    for metode in get_metode(&wp).await? {
         sok_collection.add_metode(metode.into());
     }
 
-    for kilde in get_kilde(wp).await? {
+    for kilde in get_kilde(&wp).await? {
         sok_collection.add_kilde(kilde.into());
     }
 

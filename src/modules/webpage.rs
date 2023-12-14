@@ -31,7 +31,7 @@ impl Link {
     }
 
     pub fn is_partial(&self) -> bool {
-        !self.url.contains("www") || !self.url.contains("http")
+        !self.url.contains("http")
     }
 
     pub fn is_external(&self) -> bool {
@@ -47,7 +47,7 @@ impl Link {
     }
 }
 
-
+#[derive(Debug, Clone)]
 pub struct Webpage {
     url: String,
     id: usize,
@@ -69,7 +69,7 @@ impl Webpage {
         self.medium.clone()
     }
 
-    pub async fn from_link(link: Link) -> Result<Webpage, ArchiveError<'static>> {
+    pub async fn from_link(link: Link) -> Result<Webpage, ArchiveError> {
         let url = link.create_full().to_string();
         let raw_content = get_html_content(&Client::default(), url.clone()).await?;
 
