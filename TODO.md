@@ -12,6 +12,7 @@
 - [ ] Document each struct and its fields.
 - [ ] Write comprehensive documentation for each module.
 - [ ] Document public functions and structs.
+- [ ] Add logger
 
 ## Scraper Module (scraper)
 

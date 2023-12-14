@@ -1,1 +1,1 @@
-Xl Error: Worksheet name 'worksheet.set_name(""pro_ant": "prosent"}")' cannot contain invalid characters: '[ ] : * ? / \'.
+Xl Save Error: Worksheet name 'pro_ant prosent1' has already been used in this workbook., path: src\out\film\Kinobesøk siste 12 måneder.xlsx

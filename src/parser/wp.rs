@@ -294,9 +294,13 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
 
     let request = client
         .post(wp.get_url());
-
+    let mut titles: Vec<String> = Vec::new();
     for mut form in wp.get_forms()?.combinations() {
-        let title = format_form_to_title(form.clone());
+        let mut title = String::new();
+        for (k, v) in form.clone().into_iter() {
+            title = format_form_to_title(k, v);
+            break;
+        }
         form.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
         let req = request
@@ -313,6 +317,13 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
                     let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
             
                     let mut sok = sub_wp.get_sok()?;
+
+                    if titles.contains(&title) {
+                        title = format!("{}1", title);
+                    } else {
+                        titles.push(title.clone());
+                    }
+
                     sok.title = title;
                     sok_collection.add_sok(sok);
                 } else {

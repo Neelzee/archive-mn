@@ -103,16 +103,6 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
     }
 }
 
-pub fn format_form_to_title(form: HashMap<String, String>) -> String {
-    let mut title = String::new();
-
-    for c in format!("{:?}", form).chars() {
-        if c != '{' || c != '}' {
-            title.push(c);
-        }
-    }
-
-
-
-    title
+pub fn format_form_to_title(k: String, v: String) -> String {
+    return format!("{} {}", k, v)
 }

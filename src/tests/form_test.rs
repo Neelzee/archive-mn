@@ -3,7 +3,7 @@ use std::os::raw;
 use reqwest::{Client, StatusCode};
 use scraper::Html;
 
-use crate::{utils::funcs::{get_random_webpage, get_html_content_test}, scraper::get_html_content, modules::webpage::Webpage};
+use crate::{utils::funcs::{get_random_webpage, get_html_content_test, format_form_to_title}, scraper::get_html_content, modules::webpage::Webpage};
 
 #[test]
 fn test_form() {
@@ -18,6 +18,24 @@ fn test_form() {
 
         for ar in form.combinations() {
             println!("{:?}", ar);
+        }
+
+    }
+}
+
+#[test]
+fn test_form_titler() {
+    if let Some(wp) = get_random_webpage() {
+        let res = wp.get_forms();
+
+        assert!(res.is_ok());
+
+        let form = res.unwrap();
+
+        for ar in form.combinations() {
+            for (k, v) in ar.into_iter() {
+                println!("{}", format_form_to_title(k, v));
+            }
         }
 
     }
