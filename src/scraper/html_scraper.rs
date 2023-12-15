@@ -8,6 +8,9 @@ use super::get_html_content;
 
 pub async fn scrape_html(mut url_channel: Receiver<Link>, html_channel: Sender<Html>, error_channel: Sender<ArchiveError>) {
     let client = Client::default();
+    // Links that are recieved are the links to the sok
+    // So we should get all sub sok, while we are here.
+    // TODO: Some of the code in get_sok_collection should be here
     while let Some(link) = url_channel.recv().await {
         match get_html_content(&client, link.to_string()).await {
             Ok(raw_html) => {

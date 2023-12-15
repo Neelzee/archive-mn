@@ -6,6 +6,7 @@ use parser::wp::get_sok_collection;
 use reqwest::Client;
 use ::scraper::Html;
 use scraper::get_html_content;
+use tokio::sync::mpsc::{Receiver, Sender};
 use xl::save_sok;
 use std::fs::File;
 use std::io::prelude::*;
@@ -139,12 +140,8 @@ fn parse_args(args: Vec<String>) -> Result<Vec<Link>, ArchiveError> {
     Ok(links)
 }
 
-/*
-async fn parse_webpage(url: String) -> Result<SokCollection, ArchiveError<'static>> {
-    get_sok_collection(
-        &Webpage::from_link(
-            Link::new(url).create_full()
-        ).await?
-    ).await
+async fn sok_parser(url_channel: Sender<Link>, mut html_channel: Receiver<Html>, error_channel: Sender<ArchiveError>) {
+    while let Some(html) = html_channel.recv().await {
+        
+    }
 }
-*/
