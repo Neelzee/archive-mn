@@ -3,10 +3,14 @@ use error::ArchiveError;
 use itertools::Itertools;
 use modules::{sok::{SokCollection, self}, webpage::{Webpage, Link}};
 use parser::wp::get_sok_collection;
+use reqwest::Client;
+use ::scraper::Html;
 use scraper::get_html_content;
 use xl::save_sok;
 use std::fs::File;
 use std::io::prelude::*;
+
+use crate::parser::medium::get_links_from_medium;
 
 mod error;
 mod modules;
@@ -28,47 +32,43 @@ async fn main() -> Result<(), ArchiveError> {
         return Err(ArchiveError::InvalidURL);
     }
 
-    let links: Vec <Link> = parse_args(args)?;
+    let medium_links: Vec <Link> = parse_args(args)?;
 
     let mut sok_collections: Vec<SokCollection> = Vec::new();
-
-    let mut webpages: Vec<Webpage> = Vec::new();
-
-    for link in links {
-        // TODO: The given links, should be links to the different Mediums
-        // TODO: And not specific Soks
-        webpages.push(Webpage::from_link(link).await?);
-    }
-
     let mut wp_count = 0;
-    
-    for wp in webpages {
-        match get_sok_collection(wp).await {
-            Ok(sc) => {
-                sok_collections.push(sc);
-                wp_count += 1;
-            },
-            Err(e) => log.push(e)
-        }
-    }
-
-    let mut mediums: Vec<String> = Vec::new();
-    
     let mut save_count = 0;
-    for sokc in sok_collections {
-        let path = format!("src\\out\\{}", sokc.medium.clone());
+    let mut mediums: Vec<String> = Vec::new();
 
-        if !mediums.contains(&sokc.medium) {
-            mediums.push(sokc.medium.clone());
-            let r = fs::create_dir_all(path.clone());
-            if r.is_err() {
-                println!("Could not create path: {}", path.clone());
+    let client = Client::default();
+    for medium_link in medium_links {
+        let raw_html = get_html_content(&client, medium_link.to_string()).await?;
+        let html = Html::parse_document(&raw_html);
+        for link in get_links_from_medium(html)? {
+
+            let wp = Webpage::from_link(link).await?;
+
+            match get_sok_collection(wp).await {
+                Ok(sokc) => {
+                    wp_count += 1;
+
+                    let path = format!("src\\out\\{}", sokc.medium.clone());
+
+                    if !mediums.contains(&sokc.medium) {
+                        mediums.push(sokc.medium.clone());
+                        let r = fs::create_dir_all(path.clone());
+                        if r.is_err() {
+                            println!("Could not create path: {}", path.clone());
+                        }
+                    }
+
+                    match save_sok(sokc, &path) {
+                        Ok(_) => save_count += 1,
+                        Err(e) => log.push(e), 
+                    }
+                },
+                Err(e) => log.push(e)
             }
-        }
 
-        match save_sok(sokc, &path) {
-            Ok(_) => save_count += 1,
-            Err(e) => log.push(e), 
         }
     }
 

@@ -3,6 +3,7 @@ use scraper::{Selector, error::SelectorErrorKind};
 use crate::{modules::{webpage::{Webpage, Link}, sok::{Sok, Table}}, error::ArchiveError};
 
 pub mod wp;
+pub mod medium;
 
 pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
     let mut sok: Sok;
