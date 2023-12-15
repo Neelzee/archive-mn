@@ -73,14 +73,18 @@ async fn main() -> Result<(), ArchiveError> {
     }
 
     println!("Found {} webpages, saved {} of them.", wp_count, save_count);
-
-    write_log(log.into_iter().map(|e| e.to_string()).collect_vec());
+    if log.len() != 0 {
+        println!("{} errors found.", log.len());
+        write_log(log.into_iter().map(|e| e.to_string()).collect_vec());
+    } else {
+        println!("No errors reported.");
+    }
 
     Ok(())
 }
 
 fn write_log(logs: Vec<String>) {
-    match File::create("log.txt") {
+    match File::create("log.log") {
         Ok(mut file) => {
             for t in logs {
                 let _ = file.write(t.as_bytes());

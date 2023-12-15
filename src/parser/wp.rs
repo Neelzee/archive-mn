@@ -290,7 +290,8 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
 pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
-    sok_collection.add_sok(wp.get_sok()?);
+    // Not needed, since the form-way allready gets that info
+    //sok_collection.add_sok(wp.get_sok()?);
 
     let client = Client::default();
 
@@ -306,6 +307,7 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
         }
         form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
         
+        title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
 
         let req = request
                 .try_clone().expect("Should not be a stream")
@@ -322,12 +324,13 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
             
                     let mut sok = sub_wp.get_sok()?;
                     
-                    sok.title = title.trim().to_string();
+                    sok.header_title = title.trim().to_string();
                     sok_collection.add_sok(sok);
                 } else {
                     println!("Code: {:?}", response.status());
                 }
             }
+            // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
             Err(err) => println!("Error: {:?}", err),
         }
 

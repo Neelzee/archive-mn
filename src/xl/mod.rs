@@ -1,7 +1,7 @@
 use std::cmp::min;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::SokCollection;
+use crate::modules::sok::{SokCollection, Merknad};
 use crate::utils::funcs::capitalize_first;
 
 use super::modules::sok::Sok;
@@ -20,9 +20,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     }
 
     let bold = Format::new().set_bold();
-    let wrap_text = Format::new()
-        .set_text_wrap()
-        .set_align(FormatAlign::Top)
+    let number_format = Format::new()
         .set_align(FormatAlign::Left);
 
 
@@ -45,7 +43,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         
 
         sheet.set_column_width_pixels(0, 120)?;
-        let full_name = sub_sok.title.clone();
+        let full_name = sub_sok.header_title.clone();
         let name: String;
 
         if let Some(l) = full_name.split_terminator(",").last() {
@@ -62,24 +60,53 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         // Tables
         for t in sub_sok.tables {
             r += 1;
+            // Header
+            for row in t.header {
+                let mut c = 0;
+                for cell in row {
+                    // Try to parse as int
+                    match cell.parse::<i32>() {
+                        Ok(i) => {
+                            sheet.write_number_with_format(r, c, i, &number_format)?;
+                        },
+                        Err(_) => {
+                            sheet.write_with_format(r, c, cell, &number_format)?;
+                        },
+                    }
+                    c += 1;
+                }
+                r += 1;
+            }
+            // Data
             for row in t.rows {
                 let mut c = 0;
                 for cell in row {
-                    sheet.write_with_format(r, c, cell, &wrap_text)?;
+                    // Try to parse as int
+                    match cell.parse::<i32>() {
+                        Ok(i) => {
+                            sheet.write_number_with_format(r, c, i, &number_format)?;
+                        },
+                        Err(_) => {
+                            sheet.write_with_format(r, c, cell, &number_format)?;
+                        },
+                    }
+                    
                     c += 1;
                 }
                 r += 1;
             }
         }
 
-
         // Merknad
         r += 1;
         sheet.write_with_format(r, 0, "Merknad", &bold)?;
         r += 1;
         for merknad in soks.merknad.clone() {
-            for l in merknad.content.into_iter().flat_map(|e| split_string(e)) {
-                sheet.write(r, 0, l)?;
+            for long_line in merknad.content {
+                for l in split_string(long_line) {
+                    sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;
@@ -90,8 +117,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
-            for l in metode.content.into_iter().flat_map(|e| split_string(e)) {
-                sheet.write(r, 0, l)?;
+            for long_line in metode.content {
+                for l in split_string(long_line) {
+                    sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;
@@ -102,8 +132,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
-            for l in kilde.content.into_iter().flat_map(|e| split_string(e)) {
-                sheet.write(r, 0, l)?;
+            for long_line in kilde.content {
+                for l in split_string(long_line) {
+                    sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;
@@ -120,8 +153,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         info_sheet.write_with_format(r, 0, "Merknad", &bold)?;
         r += 1;
         for merknad in soks.merknad.clone() {
-            for l in merknad.content.into_iter().flat_map(|e| split_string(e)) {
-                info_sheet.write(r, 0, l)?;
+            for long_line in merknad.content {
+                for l in split_string(long_line) {
+                    info_sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;
@@ -132,8 +168,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         info_sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
-            for l in metode.content.into_iter().flat_map(|e| split_string(e)) {
-                info_sheet.write(r, 0, l)?;
+            for long_line in metode.content {
+                for l in split_string(long_line) {
+                    info_sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;
@@ -144,8 +183,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         info_sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
-            for l in kilde.content.into_iter().flat_map(|e| split_string(e)) {
-                info_sheet.write(r, 0, l)?;
+            for long_line in kilde.content {
+                for l in split_string(long_line) {
+                    info_sheet.write(r, 0, l)?;
+                    r += 1;
+                }
                 r += 1;
             }
             r += 1;

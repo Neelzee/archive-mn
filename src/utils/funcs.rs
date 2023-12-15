@@ -30,7 +30,7 @@ pub fn get_html_content_test() -> Result<Html, Error> {
 }
 
 pub fn trim_string(str: &str) -> String {
-    return str.split_ascii_whitespace().collect::<Vec<&str>>().join(" ");
+    return str.split_whitespace().collect::<Vec<&str>>().join(" ");
 } 
 
 pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
