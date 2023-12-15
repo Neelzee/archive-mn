@@ -198,7 +198,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(()),
         Err(err) => {
-            Err(ArchiveError::XlSaveError(err, wb_path))
+            Err(ArchiveError::XlSaveError(err.to_string(), wb_path))
         },
     }
 }
