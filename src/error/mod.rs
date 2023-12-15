@@ -10,6 +10,7 @@ pub enum ArchiveError {
     UrlParseError(std::num::ParseIntError),
     MissingTitle,
     InvalidURL,
+    IOError(String),
 }
 
 impl Display for ArchiveError {
@@ -22,6 +23,8 @@ impl Display for ArchiveError {
             ArchiveError::UrlParseError(err) => write!(f, "Id Parse Error: {}", err),
             ArchiveError::MissingTitle => write!(f, "Missing Title Error"),
             ArchiveError::InvalidURL => write!(f, "Invalid URL Error"),
+            ArchiveError::IOError(e) => write!(f, "IOError: {}", e),
+        
         }
     }
 }
@@ -47,5 +50,12 @@ impl From<scraper::error::SelectorErrorKind<'_>> for ArchiveError {
 impl From<std::num::ParseIntError> for ArchiveError {
     fn from(value: std::num::ParseIntError) -> Self {
         ArchiveError::UrlParseError(value)
+    }
+}
+
+
+impl From<std::io::Error> for ArchiveError {
+    fn from(value: std::io::Error) -> Self {
+        ArchiveError::IOError(value.to_string())
     }
 }
