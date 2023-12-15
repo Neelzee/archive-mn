@@ -1,11 +1,11 @@
 use std::fmt::Display;
 use scraper::error::SelectorErrorKind;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ArchiveError {
-    ScraperError(reqwest::Error),
-    XlError(rust_xlsxwriter::XlsxError),
-    XlSaveError(rust_xlsxwriter::XlsxError, String),
+    ScraperError(String),
+    XlError(String),
+    XlSaveError(String, String),
     ParserError(String),
     UrlParseError(std::num::ParseIntError),
     MissingTitle,
@@ -31,13 +31,13 @@ impl Display for ArchiveError {
 
 impl From<reqwest::Error> for ArchiveError {
     fn from(value: reqwest::Error) -> Self {
-        ArchiveError::ScraperError(value)
+        ArchiveError::ScraperError(value.to_string())
     }
 }
 
 impl From<rust_xlsxwriter::XlsxError> for ArchiveError {
     fn from(value: rust_xlsxwriter::XlsxError) -> Self {
-        ArchiveError::XlError(value)
+        ArchiveError::XlError(value.to_string())
     }
 }
 

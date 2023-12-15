@@ -5,6 +5,8 @@
 use reqwest::Client;
 use scraper::Html;
 
+pub mod html_scraper;
+
 use crate::{modules::webpage::Webpage, error::ArchiveError};
 
 
