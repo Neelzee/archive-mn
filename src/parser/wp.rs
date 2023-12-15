@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use reqwest::Client;
 use scraper::{Selector, Html};
 
@@ -294,18 +296,20 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
 
     let request = client
         .post(wp.get_url());
-    let mut titles: Vec<String> = Vec::new();
-    for mut form in wp.get_forms()?.combinations() {
+    for form in wp.get_forms()?.combinations() {
+        let mut form_data: HashMap<String, String> = HashMap::new();
         let mut title = String::new();
-        for (k, v) in form.clone().into_iter() {
-            title = format_form_to_title(k, v);
-            break;
+        for (k, (v, d)) in form {
+            title += &d;
+            title += " ";
+            form_data.insert(k, v);
         }
-        form.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+        form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+        
 
         let req = request
                 .try_clone().expect("Should not be a stream")
-                .form(&form).build()?;
+                .form(&form_data).build()?;
 
         match client.execute(req).await {
             Ok(response) => {
@@ -317,14 +321,8 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
                     let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
             
                     let mut sok = sub_wp.get_sok()?;
-
-                    if titles.contains(&title) {
-                        title = format!("{}1", title);
-                    } else {
-                        titles.push(title.clone());
-                    }
-
-                    sok.title = title;
+                    
+                    sok.title = title.trim().to_string();
                     sok_collection.add_sok(sok);
                 } else {
                     println!("Code: {:?}", response.status());

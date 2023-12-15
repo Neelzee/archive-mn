@@ -1,4 +1,4 @@
-use std::os::raw;
+use std::{os::raw, collections::HashMap};
 
 use reqwest::{Client, StatusCode};
 use scraper::Html;
@@ -32,12 +32,6 @@ fn test_form_titler() {
 
         let form = res.unwrap();
 
-        for ar in form.combinations() {
-            for (k, v) in ar.into_iter() {
-                println!("{}", format_form_to_title(k, v));
-            }
-        }
-
     }
 }
 
@@ -55,11 +49,18 @@ async fn test_form_requester() {
         let request = client
             .post(url.clone());
 
-        for mut ar in form.combinations() {
-            ar.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+        for form in form.combinations() {
+
+            let mut form_data = HashMap::new();
+
+            for (k, (v, _)) in form {
+                form_data.insert(k, v);
+            }
+
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
             let req = request
                 .try_clone().expect("Should not be a stream")
-                .form(&ar).build().expect("Should work :)");
+                .form(&form_data).build().expect("Should work :)");
 
             let res = client.execute(req).await;
 

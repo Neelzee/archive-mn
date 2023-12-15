@@ -32,7 +32,7 @@ impl Form {
         self.options.push(FormOption { option_name, options });
     }
 
-    pub fn combinations(&self) -> impl Iterator<Item = HashMap<String, String>> + '_ {
+    pub fn combinations(self) -> impl Iterator<Item = HashMap<String, (String, String)>> {
         let options_vec: Vec<Vec<(String, String)>> = self.options.iter()
             .map(|opt| opt.options.clone())
             .collect();
@@ -40,9 +40,9 @@ impl Form {
         let product_iter = options_vec.into_iter().multi_cartesian_product();
 
         product_iter.map(move |product| {
-            let mut form_data = HashMap::new();
+            let mut form_data: HashMap<String, (String, String)> = HashMap::new();
             for (i, option) in self.options.iter().enumerate() {
-                form_data.insert(option.option_name.clone(), product[i].0.clone());
+                form_data.insert(option.option_name.clone(), (product[i].0.clone(), product[i].1.clone()));
             }
             form_data
         })
