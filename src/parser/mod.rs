@@ -1,90 +1,43 @@
-use scraper::{Selector, error::SelectorErrorKind};
+use scraper::{Selector, error::SelectorErrorKind, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, sok::{Sok, Table}}, error::ArchiveError};
+use crate::{modules::{webpage::{Webpage, Link}, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::trim_string};
 
 pub mod wp;
 pub mod medium;
+pub mod parse_sok;
 
-pub fn get_sok(sok_page: Webpage) -> Result<Sok, ()> {
-    let mut sok: Sok;
+pub fn get_merknad(html: &Html) -> Result<Vec<String>, ArchiveError> {
+    let mut merknad = Vec::new();
 
-    let mut id: usize = 0;
-    let mut medium = String::new();
+    let merknad_selector = Selector::parse(r#"p[class="merknadTekst"]"#)?;
 
-    let url = sok_page.get_url();
+    for p in html.select(&merknad_selector) {
+        merknad.push(trim_string(&p.text().collect::<String>()));
+    }
 
-    let split = url.split("/").collect::<Vec<&str>>();
+    Ok(merknad)
+}
 
-    if let Some(id_str) =  split.last() {
-        match id_str.parse::<usize>() {
-            Ok(id_) => {
-                id = id_;
-            }
-            Err(_e) => {
-                // TODO: Add some error handling
-                return Err(());
-            },
+pub fn get_text(html: &Html) -> Result<Vec<String>, ArchiveError> {
+    let text_selector = Selector::parse(r#"div[id="forklaringTxt"] p"#)?;
+
+    Ok(
+        html
+            .select(&text_selector)
+            .map(|e| trim_string(&e.text().collect::<String>()))
+            .collect::<Vec<String>>()
+    )
+}
+
+
+pub fn get_title(html: &Html) -> Result<String, ArchiveError> {
+    let title_selector = Selector::parse(".searchTitle")?;
+
+    for el in html.select(&title_selector) {
+        if el.value().name() == "h1" {
+            return Ok(el.text().collect::<String>().trim().to_owned());
         }
     }
 
-    if let Some(_medium) = split.get(split.len() - 2) {
-        medium = _medium.to_owned().to_owned();
-    }
-
-    sok = Sok::new();
-
-    // TODO: Add good error handling
-    let table = get_table(&sok_page);
-
-    Ok(sok)
+    return Err(ArchiveError::MissingTitle);
 }
-
-pub fn get_table(sok_page: &Webpage) -> Result<Vec<Table>, SelectorErrorKind> {
-
-    let mut tables = Vec::new();
-
-    let div_sok_selector = Selector::parse("div[id=sokResult]")?;
-
-    let header_selector = Selector::parse("h4")?;
-
-    let table_selector = Selector::parse("table")?;
-
-    let table_header_selector = Selector::parse("th")?;
-
-    let table_row_selector = Selector::parse("tr")?;
-
-    // Should just be one div with that id, if there are multiple, we dont really care.
-    let content = sok_page.get_content();
-    
-    let div_sok = content.select(&div_sok_selector).next().unwrap();
-
-
-
-    // Getting title
-    // Should just be one h4, inside this div, if not we dont care.
-    let name = div_sok
-        .select(&header_selector).next().unwrap()
-        .text().collect::<String>()
-        .trim().to_owned();
-
-    // Getting rows
-    for t in div_sok.select(&table_selector) {
-        let mut table = Table::new();
-        // TODO: This is wrong, as the header-row, is a tr, with th-cells
-        table.rows = t.select(&table_row_selector)
-            .map(|tr| {
-                tr.text()
-                .map(|u| u.trim().to_owned())
-                .filter(|u| u.len() != 0)
-                .collect::<Vec<String>>()
-            })
-            .filter(|v| v.len() != 0)
-            .collect::<Vec<Vec<String>>>();
-        
-        tables.push(table);
-    }
-
-    Ok(tables)
-}
-
-

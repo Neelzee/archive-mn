@@ -1,12 +1,11 @@
 use reqwest::Client;
-use scraper::Html;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 use crate::{modules::webpage::Link, error::ArchiveError};
 
 use super::get_html_content;
 
-pub async fn scrape_html(mut url_channel: Receiver<Link>, html_channel: Sender<Html>, error_channel: Sender<ArchiveError>) {
+pub async fn scrape_html(mut url_channel: Receiver<Link>, html_channel: Sender<String>, error_channel: Sender<ArchiveError>) {
     let client = Client::default();
     // Links that are recieved are the links to the sok
     // So we should get all sub sok, while we are here.
@@ -14,8 +13,7 @@ pub async fn scrape_html(mut url_channel: Receiver<Link>, html_channel: Sender<H
     while let Some(link) = url_channel.recv().await {
         match get_html_content(&client, link.to_string()).await {
             Ok(raw_html) => {
-                let html = Html::parse_document(&raw_html);
-                html_channel.send(html).await
+                html_channel.send(raw_html).await
                     .is_err()
                     .then(|| println!("Failed sending html content for url: {}", link.to_string()));
             },

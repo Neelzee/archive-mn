@@ -7,10 +7,16 @@ pub enum ArchiveError {
     XlError(String),
     XlSaveError(String, String),
     ParserError(String),
-    UrlParseError(std::num::ParseIntError),
+    UrlParseError(String),
     MissingTitle,
     InvalidURL,
     IOError(String),
+    RequestError(String),
+    ResponseError(String),
+}
+
+unsafe impl Sync for ArchiveError {
+    
 }
 
 impl Display for ArchiveError {
@@ -24,7 +30,8 @@ impl Display for ArchiveError {
             ArchiveError::MissingTitle => write!(f, "Missing Title Error"),
             ArchiveError::InvalidURL => write!(f, "Invalid URL Error"),
             ArchiveError::IOError(e) => write!(f, "IOError: {}", e),
-        
+            ArchiveError::RequestError(err) => write!(f, "Reqwest Error: {}", err),
+            ArchiveError::ResponseError(err) => write!(f, "Response Error: {}", err),
         }
     }
 }
@@ -49,7 +56,7 @@ impl From<scraper::error::SelectorErrorKind<'_>> for ArchiveError {
 
 impl From<std::num::ParseIntError> for ArchiveError {
     fn from(value: std::num::ParseIntError) -> Self {
-        ArchiveError::UrlParseError(value)
+        ArchiveError::UrlParseError(value.to_string())
     }
 }
 
