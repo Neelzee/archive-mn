@@ -17,6 +17,7 @@ use crate::parser::{get_merknad, get_text};
 
 use super::constants::ROOT_URL;
 
+// Might cause issues
 pub fn capitalize_first(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {

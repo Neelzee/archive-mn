@@ -10,7 +10,7 @@ use rust_xlsxwriter::Workbook;
 pub const MAX_STR_LEN: usize = 150;
 
 pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
-    let mut sheets: Vec<String> = Vec::new();
+    let mut sheets: Vec<(String, String)> = Vec::new();
     let mut wb = Workbook::new();
     let wb_path: String;
     if path.len() != 0 {
@@ -61,9 +61,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
             let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
             name = partial_name.trim().to_owned();
         }
-        let sheet_name = capitalize_first(&name);
-        sheet.set_name(&sheet_name)?;
-        sheets.push(sheet_name);
+        sheet.set_name(&name)?;
+        sheets.push((name, full_name));
 
         // Tables
         for t in sub_sok.tables {
@@ -161,7 +160,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         let info_sheet = wb.add_worksheet();
         let sheet_name = String::from("Informasjon");
         info_sheet.set_name(&sheet_name)?;
-        sheets.push(sheet_name);
+        sheets.push((sheet_name.clone(), sheet_name));
         // Merknad
         let mut r = 0;
         info_sheet.write_with_format(r, 0, "Merknad", &bold)?;
@@ -215,23 +214,22 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     // Table of Contents
     {
         let mut temp = Vec::new();
-        for nm in sheets {
+        for (nm, dp) in sheets {
             if wb.worksheet_from_name(&nm).is_ok() {
-                temp.push(nm);
+                temp.push((nm, dp));
             }
         }
 
         if let Ok(sheet) = wb.worksheet_from_name("Framside") {
             let mut r = 1;
-            for nm in temp {
+            for (nm, dp) in temp {
                 let link: &str = &format!("internal:'{}'!A1", nm);
-                sheet.write_url(r, 0, link)?;
+                sheet.write_url_with_text(r, 0, link, dp)?;
                 r += 1;
             }
         }
         
 
-        // sheet.write_url(0, 0, "internal:Informasjon!A1")?;
     }
     
     match wb.save(wb_path.clone()) {
