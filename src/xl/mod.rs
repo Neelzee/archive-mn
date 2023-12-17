@@ -116,6 +116,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
+            sheet.write_with_format(r, 0, metode.title, &bold)?;
+            r += 1;
             for long_line in metode.content {
                 for l in split_string(long_line) {
                     sheet.write(r, 0, l)?;
@@ -131,6 +133,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
+            sheet.write_with_format(r, 0, kilde.title, &bold)?;
+            r += 1;
             for long_line in kilde.content {
                 for l in split_string(long_line) {
                     sheet.write(r, 0, l)?;
@@ -142,6 +146,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
     }
 
+    // TODO: Rewrite this, its duplicate code, dipshit
     // Info
     {
         let info_sheet = wb.add_worksheet();
@@ -167,6 +172,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         info_sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
+            info_sheet.write_with_format(r, 0, metode.title, &bold)?;
+            r += 1;
             for long_line in metode.content {
                 for l in split_string(long_line) {
                     info_sheet.write(r, 0, l)?;
@@ -182,6 +189,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         info_sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
+            info_sheet.write_with_format(r, 0, kilde.title, &bold)?;
+            r += 1;
             for long_line in kilde.content {
                 for l in split_string(long_line) {
                     info_sheet.write(r, 0, l)?;
