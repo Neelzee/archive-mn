@@ -4,7 +4,7 @@ use reqwest::{Request, Client};
 use scraper::Html;
 use tokio::{sync::mpsc::{Receiver, Sender}, time::sleep};
 
-use crate::{error::ArchiveError, sending_error};
+use crate::{error::ArchiveError, utils::funcs::sending_error};
 
 
 pub async fn execute_request(
@@ -15,7 +15,7 @@ pub async fn execute_request(
     let client = Client::new();
     println!("Execute Request function enter");
     while let Some(form_data) = req_channel.recv().await {
-        let req = todo!();
+        let req = todo!(); // TODO: Create request
         match client.execute(req).await {
             // We get a response!
             Ok(response) => {

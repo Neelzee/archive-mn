@@ -13,6 +13,7 @@ pub enum ArchiveError {
     IOError(String),
     RequestError(String),
     ResponseError(String),
+    FailedParsing(usize, String)
 }
 
 unsafe impl Sync for ArchiveError {
@@ -24,7 +25,7 @@ impl Display for ArchiveError {
         match self {
             ArchiveError::ScraperError(err) => write!(f, "Scraper Error: {}", err),
             ArchiveError::XlError(err) => write!(f, "Xl Error: {}", err),
-            ArchiveError::XlSaveError(err, path) => write!(f, "Xl Save Error: {}, path: {}", err, path),
+            ArchiveError::XlSaveError(err, path) => write!(f, "Xl Save Error: {}, path: '{}'", err, path),
             ArchiveError::ParserError(str) => write!(f, "Parser Error: {}", str),
             ArchiveError::UrlParseError(err) => write!(f, "Id Parse Error: {}", err),
             ArchiveError::MissingTitle => write!(f, "Missing Title Error"),
@@ -32,6 +33,7 @@ impl Display for ArchiveError {
             ArchiveError::IOError(e) => write!(f, "IOError: {}", e),
             ArchiveError::RequestError(err) => write!(f, "Reqwest Error: {}", err),
             ArchiveError::ResponseError(err) => write!(f, "Response Error: {}", err),
+            ArchiveError::FailedParsing(id, url) => write!(f, "Found no tables for Sok: {}, at url: {}", id, url),
         }
     }
 }

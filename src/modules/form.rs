@@ -27,6 +27,10 @@ impl Form {
     pub fn new() -> Form {
         Form { options: Vec::new() }
     }
+    
+    pub fn is_empty(&self) -> bool {
+        self.options.is_empty()
+    }
 
     pub fn add_options(&mut self, option_name: String, options: Vec<(String, String)>) {
         self.options.push(FormOption { option_name, options });

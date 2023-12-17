@@ -11,7 +11,7 @@ use crate::{modules::webpage::Webpage, parser::wp::{get_metode, get_kilde}};
 fn get_webpage() -> Result<Webpage, std::io::Error> {
     let mut content = String::new();
 
-    let mut file = File::open("src\\tests\\html\\sok_346.html")?;
+    let mut file = File::open("src\\tests\\html\\346")?;
     file.read_to_string(&mut content)?;
 
     Ok(Webpage::from_html(

@@ -112,6 +112,8 @@ impl Webpage {
 
         let mut tables: Vec<Table> = Vec::new();
 
+        
+
         for table in self.get_content().select(&table_selector) {
             let mut cur_table = Table::new();
 
@@ -287,53 +289,71 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
     Ok(kilder)
 }
 
-pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveError> {
+pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
-    // Not needed, since the form-way allready gets that info
-    //sok_collection.add_sok(wp.get_sok()?);
+    let mut errors: Vec<ArchiveError> = Vec::new();
 
     let client = Client::default();
 
     let request = client
         .post(wp.get_url());
-    for form in wp.get_forms()?.combinations() {
-        let mut form_data: HashMap<String, String> = HashMap::new();
-        let mut title = String::new();
-        for (k, (v, d)) in form {
-            title += &d;
-            title += " ";
-            form_data.insert(k, v);
-        }
-        form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
-        
-        title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
 
-        let req = request
-                .try_clone().expect("Should not be a stream")
-                .form(&form_data).build()?;
+    let forms = wp.get_forms()?;
 
-        match client.execute(req).await {
-            Ok(response) => {
-                if response.status().is_success() {
-                    let raw_html = response.text().await?;
-            
-                    let html = Html::parse_document(&raw_html);
-            
-                    let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
-            
-                    let mut sok = sub_wp.get_sok()?;
-                    
-                    sok.header_title = title.trim().to_string();
-                    sok_collection.add_sok(sok);
-                } else {
-                    println!("Code: {:?}", response.status());
-                }
+    if forms.is_empty() {
+        let mut sok = wp.get_sok()?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+    } else {
+        for form in forms.combinations() {
+            let mut form_data: HashMap<String, String> = HashMap::new();
+            let mut title = String::new();
+            for (k, (v, d)) in form {
+                title += &d;
+                title += " ";
+                form_data.insert(k, v);
             }
-            // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
-            Err(err) => println!("Error: {:?}", err),
-        }
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+            
+            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+    
+            let req = request
+                    .try_clone().expect("Should not be a stream")
+                    .form(&form_data).build()?;
+    
+            match client.execute(req).await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let raw_html = response.text().await?;
+                
+                        let html = Html::parse_document(&raw_html);
+                
+                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                        
 
+                        match sub_wp.get_sok() {
+                            Ok(mut sok) => {
+                                sok.header_title = title.trim().to_string();
+                                sok_collection.add_sok(sok);
+                            }
+                            Err(err) => {
+                                errors.push(err.into());
+                            }
+                        }
+                        
+                        
+                    } else {
+                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                    }
+                }
+                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+                Err(err) => {
+                    errors.push(err.into());
+                },
+            }
+    
+        }
     }
 
     sok_collection.title = wp.get_title()?;
@@ -355,5 +375,5 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<SokCollection, ArchiveErr
 
 
 
-    Ok(sok_collection)
+    Ok((sok_collection, errors))
 }

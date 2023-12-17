@@ -4,7 +4,6 @@ use crate::error::ArchiveError;
 use crate::modules::sok::{SokCollection, Merknad};
 use crate::utils::funcs::capitalize_first;
 
-use super::modules::sok::Sok;
 use rust_xlsxwriter::{Format, FormatAlign};
 use rust_xlsxwriter::Workbook;
 

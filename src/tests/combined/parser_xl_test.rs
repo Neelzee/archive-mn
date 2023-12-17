@@ -9,7 +9,7 @@ async fn test_parsing_saving() {
 
         assert!(res.is_ok());
 
-        let sc = res.unwrap();
+        let (sc, _) = res.unwrap();
 
         let res2 = save_sok(sc, "src\\tests");
         eprintln!("{:?}", &res2);
