@@ -4,12 +4,13 @@ use crate::error::ArchiveError;
 use crate::modules::sok::{SokCollection, Merknad};
 use crate::utils::funcs::capitalize_first;
 
-use rust_xlsxwriter::{Format, FormatAlign};
+use rust_xlsxwriter::{Format, FormatAlign, Url};
 use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
 
 pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
+    let mut sheets: Vec<String> = Vec::new();
     let mut wb = Workbook::new();
     let wb_path: String;
     if path.len() != 0 {
@@ -22,6 +23,13 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     let number_format = Format::new()
         .set_align(FormatAlign::Left);
 
+    {
+        let sheet = wb.add_worksheet();
+        sheet.set_name("Framside")?;
+        sheet.write_with_format(0, 0, "Innhald", &bold)?;
+    }
+
+    
 
     for sub_sok in soks.sok {
         let sheet = wb.add_worksheet();
@@ -53,8 +61,9 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
             let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
             name = partial_name.trim().to_owned();
         }
-        sheet.set_name(capitalize_first(&name))?;
-
+        let sheet_name = capitalize_first(&name);
+        sheet.set_name(&sheet_name)?;
+        sheets.push(sheet_name);
 
         // Tables
         for t in sub_sok.tables {
@@ -150,8 +159,9 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     // Info
     {
         let info_sheet = wb.add_worksheet();
-        info_sheet.set_name("Informasjon")?;
-
+        let sheet_name = String::from("Informasjon");
+        info_sheet.set_name(&sheet_name)?;
+        sheets.push(sheet_name);
         // Merknad
         let mut r = 0;
         info_sheet.write_with_format(r, 0, "Merknad", &bold)?;
@@ -202,6 +212,27 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
     }
 
+    // Table of Contents
+    {
+        let mut temp = Vec::new();
+        for nm in sheets {
+            if wb.worksheet_from_name(&nm).is_ok() {
+                temp.push(nm);
+            }
+        }
+
+        if let Ok(sheet) = wb.worksheet_from_name("Framside") {
+            let mut r = 1;
+            for nm in temp {
+                let link: &str = &format!("internal:'{}'!A1", nm);
+                sheet.write_url(r, 0, link)?;
+                r += 1;
+            }
+        }
+        
+
+        // sheet.write_url(0, 0, "internal:Informasjon!A1")?;
+    }
     
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(()),
