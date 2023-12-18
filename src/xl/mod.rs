@@ -55,14 +55,15 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         if let Some(l) = full_name.split_terminator(",").last() {
             let partial_name = l.trim();
-            let (n, _) = partial_name.split_at(min(31, partial_name.len()));
+            let (n, _) = partial_name.split_at(min(31, partial_name.chars().count()));
             name = n.to_owned();
         } else {
-            let (partial_name, _) = full_name.split_at(min(31, full_name.len()));
+            let (partial_name, _) = full_name.split_at(min(31, full_name.chars().count()));
             name = partial_name.trim().to_owned();
         }
-        sheet.set_name(&name)?;
-        sheets.push((name, full_name));
+        let sheet_name = capitalize_first(&name);
+        sheet.set_name(&sheet_name)?;
+        sheets.push((sheet_name, full_name));
 
         // Tables
         for t in sub_sok.tables {
