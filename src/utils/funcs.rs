@@ -35,21 +35,19 @@ pub fn get_html_content_test() -> Result<Html, Error> {
 }
 
 pub fn validify_excel_string(str: &str) -> String {
-    let mut vstr = str.replace(":", "");
+    str.replace(":", "")
+        .replace("{", "")
+        .replace("}", "")
+        .replace(";", "")
+        .replace(",", "")
+        .replace(".", "")
+        .replace("]", "")
+        .replace("[", "")
+        .replace("*", "")
+        .replace("?", "")
+        .replace("/", "-")
+        .replace("\\", "")
 
-    vstr = vstr.replace("{", "");
-    vstr = vstr.replace("}", "");
-    vstr = vstr.replace(";", "");
-    vstr = vstr.replace(",", "");
-    vstr = vstr.replace(".", "");
-    vstr = vstr.replace("]", "");
-    vstr = vstr.replace("[", "");
-    vstr = vstr.replace("*", "");
-    vstr = vstr.replace("?", "");
-    vstr = vstr.replace("/", "-");
-    vstr = vstr.replace("\\", "");
-
-    vstr
 }
 
 pub fn trim_string(str: &str) -> String {
