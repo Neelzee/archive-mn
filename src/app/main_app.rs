@@ -2,7 +2,7 @@ use std::{env, fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
 
 use itertools::Itertools;
 use scraper::Html;
-use crate::{error::ArchiveError, xl::save_sok, scraper::get_html_content, parse_args};
+use crate::{error::ArchiveError, xl::save_sok, scraper::get_html_content, parse_args, modules::sok::{SokCollection, Merknad}, parser::wp::{get_kilde, get_metode}};
 use crate::modules::webpage::{Webpage, Link};
 use crate::parser::wp::get_sok_collection;
 use reqwest::Client;
@@ -42,6 +42,8 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
             checked_sok.push(wp.get_id());
             let time_start = Instant::now();
 
+            wp.set_medium(medium.clone());
+
             if let Some(com) = wp.get_forms().ok() {
                 let count = com.combinations().collect::<Vec<_>>().len();
                 if count <= 30 {
@@ -50,14 +52,57 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                     println!("Sok: {}", wp.get_id());
                     println!("Form Combo: {:?}", count);
                     let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
-                    continue;
+                    
+                    let mut sokc = SokCollection::new(
+                        wp.get_id(),
+                        wp.get_medium()
+                    );
+
+                    sokc.add_sok(wp.get_sok()?);
+
+                    sokc.title = wp.get_title()?;
+                    let _ = wp.get_text()?
+                        .into_iter()
+                        .map(|e| sokc.add_text(e))
+                        .collect::<Vec<_>>();
+
+                    for metode in get_metode(&wp).await? {
+                        sokc.add_metode(metode.into());
+                    }
+
+                    for kilde in get_kilde(&wp).await? {
+                        sokc.add_kilde(kilde.into());
+                    }
+
+                    sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
+
+                    let path = format!("arkiv\\{}", medium.clone());
+                    if !mediums.contains(&medium) {
+                        mediums.push(medium.clone());
+                        let r = fs::create_dir_all(path.clone());
+                        if r.is_err() {
+                            println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                        }
+                    }
+
+                    match save_sok(sokc, &path) {
+                        Ok(_) => {
+                            save_count += 1;
+                            checkmark_sok(&id);
+                            println!("Saved sok: {}", &id);
+                        },
+                        Err(e) => {
+                            println!("Failed saving sok: {}, With Error: {}", &id, &e);
+                            sok_log.push(e.clone());
+                            let _ = write_failed_sok(e.to_string(), &id);
+                        }, 
+                    }
                 }
             }
 
-            wp.set_medium(medium.clone());
 
             match get_sok_collection(wp).await {
-                Ok((sokc, mut errs)) => {
+                Ok((mut sokc, mut errs)) => {
                     wp_count += 1;
 
                     sok_log.append(&mut errs);
@@ -78,7 +123,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                         println!("Sok: {}, had 0 tables.", &sokc.id);
                         sok_log.push(ArchiveError::FailedParsing(sokc.id.clone(), link.to_string().clone()));
                         let _ = write_failed_sok("0 tables".to_string(), &id);
-                        continue;
+                        sokc.title = sokc.title + &format!("_{}", sokc.id.clone());
                     }
 
                     match save_sok(sokc, &path) {
