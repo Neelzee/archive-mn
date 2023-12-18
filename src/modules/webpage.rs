@@ -61,6 +61,10 @@ impl Webpage {
         Webpage { id, url, content, medium }
     }
 
+    pub fn set_medium(&mut self, medium: String) {
+        self.medium = medium;
+    }
+
     pub fn get_id(&self) -> usize {
         self.id.clone()
     }

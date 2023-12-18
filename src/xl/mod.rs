@@ -4,7 +4,7 @@ use crate::error::ArchiveError;
 use crate::modules::sok::{SokCollection, Merknad};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
-use rust_xlsxwriter::{Format, FormatAlign, Url};
+use rust_xlsxwriter::{Format, FormatAlign, Url, FormatBorder};
 use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
@@ -20,8 +20,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     }
 
     let bold = Format::new().set_bold();
-    let number_format = Format::new()
-        .set_align(FormatAlign::Left);
 
     {
         let sheet = wb.add_worksheet();
@@ -29,14 +27,22 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.write_with_format(0, 0, "Innhald", &bold)?;
     }
 
-    
+    // Table row format
+    let row_format = Format::new()
+        .set_border(FormatBorder::Thin)
+        .set_align(FormatAlign::Left);
+
+    let header_format = Format::new()
+        .set_border(FormatBorder::Thick)
+        .set_bold()
+        .set_align(FormatAlign::Left);
 
     for sub_sok in soks.sok {
         let sheet = wb.add_worksheet();
         let mut r = 0;
         
         // Title
-        sheet.write_with_format(r, 0, &format!("Tittel: {}", sub_sok.title), &bold)?;
+        sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
         r += 1;
         
         // Content
@@ -77,6 +83,9 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name, full_name));
 
+        // Title
+        sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
+        r += 1;
         // Tables
         for t in sub_sok.tables {
             r += 1;
@@ -87,10 +96,10 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
                     // Try to parse as int
                     match cell.parse::<i32>() {
                         Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &number_format)?;
+                            sheet.write_number_with_format(r, c, i, &header_format)?;
                         },
                         Err(_) => {
-                            sheet.write_with_format(r, c, cell, &number_format)?;
+                            sheet.write_with_format(r, c, cell, &header_format)?;
                         },
                     }
                     c += 1;
@@ -104,10 +113,10 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
                     // Try to parse as int
                     match cell.parse::<i32>() {
                         Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &number_format)?;
+                            sheet.write_number_with_format(r, c, i, &row_format)?;
                         },
                         Err(_) => {
-                            sheet.write_with_format(r, c, cell, &number_format)?;
+                            sheet.write_with_format(r, c, cell, &row_format)?;
                         },
                     }
                     
@@ -133,7 +142,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
 
         // Metode
-        r += 1;
         sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
@@ -150,7 +158,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
 
         // Kilde
-        r += 1;
         sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
@@ -190,7 +197,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
 
         // Metode
-        r += 1;
         info_sheet.write_with_format(r, 0, "Metode", &bold)?;
         r += 1;
         for metode in soks.metode.clone() {
@@ -207,7 +213,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         }
 
         // Kilde
-        r += 1;
         info_sheet.write_with_format(r, 0, "Kilde", &bold)?;
         r += 1;
         for kilde in soks.kilde.clone() {
@@ -235,9 +240,12 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         if let Ok(sheet) = wb.worksheet_from_name("Framside") {
             let mut r = 1;
+
+            sheet.write_with_format(0, 0, soks.title, &bold)?;
+
             for (nm, dp) in temp {
                 let link: &str = &format!("internal:'{}'!A1", nm);
-                sheet.write_url_with_text(r, 0, link, dp)?;
+                sheet.write_url_with_text(r, 0, link, format!("Fordelt på: {}", dp))?;
                 r += 1;
             }
         }

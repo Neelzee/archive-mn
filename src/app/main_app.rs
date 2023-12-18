@@ -36,7 +36,7 @@ pub async fn run_app() -> Result<(), ArchiveError> {
             let mut sok_log: Vec<ArchiveError> = Vec::new();
             
             
-            let wp = Webpage::from_link(link.clone()).await?;
+            let mut wp = Webpage::from_link(link.clone()).await?;
             let medium = wp.get_medium();
             let id = wp.get_id().clone();
             if checked_sok.contains(&wp.get_id()) {
@@ -57,6 +57,8 @@ pub async fn run_app() -> Result<(), ArchiveError> {
                 }
             }
 
+            wp.set_medium(medium.clone());
+
             match get_sok_collection(wp).await {
                 Ok((sokc, mut errs)) => {
                     wp_count += 1;
@@ -64,7 +66,6 @@ pub async fn run_app() -> Result<(), ArchiveError> {
                     sok_log.append(&mut errs);
 
                     let path = format!("src\\out\\{}", medium.clone());
-
                     if !mediums.contains(&medium) {
                         mediums.push(medium.clone());
                         let r = fs::create_dir_all(path.clone());

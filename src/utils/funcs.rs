@@ -42,6 +42,12 @@ pub fn validify_excel_string(str: &str) -> String {
     vstr = vstr.replace(";", "");
     vstr = vstr.replace(",", "");
     vstr = vstr.replace(".", "");
+    vstr = vstr.replace("]", "");
+    vstr = vstr.replace("[", "");
+    vstr = vstr.replace("*", "");
+    vstr = vstr.replace("?", "");
+    vstr = vstr.replace("/", "-");
+    vstr = vstr.replace("\\", "");
 
     vstr
 }
