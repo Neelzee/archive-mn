@@ -12,10 +12,7 @@ use std::io::prelude::*;
 use crate::parser::medium::get_links_from_medium;
 
 
-pub async fn run_app() -> Result<(), ArchiveError> {
-    let mut args: Vec<String> = env::args().collect();
-
-    args.remove(0); // First argument is path to the exe
+pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
     if args.len() == 0 {
         println!("Missing URL-argument.");
         return Err(ArchiveError::InvalidURL);
@@ -65,7 +62,7 @@ pub async fn run_app() -> Result<(), ArchiveError> {
 
                     sok_log.append(&mut errs);
 
-                    let path = format!("src\\out\\{}", medium.clone());
+                    let path = format!("arkiv\\{}", medium.clone());
                     if !mediums.contains(&medium) {
                         mediums.push(medium.clone());
                         let r = fs::create_dir_all(path.clone());

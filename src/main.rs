@@ -24,15 +24,34 @@ mod xl;
 mod app;
 mod tests;
 
+fn setup() -> io::Result<()> {
+    File::create("sok.log")?;
+    File::create("log.log")?;
+    File::create("failed_sok.log")?;
+    Ok(())
+}
+
 #[tokio::main(flavor="current_thread")]
 async fn main() -> Result<(), ArchiveError> {
-
+    let _ = setup();
     let mut args: Vec<String> = env::args().collect();
 
     args.remove(0); // First argument is path to the exe
     if args.len() == 0 {
-        println!("Missing URL-argument.");
-        return Err(ArchiveError::InvalidURL);
+        args.append(
+            &mut vec![
+                "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/video".to_string(),
+                "https://medienorge.uib.no/statistikk/medium/ikt".to_string()
+            ]
+        );
     }
 
     if args.contains(&"-err".to_string()) {
@@ -69,7 +88,7 @@ async fn main() -> Result<(), ArchiveError> {
 
 
     let time_start = Instant::now();
-    let r = run_app().await;
+    let r = run_app(args).await;
     let time_end = Instant::now();
     let duration = time_end - time_start;
     println!("That took: {} seconds", duration.as_secs());

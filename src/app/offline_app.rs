@@ -28,7 +28,7 @@ fn visit_dirs(dir: &Path) -> std::io::Result<Vec<String>> {
 }
 
 pub async fn get_soks_offline() -> Result<(), ArchiveError> {
-    for path in visit_dirs(Path::new("src\\in"))? {
+    for path in visit_dirs(Path::new("in"))? {
         let mut sok_log: Vec<ArchiveError> = Vec::new();
         
         let mut file = File::open(path.clone())?;
@@ -78,7 +78,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
         match get_sok_collection(wp).await {
             Ok((sokc, mut errs)) => {
                 sok_log.append(&mut errs);
-                let path = format!("src\\out\\{}", medium.clone());
+                let path = format!("arkiv\\{}", medium.clone());
 
                 let r = fs::create_dir_all(path.clone());
                 if r.is_err() {

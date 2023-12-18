@@ -29,7 +29,7 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
         match get_sok_collection(wp).await {
             Ok((sokc, mut errs)) => {
                 sok_log.append(&mut errs);
-                let path = format!("src\\out\\{}", medium.clone());
+                let path = format!("arkiv\\{}", medium.clone());
 
                 let r = fs::create_dir_all(path.clone());
                 if r.is_err() {
