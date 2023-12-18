@@ -12,7 +12,7 @@ use xl::save_sok;
 use std::fs::File;
 use std::io::prelude::*;
 use std::time::{Instant, Duration};
-use crate::{parser::medium::get_links_from_medium, app::{main_app::run_app, single_app::get_soks}};
+use crate::{parser::medium::get_links_from_medium, app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline}};
 
 mod error;
 mod logger;
@@ -37,6 +37,15 @@ async fn main() -> Result<(), ArchiveError> {
 
     if args.contains(&"-err".to_string()) {
         // TODO: Add stop on first error code
+    }
+
+    if args.contains(&"-offline".to_string()) {
+        let time_start = Instant::now();
+        let r = get_soks_offline().await;
+        let time_end = Instant::now();
+        let duration = time_end - time_start;
+        println!("That took: {} seconds", duration.as_secs());
+        return r;
     }
 
     if args.contains(&"-sok".to_string()) {
