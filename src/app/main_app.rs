@@ -52,6 +52,7 @@ pub async fn run_app() -> Result<(), ArchiveError> {
                 } else {
                     println!("Sok: {}", wp.get_id());
                     println!("Form Combo: {:?}", count);
+                    let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
                     continue;
                 }
             }
@@ -78,6 +79,7 @@ pub async fn run_app() -> Result<(), ArchiveError> {
                     if sokc.sok.len() == 0 {
                         println!("Sok: {}, had 0 tables.", &sokc.id);
                         sok_log.push(ArchiveError::FailedParsing(sokc.id.clone(), link.to_string().clone()));
+                        let _ = write_failed_sok("0 tables".to_string(), &id);
                         continue;
                     }
 
@@ -89,7 +91,8 @@ pub async fn run_app() -> Result<(), ArchiveError> {
                         },
                         Err(e) => {
                             println!("Failed saving sok: {}, With Error: {}, Took {}s", &id, &e, (time_end - time_start).as_secs());
-                            sok_log.push(e);
+                            sok_log.push(e.clone());
+                            let _ = write_failed_sok(e.to_string(), &id);
                         }, 
                     }
                 },
@@ -113,6 +116,16 @@ pub async fn run_app() -> Result<(), ArchiveError> {
     println!("Found {} webpages, saved {} of them.", wp_count, save_count);
     
     Ok(())
+}
+
+pub fn write_failed_sok(error: String, id: &usize) -> std::io::Result<()> {
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("failed_sok.log")
+        .expect("failed_sok.log File should exist");
+
+    writeln!(file, "Sok: {}, Error: {}", id, error)
 }
 
 pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {

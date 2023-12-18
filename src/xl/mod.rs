@@ -2,7 +2,7 @@ use std::cmp::min;
 
 use crate::error::ArchiveError;
 use crate::modules::sok::{SokCollection, Merknad};
-use crate::utils::funcs::capitalize_first;
+use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use rust_xlsxwriter::{Format, FormatAlign, Url};
 use rust_xlsxwriter::Workbook;
@@ -55,13 +55,25 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         if let Some(l) = full_name.split_terminator(",").last() {
             let partial_name = l.trim();
-            let (n, _) = partial_name.split_at(min(31, partial_name.chars().count()));
-            name = n.to_owned();
+            let mut n = String::new();
+            let split_point = min(31, partial_name.chars().count());
+            for c in partial_name.chars() {
+                if n.chars().count() + c.len_utf16() <= split_point {
+                    n.push(c);
+                }
+            } 
+            name = n;
         } else {
-            let (partial_name, _) = full_name.split_at(min(31, full_name.chars().count()));
-            name = partial_name.trim().to_owned();
+            let mut n = String::new();
+            let split_point = min(31, full_name.chars().count());
+            for c in full_name.chars() {
+                if n.chars().count() + c.len_utf16() <= split_point {
+                    n.push(c);
+                }
+            }
+            name = n.trim().to_owned();
         }
-        let sheet_name = capitalize_first(&name);
+        let sheet_name = capitalize_first(&validify_excel_string(&name));
         sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name, full_name));
 

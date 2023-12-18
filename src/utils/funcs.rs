@@ -34,6 +34,18 @@ pub fn get_html_content_test() -> Result<Html, Error> {
     Ok(Html::parse_document(&content))
 }
 
+pub fn validify_excel_string(str: &str) -> String {
+    let mut vstr = str.replace(":", "");
+
+    vstr = vstr.replace("{", "");
+    vstr = vstr.replace("}", "");
+    vstr = vstr.replace(";", "");
+    vstr = vstr.replace(",", "");
+    vstr = vstr.replace(".", "");
+
+    vstr
+}
+
 pub fn trim_string(str: &str) -> String {
     str.split_whitespace().collect::<Vec<&str>>().join(" ")
 } 
