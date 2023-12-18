@@ -244,10 +244,16 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
             sheet.write_with_format(0, 0, soks.title, &bold)?;
 
             for (nm, dp) in temp {
+                if dp.contains("Informasjon") {
+                    continue;
+                }
                 let link: &str = &format!("internal:'{}'!A1", nm);
                 sheet.write_url_with_text(r, 0, link, format!("Fordelt på: {}", dp))?;
                 r += 1;
             }
+
+            let link: &str = &format!("internal:'{}'!A1", "Informasjon");
+            sheet.write_url_with_text(r, 0, link, "Informasjon")?;
         }
         
 
