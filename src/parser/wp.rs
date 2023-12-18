@@ -105,6 +105,8 @@ impl Webpage {
         let th_selector = Selector::parse(r#"div[id="sokResult"] th"#)?;
         let td_selector = Selector::parse(r#"div[id="sokResult"] td"#)?;
 
+        let style_selector = Selector::parse("th div")?;
+
         for t in self.get_content().select(&title_selector) {
             sok.title = trim_string(&t.text().collect::<String>());
             break;
@@ -172,8 +174,6 @@ impl Webpage {
             }
 
             cur_table.rows = rows;
-
-            // TODO: Get style aswell.
 
             tables.push(cur_table);
 

@@ -53,9 +53,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
             }
             r += 1;
         }
-        
 
-        sheet.set_column_width_pixels(0, 120)?;
         let full_name = sub_sok.header_title.clone();
         let name: String;
 
@@ -85,9 +83,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
 
         // Title
         sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
+        sheet.set_column_width_pixels(0, 180)?;
         r += 1;
         // Tables
         for t in sub_sok.tables {
+
             r += 1;
             // Header
             for row in t.header {

@@ -4,7 +4,6 @@ use std::cmp::max;
 #[derive(Debug, Clone)]
 pub struct Table {
     pub header: Vec<Vec<String>>,
-    pub styles: Vec<Vec<String>>,
     pub rows: Vec<Vec<String>>,
 }
 
@@ -12,7 +11,6 @@ impl Table {
     pub fn new() -> Table {
         Table {
             header: Vec::new(),
-            styles: Vec::new(),
             rows: Vec::new(),
         }
     }
