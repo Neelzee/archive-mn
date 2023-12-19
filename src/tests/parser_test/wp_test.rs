@@ -4,9 +4,10 @@ Webpage test
 
 use std::{fs::File, io::Read, iter::zip};
 
+use reqwest::Client;
 use scraper::Html;
 
-use crate::{modules::webpage::Webpage, parser::wp::{get_metode, get_kilde}};
+use crate::{modules::webpage::Webpage, parser::{wp::{get_metode, get_kilde}, medium::get_links_from_medium}};
 
 fn get_webpage() -> Result<Webpage, std::io::Error> {
     let mut content = String::new();
@@ -184,4 +185,35 @@ async fn test_get_kilde() {
     } else {
         panic!("Could not get webpage to test");
     }
+}
+
+
+#[tokio::test]
+async fn test_get_medium_links() {
+    let client = Client::default();
+    let res = client
+        .get("https://medienorge.uib.no/statistikk/medium/boker")
+        .send()
+        .await;
+
+    assert!(res.is_ok());
+
+    let response = res.unwrap();
+
+    assert!(response.status().is_success());
+
+    let res = response.text().await;
+
+    assert!(res.is_ok());
+
+
+    let html = Html::parse_document(&res.unwrap());
+
+    let res = get_links_from_medium(html);
+
+    assert!(res.is_ok());
+
+    let links = res.unwrap();
+
+    println!("Count: {}, {:?}", links.len(), links);
 }
