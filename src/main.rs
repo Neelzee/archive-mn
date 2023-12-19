@@ -82,6 +82,11 @@ async fn main() -> Result<(), ArchiveError> {
     let time_end = Instant::now();
     let duration = time_end - time_start;
     println!("That took: {} seconds", duration.as_secs());
+
+    println!("Press any key to continue");
+    let mut buffer = String::new();
+    let stdin = io::stdin();
+    stdin.read_line(&mut buffer)?;
     r
 }
 

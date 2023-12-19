@@ -77,7 +77,18 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
             }
             name = n.trim().to_owned();
         }
+
         let sheet_name = capitalize_first(&validify_excel_string(&name));
+        
+        if sheets.clone().into_iter().any(|(_, dp)| dp == sheet_name) {
+            println!(
+                "Skipping: {}, {}. '{}' already a sheetname",
+                sub_sok.title,
+                sub_sok.header_title,
+                &sheet_name);
+            continue;
+        }
+
         sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name, full_name));
 
