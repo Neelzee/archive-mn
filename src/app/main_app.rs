@@ -93,6 +93,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                             let _ = write_failed_sok(e.to_string(), &id);
                         }, 
                     }
+                    continue;
                 }
             }
 
