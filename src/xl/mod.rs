@@ -252,7 +252,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         if let Ok(sheet) = wb.worksheet_from_name("Framside") {
             let mut r = 1;
 
-            sheet.write_with_format(0, 0, soks.title, &bold)?;
+            sheet.write_with_format(0, 0, soks.title.clone(), &bold)?;
 
             for (nm, dp) in temp {
                 if dp.contains("Informasjon") {
@@ -273,7 +273,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(()),
         Err(err) => {
-            Err(ArchiveError::XlSaveError(err.to_string(), wb_path))
+            let p = format!("arkiv\\{}.xslsx", soks.title);
+            match wb.save(p.clone()) {
+                Ok(_) => Err(ArchiveError::XlSaveError(err.to_string(), wb_path)),
+                Err(e) => Err(ArchiveError::XlSaveError(e.to_string(), p)),
+            }
         },
     }
 }
