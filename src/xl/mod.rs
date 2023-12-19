@@ -9,10 +9,12 @@ use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
 
-pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
+pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
     let mut wb = Workbook::new();
     let wb_path: String;
+    let mut errors: Vec<ArchiveError> = Vec::new();
+    let id = soks.id.clone();
     if path.len() != 0 {
         wb_path = format!("{}\\{}.xlsx", path.to_string(), soks.title.clone());
     } else {
@@ -81,11 +83,12 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
         let sheet_name = capitalize_first(&validify_excel_string(&name));
         
         if sheets.clone().into_iter().any(|(_, dp)| dp == sheet_name) {
-            println!(
+            errors.push(ArchiveError::XlSheetError(format!(
                 "Skipping: {}, {}. '{}' already a sheetname",
                 sub_sok.title,
                 sub_sok.header_title,
-                &sheet_name);
+                &sheet_name)
+            , id.clone().to_string()));
             continue;
         }
 
@@ -271,11 +274,14 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<(), ArchiveError> {
     }
     
     match wb.save(wb_path.clone()) {
-        Ok(_) => Ok(()),
+        Ok(_) => Ok(errors),
         Err(err) => {
             let p = format!("arkiv\\{}.xslsx", soks.title);
             match wb.save(p.clone()) {
-                Ok(_) => Err(ArchiveError::XlSaveError(err.to_string(), wb_path)),
+                Ok(_) => {
+                    errors.push(ArchiveError::XlSaveError(err.to_string(), wb_path));
+                    Ok(errors)
+                },
                 Err(e) => Err(ArchiveError::XlSaveError(e.to_string(), p)),
             }
         },

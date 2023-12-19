@@ -84,9 +84,10 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                     }
 
                     match save_sok(sokc, &path) {
-                        Ok(_) => {
+                        Ok(mut err) => {
                             save_count += 1;
                             checkmark_sok(&id);
+                            sok_log.append(&mut err);
                             println!("Saved sok: {}", &id);
                         },
                         Err(e) => {
