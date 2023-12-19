@@ -1,4 +1,4 @@
-use std::{env, fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
+use std::{fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
 
 use itertools::Itertools;
 use scraper::Html;
@@ -23,7 +23,6 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
     let mut wp_count = 0;
     let mut save_count = 0;
     let mut mediums: Vec<String> = Vec::new();
-    let mut checked_sok = get_checked_soks();
 
     let client = Client::default();
     for medium_link in medium_links {
@@ -36,10 +35,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
             let mut wp = Webpage::from_link(link.clone()).await?;
             let medium = wp.get_medium();
             let id = wp.get_id().clone();
-            if checked_sok.contains(&wp.get_id()) {
-                continue;
-            }
-            checked_sok.push(wp.get_id());
+        
             let time_start = Instant::now();
 
             wp.set_medium(medium.clone());
@@ -185,17 +181,6 @@ pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {
     }
 
     Ok(())
-}
-
-pub fn get_checked_soks() -> Vec<usize> {
-    let file = File::open("sok.log").expect("sok.log File should exist");
-
-    let reader = io::BufReader::new(file);
-
-    return reader.lines()
-        .filter_map(|e| e.ok())
-        .filter_map(|e| e.parse::<usize>().ok())
-        .collect::<Vec<usize>>();
 }
 
 pub fn checkmark_sok(id: &usize) {

@@ -1,19 +1,18 @@
-use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{self, Read, Error};
-use std::path::Path;
+
 use rand::Rng;
 use rand::distributions::Uniform;
 use ego_tree::{NodeId, NodeRef};
 use scraper::Html;
-use scraper::{Node, ElementRef};
-use tokio::sync::mpsc::error::SendError;
+use scraper::Node;
 
-use crate::modules::sok::Merknad;
+
+
 use crate::modules::webpage::Webpage;
-use crate::parser::wp::get_kilde;
-use crate::parser::{get_merknad, get_text};
+
+
 
 use super::constants::ROOT_URL;
 
@@ -121,18 +120,5 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
         Ok((file_name, contents))
     } else {
         Err(io::Error::new(io::ErrorKind::NotFound, "No files found in the folder"))
-    }
-}
-
-pub fn format_form_to_title(k: String, v: String) -> String {
-    return format!("{} {}", k, v)
-}
-
-pub fn sending_error<T, E>(res: Result<T, SendError<E>>)
-where
-    T: std::fmt::Debug,
-{
-    if res.is_err() {
-        println!("Failed sending error: {:?}", res.unwrap_err());
     }
 }

@@ -1,9 +1,9 @@
-use std::{os::raw, collections::HashMap};
+use std::collections::HashMap;
 
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 use scraper::Html;
 
-use crate::{utils::funcs::{get_random_webpage, get_html_content_test, format_form_to_title}, scraper::get_html_content, modules::webpage::Webpage};
+use crate::{utils::funcs::{get_random_webpage, get_html_content_test}, modules::webpage::Webpage};
 
 #[test]
 fn test_form() {
