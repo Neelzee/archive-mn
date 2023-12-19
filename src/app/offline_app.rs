@@ -44,7 +44,6 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
         let mut str = path.split("\\").collect::<Vec<_>>().into_iter().rev();
 
         if let Some(i) = str.next() {
-            println!("{}", i);
             id = i.parse::<usize>()?;
         }
 
@@ -61,7 +60,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
         let wp = Webpage::from_html(id, url, content, medium);
         let medium = wp.get_medium();
         let id = wp.get_id().clone();
-        
+        println!("Offline Sok: {}", &id);        
         let time_start = Instant::now();
 
         let link = wp.get_url();

@@ -53,14 +53,16 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                         wp.get_id(),
                         wp.get_medium()
                     );
-
-                    sokc.add_sok(wp.get_sok()?);
+                    let mut sok = wp.get_sok()?;
+                    sok.header_title = sok.title.clone();
+                    sokc.add_sok(sok);
 
                     sokc.title = wp.get_title()?;
                     let _ = wp.get_text()?
                         .into_iter()
                         .map(|e| sokc.add_text(e))
                         .collect::<Vec<_>>();
+
 
                     for metode in get_metode(&wp).await? {
                         sokc.add_metode(metode.into());
