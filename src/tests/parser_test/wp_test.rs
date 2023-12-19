@@ -24,33 +24,6 @@ fn get_webpage() -> Result<Webpage, std::io::Error> {
 
 
 #[test]
-fn test_get_links() {
-    if let Ok(wp) = get_webpage() {
-        let res = wp.get_links();
-
-        assert!(res.is_ok());
-
-        let links = res.unwrap();
-
-        assert!(links.len() != 0);
-
-        assert_eq!(
-            "https://medienorge.uib.no/files/institusjon.cfm?institusjon_id=38".to_owned(),
-            links.get(0).unwrap().create_full().to_string()
-        );
-
-        assert_eq!(
-            "https://medienorge.uib.no/metode/346".to_owned(),
-            links.get(1).unwrap().create_full().to_string()
-        );
-
-        println!("{:?}", links);
-    } else {
-        panic!("Could not get webpage to test");
-    }
-}
-
-#[test]
 fn test_get_title() {
     if let Ok(wp) = get_webpage() {
         let res = wp.get_title();
@@ -124,10 +97,6 @@ fn test_get_sok() {
         assert!(res.is_ok());
 
         let sok = res.unwrap();
-
-        for t in sok.clone().tables {
-            t.show();
-        }
 
         println!("{:?}", sok);
     } else {

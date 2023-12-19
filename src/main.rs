@@ -1,27 +1,17 @@
-use std::{env, fs::{self, OpenOptions}, io, collections::HashMap, ops::Index, future::Future};
+use std::{env, io};
 use error::ArchiveError;
-use itertools::Itertools;
-use logger::{error_logger::error_logger, sok_logger::sok_logger};
-use modules::{sok::{SokCollection, self, Sok, Merknad}, webpage::{Webpage, Link}};
-use parser::{wp::{get_sok_collection, get_kilde, get_metode}, parse_sok::parse_sok, get_text, get_merknad};
-use reqwest::{Client, Request};
-use ::scraper::Html;
-use scraper::{get_html_content, html_scraper::scrape_html, request_scraper::execute_request};
-use tokio::sync::mpsc::{self, Receiver, Sender, error::SendError};
-use xl::save_sok;
+use modules::webpage::Link;
 use std::fs::File;
-use std::io::prelude::*;
-use std::time::{Instant, Duration};
-use crate::{parser::medium::get_links_from_medium, app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline}};
+use std::time::Instant;
+use crate::app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline};
 
 mod error;
-mod logger;
 mod modules;
 mod parser;
-mod scraper;
 mod utils;
 mod xl;
 mod app;
+mod scraper;
 mod tests;
 
 fn setup() -> io::Result<()> {

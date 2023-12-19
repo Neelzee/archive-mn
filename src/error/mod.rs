@@ -11,7 +11,6 @@ pub enum ArchiveError {
     MissingTitle,
     InvalidURL,
     IOError(String),
-    RequestError(String),
     ResponseError(String),
     FailedParsing(usize, String)
 }
@@ -31,7 +30,6 @@ impl Display for ArchiveError {
             ArchiveError::MissingTitle => write!(f, "Missing Title Error"),
             ArchiveError::InvalidURL => write!(f, "Invalid URL Error"),
             ArchiveError::IOError(e) => write!(f, "IOError: {}", e),
-            ArchiveError::RequestError(err) => write!(f, "Reqwest Error: {}", err),
             ArchiveError::ResponseError(err) => write!(f, "Response Error: {}", err),
             ArchiveError::FailedParsing(id, url) => write!(f, "Found no tables for Sok: {}, at url: {}", id, url),
         }

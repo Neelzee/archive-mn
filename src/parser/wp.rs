@@ -3,44 +3,10 @@ use std::collections::HashMap;
 use reqwest::Client;
 use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link, self}, form::Form, sok::{Sok, Table, SokCollection, self, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor, format_form_to_title}, scraper::get_html_content};
+use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table, SokCollection, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
 
 // TODO: Change these from methods to functions
 impl Webpage {
-    pub fn get_links(&self) -> Result<Vec<Link>, ArchiveError> {
-        let mut links = Vec::new();
-
-        let merknad_head_selector = Selector::parse(".merknadHeader")?;
-        let a_selector = Selector::parse("a.bold-text[href][onclick]")?;
-
-        // TODO: Fix
-
-        // METODE
-        for a in self.get_content().select(&merknad_head_selector).filter_map(|e| e.parent()) {
-            for child in a.children() {
-                if let Some(el) = child.value().as_element() {
-                    if el.name() == "a" {
-                        if let Some(a) = el.attr("href") {
-                            links.push(Link::new(a.to_owned()));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Kilder?
-        for el in self.get_content().select(&a_selector) {
-            if let Some(a) = el.attr("href") {
-                links.push(Link::new(a.to_owned()));
-            }
-        }
-
-        links.sort();
-        links.dedup();
-        
-        Ok(links)
-    }
-
     pub fn get_title(&self) -> Result<String, ArchiveError> {
         let title_selector = Selector::parse(".searchTitle")?;
 
@@ -104,8 +70,6 @@ impl Webpage {
         let tr_selector = Selector::parse(r#"div[id="sokResult"] tr"#)?;
         let th_selector = Selector::parse(r#"div[id="sokResult"] th"#)?;
         let td_selector = Selector::parse(r#"div[id="sokResult"] td"#)?;
-
-        let style_selector = Selector::parse("th div")?;
 
         for t in self.get_content().select(&title_selector) {
             sok.title = trim_string(&t.text().collect::<String>());

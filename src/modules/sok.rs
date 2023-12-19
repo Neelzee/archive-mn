@@ -14,41 +14,6 @@ impl Table {
             rows: Vec::new(),
         }
     }
-
-    /// Prints the table, adds `' ,'` between every element.
-    pub fn show(&self) {
-        let header = self.header
-        .iter()
-        .fold(
-            String::new(), 
-            |mut acc, e| {
-                acc += &e.iter().fold(String::new(), |mut ac, x| {
-                    ac += x;
-                    ac += ", ";
-                    ac
-                });
-                acc += "\n";
-                acc
-            });
-
-        let rows = self.rows
-            .iter()
-            .fold(
-                String::new(), 
-                |mut acc, e| {
-                    acc += &e.iter().fold(String::new(), |mut ac, x| {
-                        ac += x;
-                        ac += ", ";
-                        ac
-                    });
-                    acc += "\n";
-                    acc
-                });
-        println!("{}", "=".repeat(max(header.len(), rows.len())));
-        println!("{}", header);
-        println!("{}", rows);
-        println!("{}", "=".repeat(max(header.len(), rows.len())));
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -94,11 +59,6 @@ impl SokCollection {
             metode: Vec::new(),
         }
     }
-
-    pub fn set_title(&mut self, title: String) {
-        self.title = title;
-    }
-
     pub fn add_text(&mut self, text: String) {
         self.text.push(text);
     }

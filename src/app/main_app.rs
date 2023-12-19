@@ -1,4 +1,4 @@
-use std::{env, fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
+use std::{fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
 
 use itertools::Itertools;
 use scraper::Html;

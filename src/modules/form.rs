@@ -14,15 +14,6 @@ pub struct FormOption {
     options: Vec<(String, String)>
 }
 
-impl FormOption {
-    pub fn new(option_name: String, options: Vec<(String, String)>) -> FormOption {
-        FormOption {
-            option_name,
-            options,
-        }
-    }
-}
-
 impl Form {
     pub fn new() -> Form {
         Form { options: Vec::new() }

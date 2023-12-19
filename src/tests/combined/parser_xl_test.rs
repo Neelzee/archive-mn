@@ -1,6 +1,4 @@
-use scraper::Html;
-
-use crate::{modules::webpage::Webpage, utils::{constants::ROOT_URL, funcs::{get_random_file_and_contents, get_random_webpage}}, parser::wp::get_sok_collection, xl::save_sok};
+use crate::{utils::funcs::get_random_webpage, parser::wp::get_sok_collection, xl::save_sok};
 
 #[tokio::test]
 async fn test_parsing_saving() {

@@ -1,6 +1,6 @@
-use scraper::{Selector, error::SelectorErrorKind, Html};
+use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, sok::{Sok, Table}}, error::ArchiveError, utils::funcs::trim_string};
+use crate::{error::ArchiveError, utils::funcs::trim_string};
 
 pub mod wp;
 pub mod medium;
