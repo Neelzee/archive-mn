@@ -7,7 +7,7 @@ use crate::{error::ArchiveError, modules::{webpage::{Link, Webpage}, sok::{SokCo
 
 use std::path::Path;
 
-fn visit_dirs(dir: &Path) -> std::io::Result<Vec<String>> {
+pub fn visit_dirs(dir: &Path) -> std::io::Result<Vec<String>> {
     let mut paths = Vec::new();
     if dir.is_dir() {
         for entry in fs::read_dir(dir)? {

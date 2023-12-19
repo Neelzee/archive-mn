@@ -3,7 +3,7 @@ use error::ArchiveError;
 use modules::webpage::Link;
 use std::fs::File;
 use std::time::Instant;
-use crate::app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline};
+use crate::app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline, interactive_app::interactive};
 
 mod error;
 mod modules;
@@ -25,6 +25,11 @@ fn setup() -> io::Result<()> {
 async fn main() -> Result<(), ArchiveError> {
     let _ = setup();
     let mut args: Vec<String> = env::args().collect();
+
+    if args.contains(&"-cli".to_string()) {
+        interactive().await;
+        return Ok(());
+    }
 
     args.remove(0); // First argument is path to the exe
     if args.len() == 0 {
