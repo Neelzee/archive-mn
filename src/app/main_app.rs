@@ -78,7 +78,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
 
                     sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
 
-                    let path = format!("arkiv\\{}", medium.clone());
+                    let path = format!("error\\{}", medium.clone());
                     if !mediums.contains(&medium) {
                         mediums.push(medium.clone());
                         let r = fs::create_dir_all(path.clone());
@@ -89,8 +89,6 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
 
                     match save_sok(sokc, &path) {
                         Ok(mut err) => {
-                            save_count += 1;
-                            checkmark_sok(&id);
                             sok_log.append(&mut err);
                             println!("Saved sok: {}", &id);
                         },
