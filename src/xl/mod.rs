@@ -39,6 +39,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
         .set_bold()
         .set_align(FormatAlign::Left);
 
+    let mut i = 0;
     for sub_sok in soks.sok {
         let sheet = wb.add_worksheet();
         let mut r = 0;
@@ -94,6 +95,9 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
         if !&sheet_name.is_empty() {
             sheet.set_name(&sheet_name)?;
             sheets.push((sheet_name, full_name));
+        } else {
+            sheet.set_name(format!("Sheet{}", i))?;
+            i += 1;
         }
 
 
