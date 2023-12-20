@@ -120,7 +120,17 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                             sheet.write_number_with_format(r, c, i, &header_format)?;
                         },
                         Err(_) => {
-                            sheet.write_with_format(r, c, cell, &header_format)?;
+                            // Lets try again with trim
+                            let s = cell.clone();
+                            let res = s.split_whitespace().collect::<Vec<&str>>().join("");
+                            match res.parse::<i32>() {
+                                Ok(i) => {
+                                    sheet.write_number_with_format(r, c, i, &header_format)?;
+                                },
+                                Err(_) => {
+                                    sheet.write_with_format(r, c, cell, &header_format)?;
+                                },
+                            }
                         },
                     }
                     c += 1;
@@ -134,10 +144,20 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                     // Try to parse as int
                     match cell.parse::<i32>() {
                         Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &row_format)?;
+                            sheet.write_number_with_format(r, c, i, &header_format)?;
                         },
                         Err(_) => {
-                            sheet.write_with_format(r, c, cell, &row_format)?;
+                            // Lets try again with trim
+                            let s = cell.clone();
+                            let res = s.split_whitespace().collect::<Vec<&str>>().join("");
+                            match res.parse::<i32>() {
+                                Ok(i) => {
+                                    sheet.write_number_with_format(r, c, i, &header_format)?;
+                                },
+                                Err(_) => {
+                                    sheet.write_with_format(r, c, cell, &header_format)?;
+                                },
+                            }
                         },
                     }
                     
