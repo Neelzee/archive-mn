@@ -75,6 +75,8 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
 
         let time_end = Instant::now();
 
+        sokc.title = wp.get_title()?;
+
         sokc.add_sok(wp.get_sok()?);
 
         // Kilde

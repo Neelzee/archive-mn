@@ -11,10 +11,21 @@ pub struct Form {
 pub struct FormOption {
     option_name: String,
     /// Request Name, Display Name
-    options: Vec<(String, String)>
+    options: Vec<(String, String)>,
+    multiple: bool,
+    has_all: bool,
 }
 
 impl FormOption {
+    pub fn new(option_name: String, options: Vec<(String, String)>) -> FormOption {
+        FormOption {
+            option_name,
+            options,
+            multiple: false,
+            has_all: false,
+        }
+    }
+
     pub fn show(&self) {
         println!("Option Name: {}", self.option_name);
         for (req, dis) in self.options.clone() {
@@ -22,8 +33,26 @@ impl FormOption {
         }
     }
 
+    pub fn get_multiple(&self) -> bool {
+        self.multiple
+    }
+
+    pub fn options(&self) -> Vec<(String, String)> {
+        self.options.clone()
+    }
+
     pub fn option_name(&self) -> String {
         self.option_name.clone()
+    }
+
+    /// Toggles multiple
+    pub fn multiple(&mut self) {
+        self.multiple = !self.multiple;
+    }
+
+    /// Toggles has all
+    pub fn has_all(&mut self) {
+        self.has_all = !self.has_all;
     }
 
     pub fn request_names(&self) -> Vec<String> {
@@ -48,8 +77,8 @@ impl Form {
         self.options.is_empty()
     }
 
-    pub fn add_options(&mut self, option_name: String, options: Vec<(String, String)>) {
-        self.options.push(FormOption { option_name, options });
+    pub fn add_options(&mut self, fo: FormOption) {
+        self.options.push(fo);
     }
 
     pub fn combinations(self) -> impl Iterator<Item = HashMap<String, (String, String)>> {

@@ -2,7 +2,7 @@ use std::{time::Instant, fs};
 
 use itertools::Itertools;
 
-use crate::{error::ArchiveError, modules::webpage::{Link, Webpage}, parser::wp::get_sok_collection, xl::save_sok, app::main_app::{checkmark_sok, write_log}};
+use crate::{error::ArchiveError, modules::webpage::{Link, Webpage}, parser::wp::{get_sok_collection, get_sok_collection_tmf}, xl::save_sok, app::main_app::{checkmark_sok, write_log, write_failed_sok}};
 
 pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
     for link in links {
@@ -22,15 +22,43 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
             } else {
                 println!("Sok: {}", wp.get_id());
                 println!("Form Combo: {:?}", count);
-                continue;
+                let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
+                match get_sok_collection_tmf(wp).await {
+                    Ok((sokc, mut errs)) => {
+
+                        sok_log.append(&mut errs);                            
+                        
+                        let path = format!("error\\{}", medium.clone());
+                        let r = fs::create_dir_all(path.clone());
+                        if r.is_err() {
+                            println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                        }
+
+                        match save_sok(sokc, &path) {
+                            Ok(mut err) => {
+                                sok_log.append(&mut err);
+                                println!("Saved sok: {}", &id);
+                            },
+                            Err(e) => {
+                                println!("Failed saving sok: {}, With Error: {}", &id, &e);
+                                sok_log.push(e.clone());
+                                let _ = write_failed_sok(e.to_string(), &id);
+                            }, 
+                        }
+                        continue;
+                    },
+                    Err(_) => todo!(),
+                }
             }
         }
 
-        match get_sok_collection(wp).await {
-            Ok((sokc, mut errs)) => {
-                sok_log.append(&mut errs);
-                let path = format!("arkiv\\{}", medium.clone());
 
+        match get_sok_collection(wp).await {
+            Ok((mut sokc, mut errs)) => {
+
+                sok_log.append(&mut errs);
+
+                let path = format!("arkiv\\{}", medium.clone());
                 let r = fs::create_dir_all(path.clone());
                 if r.is_err() {
                     println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
@@ -42,7 +70,8 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                 if sokc.sok.len() == 0 {
                     println!("Sok: {}, had 0 tables.", &sokc.id);
                     sok_log.push(ArchiveError::FailedParsing(sokc.id.clone(), link.to_string().clone()));
-                    continue;
+                    let _ = write_failed_sok("0 tables".to_string(), &id);
+                    sokc.title = sokc.title + &format!("_{}", sokc.id.clone());
                 }
 
                 match save_sok(sokc, &path) {
@@ -52,7 +81,8 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                     },
                     Err(e) => {
                         println!("Failed saving sok: {}, With Error: {}, Took {}s", &id, &e, (time_end - time_start).as_secs());
-                        sok_log.push(e);
+                        sok_log.push(e.clone());
+                        let _ = write_failed_sok(e.to_string(), &id);
                     }, 
                 }
             },

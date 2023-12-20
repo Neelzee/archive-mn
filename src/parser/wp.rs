@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use reqwest::Client;
 use scraper::{Selector, Html};
 
-use crate::{modules::{webpage::{Webpage, Link}, form::Form, sok::{Sok, Table, SokCollection, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
+use crate::{modules::{webpage::{Webpage, Link}, form::{Form, FormOption}, sok::{Sok, Table, SokCollection, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
 
 // TODO: Change these from methods to functions
 impl Webpage {
@@ -40,20 +40,28 @@ impl Webpage {
         for select in self.get_content().select(&select_selector) {
             if let Some(option_name) = select.attr("name") {
                 let mut options: Vec<(String, String)> = Vec::new();
-
                 for option in self.get_content().select(&option_selector) {
                     if let Some(p) = option.parent() {
                         if p.id() != select.id() {
                             continue;
                         }
-
+                        
                         if let Some(v) = option.attr("value") {
                             options.push((v.to_string(), trim_string(&option.text().collect::<String>())));
                         }
                     }
                 }
+                let mut fo = FormOption::new(option_name.to_string(), options);
 
-                form.add_options(option_name.to_string(), options);
+                // Checks if it can has multiple
+                if let Some(v) = select.attr("multiple") {
+                    if v == "multiple" {
+                        fo.multiple();
+                    }
+                }
+
+
+                form.add_options(fo);
             }
         }
 
@@ -79,7 +87,7 @@ impl Webpage {
         let mut tables: Vec<Table> = Vec::new();
 
         
-
+        // This is stupid, motherfucker
         for table in self.get_content().select(&table_selector) {
             let mut cur_table = Table::new();
 
@@ -274,6 +282,117 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
             let mut form_data: HashMap<String, String> = HashMap::new();
             let mut title = String::new();
             for (k, (v, d)) in form {
+                title += &d;
+                title += " ";
+                form_data.insert(k, v);
+            }
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+            
+            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+    
+            let req = request
+                    .try_clone().expect("Should not be a stream")
+                    .form(&form_data).build()?;
+    
+            match client.execute(req).await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let raw_html = response.text().await?;
+                
+                        let html = Html::parse_document(&raw_html);
+                
+                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                        
+
+                        match sub_wp.get_sok() {
+                            Ok(mut sok) => {
+                                sok.header_title = title.trim().to_string();
+                                sok_collection.add_sok(sok);
+                            }
+                            Err(err) => {
+                                errors.push(err.into());
+                            }
+                        }
+                        
+                        
+                    } else {
+                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                    }
+                }
+                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+                Err(err) => {
+                    errors.push(err.into());
+                },
+            }
+    
+        }
+    }
+
+    sok_collection.title = wp.get_title()?;
+    let _ = wp.get_text()?
+        .into_iter()
+        .map(|e| sok_collection.add_text(e))
+        .collect::<Vec<_>>();
+
+    for metode in get_metode(&wp).await? {
+        sok_collection.add_metode(metode.into());
+    }
+
+    for kilde in get_kilde(&wp).await? {
+        sok_collection.add_kilde(kilde.into());
+    }
+
+    sok_collection.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
+
+
+
+
+    Ok((sok_collection, errors))
+}
+
+
+pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+    let mut errors: Vec<ArchiveError> = Vec::new();
+
+    let client = Client::default();
+
+    let request = client
+        .post(wp.get_url());
+
+    let forms = wp.get_forms()?;
+
+    if forms.is_empty() {
+        let mut sok = wp.get_sok()?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+    } else {
+        let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut multiple_fo: Vec<String> = Vec::new();
+        for fo in forms.options() {
+            if fo.get_multiple() {
+                form_data.insert(
+                    fo.option_name(), 
+                    fo.options()
+                    .into_iter()
+                    .map(|(e, _)| e.trim().to_string())
+                    .collect::<Vec<String>>()
+                    .join(",")
+                );
+                multiple_fo.push(fo.option_name());
+            }
+        }
+
+        for form in forms.combinations() {
+            println!("{:?}", &form_data);
+            let mut title = String::new();
+            for (k, (v, d)) in form {
+
+                if multiple_fo.contains(&k) {
+                    continue;
+                }
+
                 title += &d;
                 title += " ";
                 form_data.insert(k, v);

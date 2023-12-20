@@ -2,7 +2,7 @@ use std::{fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
 
 use itertools::Itertools;
 use scraper::Html;
-use crate::{error::ArchiveError, xl::save_sok, scraper::get_html_content, parse_args, modules::sok::{SokCollection, Merknad}, parser::wp::{get_kilde, get_metode}};
+use crate::{error::ArchiveError, xl::save_sok, scraper::get_html_content, parse_args, modules::sok::{SokCollection, Merknad}, parser::wp::{get_kilde, get_metode, get_sok_collection_tmf}};
 use crate::modules::webpage::{Webpage, Link};
 use crate::parser::wp::get_sok_collection;
 use reqwest::Client;
@@ -48,57 +48,35 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                     println!("Sok: {}", wp.get_id());
                     println!("Form Combo: {:?}", count);
                     let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
-                    
-                    let mut sokc = SokCollection::new(
-                        wp.get_id(),
-                        wp.get_medium()
-                    );
-                    let mut sok = wp.get_sok()?;
-                    sok.header_title = sok.title.clone();
-                    sokc.add_sok(sok);
-                    
-                    for t in wp.get_text()? {
-                        sokc.add_text(t);
-                    }
+                    match get_sok_collection_tmf(wp).await {
+                        Ok((sokc, mut errs)) => {
 
-                    sokc.title = wp.get_title()?;
-                    let _ = wp.get_text()?
-                        .into_iter()
-                        .map(|e| sokc.add_text(e))
-                        .collect::<Vec<_>>();
+                            sok_log.append(&mut errs);                            
+                           
+                            let path = format!("error\\{}", medium.clone());
+                            if !mediums.contains(&medium) {
+                                mediums.push(medium.clone());
+                                let r = fs::create_dir_all(path.clone());
+                                if r.is_err() {
+                                    println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                                }
+                            }
 
-
-                    for metode in get_metode(&wp).await? {
-                        sokc.add_metode(metode.into());
-                    }
-
-                    for kilde in get_kilde(&wp).await? {
-                        sokc.add_kilde(kilde.into());
-                    }
-
-                    sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
-
-                    let path = format!("error\\{}", medium.clone());
-                    if !mediums.contains(&medium) {
-                        mediums.push(medium.clone());
-                        let r = fs::create_dir_all(path.clone());
-                        if r.is_err() {
-                            println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
-                        }
-                    }
-
-                    match save_sok(sokc, &path) {
-                        Ok(mut err) => {
-                            sok_log.append(&mut err);
-                            println!("Saved sok: {}", &id);
+                            match save_sok(sokc, &path) {
+                                Ok(mut err) => {
+                                    sok_log.append(&mut err);
+                                    println!("Saved sok: {}", &id);
+                                },
+                                Err(e) => {
+                                    println!("Failed saving sok: {}, With Error: {}", &id, &e);
+                                    sok_log.push(e.clone());
+                                    let _ = write_failed_sok(e.to_string(), &id);
+                                }, 
+                            }
+                            continue;
                         },
-                        Err(e) => {
-                            println!("Failed saving sok: {}, With Error: {}", &id, &e);
-                            sok_log.push(e.clone());
-                            let _ = write_failed_sok(e.to_string(), &id);
-                        }, 
+                        Err(_) => todo!(),
                     }
-                    continue;
                 }
             }
 
