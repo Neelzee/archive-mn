@@ -15,10 +15,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
     let wb_path: String;
     let mut errors: Vec<ArchiveError> = Vec::new();
     let id = soks.id.clone();
+    let title = validify_excel_string(&soks.title.clone());
     if path.len() != 0 {
-        wb_path = format!("{}\\{}.xlsx", path.to_string(), soks.title.clone());
+        wb_path = format!("{}\\{}.xlsx", path.to_string(), title);
     } else {
-        wb_path = format!("{}\\{}.xlsx", soks.medium.clone(), soks.title.clone());
+        wb_path = format!("{}\\{}.xlsx", soks.medium.clone(), title);
     }
 
     let bold = Format::new().set_bold();
