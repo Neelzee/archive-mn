@@ -162,7 +162,7 @@ impl Webpage {
 }
 
 
-pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
+pub async fn get_metode(wp: Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
     let mut metoder: Vec<(String, Vec<String>)> = Vec::new();
 
     let mut links = Vec::new();
@@ -209,7 +209,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     Ok(metoder)
 }
 
-pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
+pub async fn get_kilde(wp: Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
     let mut kilder: Vec<(String, Vec<String>)> = Vec::new();
 
     let mut links = Vec::new();
@@ -326,11 +326,11 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
         .map(|e| sok_collection.add_text(e))
         .collect::<Vec<_>>();
 
-    for metode in get_metode(&wp).await? {
+    for metode in get_metode(wp.clone()).await? {
         sok_collection.add_metode(metode.into());
     }
 
-    for kilde in get_kilde(&wp).await? {
+    for kilde in get_kilde(wp.clone()).await? {
         sok_collection.add_kilde(kilde.into());
     }
 

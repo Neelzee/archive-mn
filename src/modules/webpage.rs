@@ -55,6 +55,10 @@ pub struct Webpage {
     content: Html,
 }
 
+unsafe impl Send for Webpage {
+    
+}
+
 
 impl Webpage {
     pub fn from_html(id: usize, url: String, content: Html, medium: String) -> Webpage {

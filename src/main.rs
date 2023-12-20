@@ -4,6 +4,7 @@ use modules::webpage::Link;
 use std::fs::File;
 use std::time::Instant;
 use crate::app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline, interactive_app::interactive};
+use crate::conc::main_conc;
 
 mod error;
 mod modules;
@@ -13,6 +14,7 @@ mod xl;
 mod app;
 mod scraper;
 mod tests;
+mod conc;
 
 fn setup() -> io::Result<()> {
     File::create("sok.log")?;
@@ -47,6 +49,13 @@ async fn main() -> Result<(), ArchiveError> {
                 "https://medienorge.uib.no/statistikk/medium/ikt".to_string()
             ]
         );
+    }
+
+    // Concurrently
+    if args.contains(&"-conc".to_string()) {
+        let time_start = Instant::now();
+        main_conc().await;
+        let time_end = Instant::now();
     }
 
     if args.contains(&"-err".to_string()) {

@@ -78,12 +78,12 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
         sokc.add_sok(wp.get_sok()?);
 
         // Kilde
-        for k in get_kilde(&wp).await? {
+        for k in get_kilde(wp.clone()).await? {
             sokc.add_kilde(k.into());
         }
 
         // Metode
-        for m in get_metode(&wp).await? {
+        for m in get_metode(wp.clone()).await? {
             sokc.add_metode(m.into());
         }
 

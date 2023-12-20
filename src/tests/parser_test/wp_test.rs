@@ -125,7 +125,7 @@ fn test_get_merknad() {
 #[tokio::test]
 async fn test_get_metode() {
     if let Ok(wp) = get_webpage() {
-        let res = get_metode(&wp).await;
+        let res = get_metode(wp).await;
 
         assert!(res.is_ok());
 
@@ -142,7 +142,7 @@ async fn test_get_metode() {
 #[tokio::test]
 async fn test_get_kilde() {
     if let Ok(wp) = get_webpage() {
-        let res = get_kilde(&wp).await;
+        let res = get_kilde(wp).await;
 
         assert!(res.is_ok());
 
