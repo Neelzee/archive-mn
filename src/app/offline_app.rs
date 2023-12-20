@@ -92,6 +92,11 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
         // Merknad
         sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
 
+        // text
+        for t in wp.get_text()? {
+            sokc.add_text(t);
+        }
+
         // Failed
         if sokc.sok.len() == 0 {
             println!("Sok: {}, had 0 tables.", &sokc.id);
