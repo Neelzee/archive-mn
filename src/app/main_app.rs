@@ -56,6 +56,10 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                     let mut sok = wp.get_sok()?;
                     sok.header_title = sok.title.clone();
                     sokc.add_sok(sok);
+                    
+                    for t in wp.get_text()? {
+                        sokc.add_text(t);
+                    }
 
                     sokc.title = wp.get_title()?;
                     let _ = wp.get_text()?
