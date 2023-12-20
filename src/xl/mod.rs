@@ -278,7 +278,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(errors),
         Err(err) => {
-            let p = format!("arkiv\\{}.xslsx", soks.id);
+            let p = format!("arkiv\\{}.xlsx", soks.id);
             match wb.save(p.clone()) {
                 Ok(_) => {
                     errors.push(ArchiveError::XlSaveError(err.to_string(), wb_path));
