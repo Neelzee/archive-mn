@@ -91,9 +91,11 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             , id.clone().to_string()));
             continue;
         }
+        if !&sheet_name.is_empty() {
+            sheet.set_name(&sheet_name)?;
+            sheets.push((sheet_name, full_name));
+        }
 
-        sheet.set_name(&sheet_name)?;
-        sheets.push((sheet_name, full_name));
 
         // Title
         sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
