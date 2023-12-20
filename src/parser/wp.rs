@@ -350,7 +350,7 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
     Ok((sok_collection, errors))
 }
 
-
+#[deprecated(note="this sucks, dude")]
 pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
@@ -383,7 +383,6 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
                 multiple_fo.push(fo.option_name());
             }
         }
-
         for form in forms.combinations() {
             println!("{:?}", &form_data);
             let mut title = String::new();
