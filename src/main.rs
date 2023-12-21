@@ -13,7 +13,9 @@ mod xl;
 mod app;
 mod scraper;
 mod tests;
-
+/// # Setup
+/// Ensures that all the *.log files are available, before exec.
+/// Can throw an io::Error
 fn setup() -> io::Result<()> {
     File::create("sok.log")?;
     File::create("log.log")?;
@@ -23,7 +25,9 @@ fn setup() -> io::Result<()> {
 
 #[tokio::main(flavor="current_thread")]
 async fn main() -> Result<(), ArchiveError> {
-    let _ = setup();
+    if let Err(e) = setup() {
+        eprintln!("Error during setup: {}", e);
+    }
     let mut args: Vec<String> = env::args().collect();
 
     if args.contains(&"-cli".to_string()) {
