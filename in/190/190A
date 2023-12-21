@@ -14,7 +14,7 @@
 	<meta name="revised" content="2015/11/18" />
 	<meta property="og:site_name" content="medienorge">
 	<meta property="og:type" content="website">
-	<meta property="og:url" content="https://medienorge.uib.no?cat=statistikk&medium=avis&queryID=190">
+	<meta property="og:url" content="https://medienorge.uib.no?cat=statistikk&aspekt=okonomi&queryID=190">
 	<style>
 		html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outline:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 	</style>
@@ -96,6 +96,8 @@
 		/**
 		 * Hindre at dialogboksen vises og for utvalgte IP'er.
 		 */
+		
+			return;
 		
 		window.cookieconsent.initialise({
 			window: '<div role="dialog" aria-label="cookieconsent" aria-describedby="cookieconsent:desc" class="cc-window {{classes}}" id="consentbanner" style="padding:20px;">{{children}}</div>',
@@ -1302,7 +1304,7 @@
         excelEle = document.createElement('div')
         excelEle.style.display = "inline-block"
         
-            excelEle.innerHTML = '<a class="bold-text d-none d-md-block" style="font-size: 1.1rem;  display:inline; float:right; margin-right:2px;" href="/statistikk/excel_download/avis/190" onClick="return submitSearchForm(`/statistikk/excel_download/avis/190`);"> <img src="/images/excel_new.png" width="25" height="18" style="margin-right: 2px; margin-bottom:7px;" />Excel</a>'
+            excelEle.innerHTML = '<a class="bold-text d-none d-md-block" style="font-size: 1.1rem;  display:inline; float:right; margin-right:2px;" href="/statistikk/excel_download/okonomi/190" onClick="return submitSearchForm(`/statistikk/excel_download/okonomi/190`);"> <img src="/images/excel_new.png" width="25" height="18" style="margin-right: 2px; margin-bottom:7px;" />Excel</a>'
         
         function mediaFunction(mediaqr){
             if(mediaqr.matches && !lagt_til_mobil){
@@ -1314,7 +1316,7 @@
                         lagt_til_mobil = true;
                         excelEleMobile = document.createElement('div')
                         
-                            excelEleMobile.innerHTML = '<a class="bold-text" style="font-size: 1.1rem; float:right; position:absolute; right:0; " href="/statistikk/excel_download/avis/190" onClick="return submitSearchForm(`/statistikk/excel_download/avis/190`);"> <img src="/images/excel_new.png" width="20" height="15" style="margin-right: 2px;margin-bottom:7px;" />Excel</a>'
+                            excelEleMobile.innerHTML = '<a class="bold-text" style="font-size: 1.1rem; float:right; position:absolute; right:0; " href="/statistikk/excel_download/okonomi/190" onClick="return submitSearchForm(`/statistikk/excel_download/okonomi/190`);"> <img src="/images/excel_new.png" width="20" height="15" style="margin-right: 2px;margin-bottom:7px;" />Excel</a>'
                         
                         newEle.innerHTML = "Sveip for å se hele tabellen <bold style='font-size:18px;'>&#8594;</bold>"
                         newEle.innerHTML += excelEleMobile.innerHTML

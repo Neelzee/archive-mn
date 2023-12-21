@@ -1,0 +1,526 @@
+
+<!DOCTYPE html>
+<html lang="no">
+<head>
+	<title>PPM - lyttertall for riksdekkende radiokanaler - Medienorge - fakta om norske massemedier - statistikkmeny</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge;chrome=1" />
+
+	
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="medienorge er en informasjonssentral for fakta om norske medier som ble opprettet av Kulturdepartementet i 1994. Formålet med opprettelsen var å gjøre norsk mediestatistikk tilgjengelig via én sentral kilde, og å dokumentere norsk medieutvikling gjennom systematisk innsamling av mediedata. Etter mer enn femten års arbeid sitter medienorge i dag med en omfattende samling informasjon om norsk mediesektor. Informasjonen presenteres både på disse nettsidene, i egne nyhetsbrev og i ulike publikasjoner." />
+	<meta name="keywords" content="medier,norge,avis,presse,fagpresse,ukepresse,bker,radio,fonogram,tv,fjernsyn,film,kino,video,it,internett,mediebruk,tilgang,konomi,struktur,innhold" />
+	<meta name="revised" content="2015/11/18" />
+	<meta property="og:site_name" content="medienorge">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://medienorge.uib.no?cat=statistikk&medium=boker&queryID=428">
+	<style>
+		html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outline:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+	</style>
+	<link rel="preload" href="/assets/fonts/ITCFranklin.otf" as="font" type="font/otf" crossorigin>
+	<link rel="stylesheet" href="/assets/fonts/ITCFranklin.otf" as="font" type="font/otf" crossorigin>
+	<link rel="preload" href="/assets/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="stylesheet" href="/assets/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin>
+	<link rel="preload" href="/assets/css/source/stylingsen.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="stylesheet" href="/assets/css/source/stylingsen.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<noscript><link rel="stylesheet" href="/assets/css/stylesheet.min.css"></noscript>
+	<link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+	<link rel="preload" href="/assets/css/source/customNytt.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<link rel="stylesheet" href="/assets/css/source/customNytt.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+	<noscript><link rel="stylesheet" href="/assets/css/custom.min.css"></noscript>
+
+	<script type="text/javascript" src="/assets/js/functions.min.js"></script>
+	<script type="text/javascript" src="/assets/js/jquery/jquery-3.5.1.min.js"></script>
+	<script defer type="text/javascript" src="/assets/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/assets/js/jquery/jquery.expander.min.js"></script>
+
+	<script src="/assets/js/source/util.js"></script>
+	<script src="/assets/js/moment.min.js"></script>
+	<script src="/assets/js/handlebars.runtime.min-v4.7.6.js"></script>
+
+	<script type="text/javascript" src="/assets/js/form.min.js"></script> 
+
+	<noscript><meta http-equiv="set-cookie" content="js=n;"></noscript>
+	
+	<script>
+	$.ajaxSetup({ cache: false });
+	function updateLog() {
+		$.get("/ajax/log.cfm",{url:document.URL,title:document.title,from:'https://medienorge.uib.no/'},function() {
+			setTimeout(function() {updateLog()},5000);
+		});
+	}
+
+	// Google Analytics
+	function analytics() {
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-78056221-1', 'auto');
+		ga('set', 'anonymizeIp', true);
+		ga('set', 'forceSSL', true);
+		ga('require', 'displayfeatures');
+		ga('send', 'pageview');
+	}
+	// End GA
+
+	// Matomo 
+	var _paq = window._paq = window._paq || [];
+	/* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+	_paq.push(['trackPageView']);
+	_paq.push(['enableLinkTracking']);
+	(function() {
+		var u="https://infomedia.matomo.cloud/";
+		_paq.push(['setTrackerUrl', u+'matomo.php']);
+		_paq.push(['setSiteId', '1']);
+		var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+		g.async=true; g.src='//cdn.matomo.cloud/infomedia.matomo.cloud/matomo.js'; s.parentNode.insertBefore(g,s);
+	})();
+    // End Matomo Code 
+
+	setJsCookie();
+
+	$(function () {
+  		$('[data-toggle="popover"]').popover()
+	})
+	</script>
+
+	
+	<link rel="stylesheet" type="text/css" href="/assets/css/cookieconsent/cookieconsent.min.css" />
+	<link rel="stylesheet" type="text/css" href="/assets/css/cookieconsent/customChanged.css" />
+	<script src="/assets/js/cookieconsent/cookieconsent.min.js"></script>
+	<script>
+	window.addEventListener("load", function() {
+		/**
+		 * Hindre at dialogboksen vises og for utvalgte IP'er.
+		 */
+		
+			return;
+		
+		window.cookieconsent.initialise({
+			window: '<div role="dialog" aria-label="cookieconsent" aria-describedby="cookieconsent:desc" class="cc-window {{classes}}" id="consentbanner" style="padding:20px;">{{children}}</div>',
+			position: "bottom-left",
+			content: {
+				header: 'Informasjon',
+				message: "Vi bruker informasjonskapsler (\"cookies\") på nettsiden vår til støtte for brukeropplevelsen og for å samle inn brukerstatistikk. Vi lagrer ikke opplysninger som kan spores tilbake til deg som person.",
+				deny: "Tillat ikke",
+				allow: "Tillat",
+				dismiss: "Lukk",
+				link: "Les vår personvernerklæring her",
+				href: "https://medienorge.uib.no/personvern",
+				
+			},
+			elements: {
+				messagelink: '<span id="cookieconsent:desc" class="cc-message" style="margin-bottom:5px;">{{message}}<a aria-label="learn more about cookies" tabindex="0" class="cc-link" href="{{href}}" target="_blank" style="color:#DCF968; font-weight:600; text-decoration:none;">{{link}}</a></span>',
+				dismiss: '<a aria-label="dismiss cookie message" role="button" tabindex="0" class="cc-btn cc-dismiss" style="top:0px; font-size: 1em;">{{dismiss}}</a>'
+			},
+			palette: {
+				popup: {
+				  	background: "rgba(74,171,203,0.8)",
+				  	text: "white"
+				},
+				button: {
+					background: "#BCD948"
+				}
+			},
+			/**
+			 * onPopupOpen eksekveres hver gang dialogvinduet vises, dvs. når brukeren ikke har har trykket "Lukk"/dismiss.
+			 */
+			onPopupOpen: function() {
+				analytics();
+				updateLog();
+			},
+			/**
+			 * onInitialize eksekveres når det finnes en cookie, dvs. når brukeren har trykket "Lukk".
+			 */
+			onInitialise: function(status) {
+				if(this.hasAnswered() && status != 'deny') {
+					analytics();
+					updateLog();
+				}
+			}
+		});
+	});
+	</script>
+
+	<link rel="shortcut icon" href="https://medienorge.uib.no/images/favicon.ico" />
+	<link rel="alternate" type="application/rss+xml" title="Medienorge RSS" href="https://medienorge.uib.no/feed.cfm">
+	<meta property='og:title' content='PPM - lyttertall for riksdekkende radiokanaler'>
+	<meta property='og:description' content='http://medienorge.uib.no'>
+	<meta property='og:image' content='https://medienorge.uib.no/images/Statistikk-FB.png'>
+	<meta property='og:image:width' content='210'>
+	<meta property='og:image:height' content='210'>
+</head> <!-- end head -->
+<body>
+	<div class="container-lg min-100 bg-white">
+		<header>
+		<div class="row">
+			﻿
+﻿
+<div class="col">
+<div class="inner pb-2 pt-3">
+	<div class="col px-0 mb-1">
+		<a href="/"><img style="height: 85px" src="/images/MeNo_logoRGB.svg" alt="medienorge"></a>
+	</div>
+	<div class="col px-0 my-auto d-none d-lg-block d-xl-block">
+		<img src="/images/partners.svg" usemap="#headerMap" alt="Medienorge finansieres av Kulturdepartementet og deltar
+		i et nordisk samarbeid via informasjonsnettverket Nordicom. Institutt for informasjons- og medievitenskap ved
+		Universitetet i Bergen har det faglige og administrative ansvaret for prosjektet.">
+	</div>
+</div>
+
+<map name="headerMap">
+    <area target="_blank" alt="" title="" href="http://www.uib.no/infomedia" coords="69,54,15,11" shape="rect">
+    <area target="_blank" alt="" title="" href="http://www.nordicom.gu.se/" coords="82,18,178,47" shape="rect">
+    <area target="_blank" alt="" title="" href="https://tinius.com/" coords="358,53,295,9" shape="rect">
+    <area target="_blank" alt="" title="" href="https://frittord.no/" coords="377,10,456,49" shape="rect">
+    <area target="_blank" alt="" title="" href="https://www.amedia.no/" coords="472,24,537,49" shape="rect">
+</map>
+
+<div class="row">
+	<div class="col p-0">
+			﻿
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+  <div id="left-menu" class="nav navbar-left d-lg-none">
+    <div class="dropdown">
+      <a class="nav-link dropdown-toggle" href="/statistikk" id="navbarDropdownStatistikkSmall" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">STATISTIKK</a>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <h6 class="pl-4 py-1">MEDIUM:</h6>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/avis">AVIS</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/fagpresse">FAGPRESSE</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/ukepresse">UKEPRESSE</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/boker">BØKER</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/radio">RADIO</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/fonogram">MUSIKKMEDIER</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/tv">TV</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/film">FILM</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/video">VIDEO</a>
+              <a class="dropdown-item pl-5" href="/statistikk/medium/ikt">IKT</a>
+              <h6 class="pl-4 py-1 pt-2">ASPEKT:</h6>
+              <a class="dropdown-item pl-5" href="/statistikk/aspekt/tilgang-og-bruk">TILGANG/BRUK</a>
+              <a class="dropdown-item pl-5" href="/statistikk/aspekt/innhold">INNHOLD</a>
+              <a class="dropdown-item pl-5" href="/statistikk/aspekt/struktur">STRUKTUR</a>
+              <a class="dropdown-item pl-5" href="/statistikk/aspekt/okonomi">ØKONOMI</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a class="nav-link dropdown-toggle" href="/fakta" id="navbarDropdownFaktaSmall" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FAKTA</a>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="/fakta/mediekonsern">MEDIEKONSERN</a>
+            <a class="dropdown-item" href="/fakta/sportsrettigheter">SPORTSRETTIGHETER</a>
+      </div>
+    </div>
+      <a class="nav-link" href="/medienyheter">MEDIENYHETER</a>
+      <div class="dropdown">
+        <a class="nav-link dropdown-toggle d-none d-md-block" href="/publikasjoner" id="navbarDropdownPublikasjonerSmall" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">PUBLIKASJONER</a>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <a class="dropdown-item" href="/nyhetsbrev">NYHETSBREV</a>
+              <a class="dropdown-item" href="/publikasjoner">PUBLIKASJONER</a>
+        </div>
+      </div>
+  </div>
+
+    <button class="navbar-toggler text-warning ml-auto collapsed" id="menuButton" type="button" data-toggle="collapse" data-target="#hamburgerMenu" aria-controls="hamburgerMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="hamburgerMenu">
+      <ul class="navbar-nav nav-fill w-100 mr-auto mt-2 mt-lg-0 m-0 px-2 px-lg-4">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="/statistikk" id="navbarDropdownStatistikk" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">STATISTIKK</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <h6 class="pl-4 py-2 mb-0">MEDIUM:</h6>
+              <a class="dropdown-item" href="/statistikk/medium/avis">AVIS</a>
+              <a class="dropdown-item" href="/statistikk/medium/fagpresse">FAGPRESSE</a>
+              <a class="dropdown-item" href="/statistikk/medium/ukepresse">UKEPRESSE</a>
+              <a class="dropdown-item" href="/statistikk/medium/boker">BØKER</a>
+              <a class="dropdown-item" href="/statistikk/medium/radio">RADIO</a>
+              <a class="dropdown-item" href="/statistikk/medium/fonogram">MUSIKKMEDIER</a>
+              <a class="dropdown-item" href="/statistikk/medium/tv">TV</a>
+              <a class="dropdown-item" href="/statistikk/medium/film">FILM</a>
+              <a class="dropdown-item" href="/statistikk/medium/video">VIDEO</a>
+              <a class="dropdown-item" href="/statistikk/medium/ikt">IKT</a>
+              <h6 class="pl-4 py-2 mb-0">ASPEKT:</h6>
+              <a class="dropdown-item" href="/statistikk/aspekt/tilgang-og-bruk">TILGANG/BRUK</a>
+              <a class="dropdown-item" href="/statistikk/aspekt/innhold">INNHOLD</a>
+              <a class="dropdown-item" href="/statistikk/aspekt/struktur">STRUKTUR</a>
+              <a class="dropdown-item" href="/statistikk/aspekt/okonomi">ØKONOMI</a>
+          </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="/fakta" id="navbarDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">FAKTA</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="/fakta/mediekonsern">MEDIEKONSERN</a>
+            <a class="dropdown-item" href="/fakta/sportsrettigheter">SPORTSRETTIGHETER</a>
+        </div>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/medienyheter">MEDIENYHETER</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="/publikasjoner" id="navbarDropdownPublikasjoner" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">PUBLIKASJONER</a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" href="/nyhetsbrev">NYHETSBREV</a>
+              <a class="dropdown-item" href="/publikasjoner">PUBLIKASJONER</a>
+          </div>
+      </li>
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="/lenker" id="navbarDropdownPekere" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">KILDER OG PEKERE</a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="/kilder">KILDER</a>
+            <a class="dropdown-item" href="/lenker/norske">NORSKE PEKERE</a>
+            <a class="dropdown-item" href="/lenker/internasjonale">INTERNASJONALE PEKERE</a>
+        </div>
+    </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/om">OM OSS</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/hjelp">HJELP</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/english">ENGLISH</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+  <script>
+    const menuButton = document.querySelector("#menuButton");
+    const hamburgerMenu = document.querySelector("#hamburgerMenu");
+    menuButton.addEventListener('click', function(){
+      if (!hamburgerMenu.classList.contains('collapsing')){
+        document.querySelector("#left-menu").classList.toggle("invisible");
+      }
+    });
+  </script>
+	</div>
+</div>
+
+
+</div>
+ 
+		</div>
+	</header>
+		<main>
+			<div class="row mt-4">
+				﻿
+<noscript>
+<div class="col">
+	<div class="alert alert-danger">ADVARSEL: JavaScript er skrudd av. For at nettsidene skal fungere skikkelig må du skru på JavaScript i nettleseren din.</div>
+</div>
+</noscript>
+﻿
+﻿ 
+
+<div class="col-12">
+    <div class="inner">
+
+
+  <div class="col-12 col-md-9">
+    <div class="row">
+
+  	
+
+  
+				<h1 class="searchTitle dottedUnderline">PPM - lyttertall for riksdekkende radiokanaler - resultat</h1>
+			
+		
+		
+		<style> .brodtekst p{
+			margin-bottom: 1rem;
+			}.brodtekst p:last-of-type{
+				margin-bottom:0;
+			}
+			</style>
+		<div style="clear:both;"></div>
+        <div id="forklaringTxt" class="brodtekst pr-md-3" style="width: 100%; margin-bottom:1rem;">
+
+        <p>Lyttertallene for de store norske radioaktørene blir fra 2019 målt av <a  href="/files/institusjon.cfm?institusjon_id=100" onclick="Dummy(this.href);return false;">Nielsen Media Research</a>. Nielsens PPM-undersøkelse er en videreføring av <a href="http://medienorge.uib.no/statistikk/medium/radio/351">Kantars lytterundersøkelse fra 2006-2018</a>, og gjennomføres i hovedsak med samme metode. Lyttertallene samles inn ved at et landsomfattende utvalg av personer bærer med seg et elektronisk måleapparat som gjenkjenner all radiolyd som tilhører kanalene som deltar i undersøkelsen. Lytting på andre kanaler fanges ikke opp. Omfanget av radiolyttingen vil derfor variere med hvor mange radiokanaler som deltar. Som hos Kantar registreres tidsforsinket lytting inntil 7 dager etter sendetidspunkt for innholdet. Også lytting på selskapenes podkaster vil bli fanget opp hvis lyttingen foregår innenfor 7 dager fra sendetidspunkt.</p>
+
+<p>Da Nielsen overtok målingen fra 2019 ble det gjort enkelte endringer som kan påvirke resultatene. Undersøkelsen er utvidet med flere av NRKs kanaler, og utvalget er dobbelt så stort som tidligere. Samtidig er den nedre aldersgrensen flyttet fra 12 år til 10 år. I tillegg til lyttertall basert på PPM, registrerer Nielsen også digital lytting gjennom en annen metode enn PPM. Denne undersøkelsen gir informasjon om hvilken enhet lyttingen skjer på, og kan gi mer informasjon om for eksempel bruk av podkast. Disse tallene rapporteres foreløping bare til radioselskapene.</p>
+
+<p>Nedenfor finner du radiokanalenes markedsandeler, dekning og lyttetid en gjennomsnittsdag. Tallene kan fordeles på bakgrunnsvariabler som kjønn, alder og utdanning.</p>
+
+<p>Du finner også disse lyttertallene hos medienorge: <a href="http://medienorge.uib.no/statistikk/medium/radio/351">Radiokanalenes lyttertall i årene før 2019</a>, <a href="http://medienorge.uib.no/statistikk/medium/radio/429">Lyttertall på selskapsnivå for NRK, P4 og Bauer</a>, <a href="http://medienorge.uib.no/statistikk/medium/radio/431">Radiokanalenes markedsandeler etter tid på døgnet</a>. Flere lyttertall finnes hos <a href="https://www.nielsen.com/no/no/solutions/audio//">Nielsen</a>, mens sammenlignbare lyttertall for Norge og de andre nordiske landene er tilgjengelige hos <a href="https://www.nordicom.gu.se/sv/statistik-fakta/mediestatistik"> det nordiske kunnskapssenteret Nordicom</a>.</p>
+
+
+         </div>
+	
+  </div>
+</div>
+
+  
+  
+  	<div class="col-12 col-md-3 px-0 px-md-2">
+  	   <div class="tagHeaderRight">hent <b>data</b></div>
+       ﻿
+
+<form id="frmSearch" class="search" action="" method="post" enctype="application/x-www-form-urlencoded"> 
+	<fieldset>
+		<div class="divLabel">Informasjon om:</div>
+		<select name="info" style="margin-bottom: 0.7em;">
+		<option value="MA">markedsandel</option><option value="Tid alle" selected="selected">lyttetid</option><option value="Dekning">dekning</option>
+		</select><br />
+		
+		<div class="divLabel">for år:</div>
+		<select name="aar" multiple="multiple" style="height: 5.5em; clear: both; margin-bottom: 0.7em;">
+		<option value="2022" selected="selected">2022</option><option value="2021" selected="selected">2021</option><option value="2020" selected="selected">2020</option><option value="2019" selected="selected">2019</option> 
+		</select>	
+		
+		<div class="divLabel">fordelt på:</div>
+		<select name="variabel" style="margin-bottom: 0.7em;">
+		<option value="Alle" selected="selected">alle</option><option value="Kjønn">kjønn</option><option value="Alder">alder</option><option value="Utdanning">utdanning</option>
+		</select><br />
+		
+		
+		
+	</fieldset>
+		
+	<fieldset class="button">
+		<input type="submit" value="Vis tabell" name="btnSubmit" /><br />
+	</fieldset>
+</form>
+  	</div>
+  
+  
+  <div id="sokResult"class="col-12 scroll px-0 mt-2">
+  	﻿﻿
+
+<h4>Gjennomsnittlig lyttetid i minutter pr døgn for 2019 - 2022 fordelt på alle</h4> <table><tr><th>År</th><th><div style="text-align: left;">Alle</div></th><th>NRK<br>P1</th><th>NRK<br>P2</th><th>NRK<br>P3</th><th>NRK<br>Klassisk</th><th>NRK<br>Alltid<br>nyheter</th><th>NRK<br>Sápmi</th><th>NRK<br>mP3</th><th>NRK<br>Folke-<br>musikk</th><th>NRK<br>Super</th><th>NRK<br>Sport</th><th>NRK<br>Vær</th><th>NRK<br>Jazz</th><th>NRK<br>P1+</th><th>NRK<br>P13</th><th>NRK P13<br>Radio-<br>resepsjonen</th><th>NRK<br>Trafikk</th><th>NRK<br>P3 Urørt</th><th>NRK<br>P3X</th><th>P4</th><th>P5</th><th>P6</th><th>P7</th><th>P8</th><th>P9<br>Retro</th><th>P10<br>Country</th><th>NRJ</th><th>Radio<br>Norge</th><th>KISS</th><th>Radio<br>Rock</th><th>P24&#8209;7<br>Kos</th><th>P24&#8209;7<br>Mix</th><th>P24&#8209;7<br>Fun</th><th>Norsk<br>Pop</th><th>Radio<br>Vinyl</th><th>Radio<br>Topp 40</th><th>Radio 1</th><th>Bauer<br>Pop Up</th><th>Bauer<br>Pluss Total</th><th>Podplay<br>Total</th><th>Totalt</th> <th class="filler" style="width: 90%;">&nbsp;  </th></tr> <tr class="one "><td>2022</td><td>Alle 10+ år</td><td style="text-align: right;">30</td><td style="text-align: right;">6</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">8</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">11</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">3</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;"> - </td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">82</td> <td>&nbsp;</td> </tr> <tr class="two "><td>2021</td><td>Alle 10+ år</td><td style="text-align: right;">34</td><td style="text-align: right;">6</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">8</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">11</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">3</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;"> - </td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;"> - </td><td style="text-align: right;">88</td> <td>&nbsp;</td> </tr> <tr class="one "><td>2020</td><td>Alle 10+ år</td><td style="text-align: right;">34</td><td style="text-align: right;">6</td><td style="text-align: right;">3</td><td style="text-align: right;">2</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">8</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">12</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">4</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;"> - </td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;"> - </td><td style="text-align: right;">90</td> <td>&nbsp;</td> </tr> <tr class="two "><td>2019</td><td>Alle 10+ år</td><td style="text-align: right;">34</td><td style="text-align: right;">6</td><td style="text-align: right;">4</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">7</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;">12</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">1</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">3</td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">0</td><td style="text-align: right;">1</td><td style="text-align: right;"> - </td><td style="text-align: right;">0</td><td style="text-align: right;">2</td><td style="text-align: right;">1</td><td style="text-align: right;">0</td><td style="text-align: right;">0</td><td style="text-align: right;"> - </td><td style="text-align: right;"> - </td><td style="text-align: right;">90</td> <td>&nbsp;</td></tr></table>   
+  </div>
+
+  
+
+
+
+
+
+
+<div class="col-12 col-md-9 pl-0 pr-4 mt-4">
+	<div class="merknadHeader"><h4 class="mb-1" style="font-size:1.33rem;">Merk:</h4></div> 
+
+		<p class="merknadTekst">
+		PPM-målingen inkluderer tidsforskjøvet lytting opptil 7 dager. 
+		</p>
+	
+
+		<p class="merknadTekst">
+		Lyttingen rapporteres på minuttnivå. 
+		</p>
+	
+
+		<p class="merknadTekst">
+		PPM-tallene dokumenterer passiv lytting eller eksponering for radiosendinger, uavhengig av om lytterne er klar over at de hører på radio - f.eks. i form av radiosendinger i butikker, restauranter etc. 
+		</p>
+	
+
+    <div class="d-block d-md-none">
+        <div class="merknadHeader"><h4 class="mb-1" style="font-size:1.33rem;">Kilder</h4></div> <ul style="margin-bottom: .7rem;"> 
+                <li><a href="/files/institusjon.cfm?institusjon_id=100" class="bold-text" style="font-size: 1.1rem;" onclick="javascript:window.open('/files/institusjon.cfm?institusjon_id=100','','innerWidth=840,height=550,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no,resizable=yes'); return false;">Nielsen Media Research</a></li>
+                </ul> 
+    </div>
+</div>
+
+<div class="col-12 col-md-3 px-0 mt-4">
+	
+        <div class="d-none d-md-block">
+		    <div class="merknadHeader"><h4 class="mb-1" style="font-size:1.33rem;">Kilder</h4></div> <ul style="margin-bottom: .7rem;"> 
+                <li><a href="/files/institusjon.cfm?institusjon_id=100" class="bold-text" style="font-size: 1.1rem;" onclick="javascript:window.open('/files/institusjon.cfm?institusjon_id=100','','innerWidth=840,height=550,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,copyhistory=no,resizable=yes'); return false;">Nielsen Media Research</a></li>
+                </ul> 
+        </div>
+	<div class="merknadHeader"><h4 class="mb-1" style="font-size:1.33rem;">Metode</h4></div> 
+
+				<a class="bold-text" style="font-size: 1.1rem;" href="/metode/428">PPM - lyttertall for riksdekkende radiokanaler</a><br />
+
+                <p /> 
+        
+        
+		<br />
+
+
+
+
+
+
+
+
+        <div style="clear: both;"></div>  
+
+
+		<div style="clear: both;"></div>  
+
+
+
+
+
+
+
+
+
+
+</div>
+    </div>
+</div>
+
+<script>
+    //mediaqueries som legger til tekst over tabellen dersom man er på tlf.. og litt mer
+    window.onload = function(){
+        h4 = document.getElementById("sokResult").getElementsByTagName("h4")
+        h4[0].style.display = "inline-block";
+        var mq = window.matchMedia("(max-width: 420px)");
+        lagt_til_mobil = false;
+        lagt_til_pc = false;
+        excelEle = document.createElement('div')
+        excelEle.style.display = "inline-block"
+        
+            excelEle.innerHTML = '<a class="bold-text d-none d-md-block" style="font-size: 1.1rem;  display:inline; float:right; margin-right:2px;" href="/statistikk/excel_download/boker/428" onClick="return submitSearchForm(`/statistikk/excel_download/boker/428`);"> <img src="/images/excel_new.png" width="25" height="18" style="margin-right: 2px; margin-bottom:7px;" />Excel</a>'
+        
+        function mediaFunction(mediaqr){
+            if(mediaqr.matches && !lagt_til_mobil){
+                document.getElementById('forklaringTxt').style.marginBottom = '0';
+                    if(document.getElementById("sokResult").classList=="col-12 scroll px-0 mt-2"){
+                        newEle = document.createElement('h5')
+                        newEle.style.color = "gray";
+                        h4[0].insertBefore(newEle, h4[0].nextNode) 
+                        lagt_til_mobil = true;
+                        excelEleMobile = document.createElement('div')
+                        
+                            excelEleMobile.innerHTML = '<a class="bold-text" style="font-size: 1.1rem; float:right; position:absolute; right:0; " href="/statistikk/excel_download/boker/428" onClick="return submitSearchForm(`/statistikk/excel_download/boker/428`);"> <img src="/images/excel_new.png" width="20" height="15" style="margin-right: 2px;margin-bottom:7px;" />Excel</a>'
+                        
+                        newEle.innerHTML = "Sveip for å se hele tabellen <bold style='font-size:18px;'>&#8594;</bold>"
+                        newEle.innerHTML += excelEleMobile.innerHTML
+                        newEle.classList.add("d-md-none")
+                        document.getElementById("sokResult").classList = "col-12 scroll px-0 mt-4" 
+                    }else if(document.getElementById("sokResult").classList =="col-12 px-0 mt-2"){
+                        document.getElementById("sokResult").classList = "col-12 px-0 mt-4" 
+                    }        
+            }else{
+                if(!lagt_til_pc){
+                    document.getElementById("sokResult").insertAdjacentHTML('afterbegin', excelEle.innerHTML);
+                    lagt_til_pc = true;
+                }
+                
+            }
+        }
+        mediaFunction(mq)
+        mq.addListener(mediaFunction)
+    }
+</script> 
+			</div>
+		</main>
+		<footer>
+			<div class="row">
+				﻿<div class="col text-center border-top border-bottom my-4 py-2 mx-5"> 
+     <p style="color: #212529">Alle data på Medienorges nettsider kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.</p>
+     <span class="bunntekst bold-text">MEDIENORGE &copy;2023</span><br>
+     <span class="bunntekst bold-text"><a href="https://medienorge.uib.no/personvern">Personvernerklæring</a></span>
+</div>
+
+ 
+			</div>
+		</footer>
+	</div>
+</body>
+</html>

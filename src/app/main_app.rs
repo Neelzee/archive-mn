@@ -31,7 +31,6 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
         for link in get_links_from_medium(html)? {
             let mut sok_log: Vec<ArchiveError> = Vec::new();
             
-            
             let mut wp = Webpage::from_link(link.clone()).await?;
             let medium = wp.get_medium();
             let id = wp.get_id().clone();

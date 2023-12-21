@@ -4,7 +4,7 @@ use crate::error::ArchiveError;
 use crate::modules::sok::{SokCollection, Merknad};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
-use rust_xlsxwriter::{Format, FormatAlign, Url, FormatBorder};
+use rust_xlsxwriter::{Format, FormatAlign, Url, FormatBorder, Worksheet};
 use rust_xlsxwriter::Workbook;
 
 pub const MAX_STR_LEN: usize = 150;
@@ -42,7 +42,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
 
     let mut i = 0;
     for sub_sok in soks.sok {
-        let sheet = wb.add_worksheet();
+        let mut sheet = Worksheet::new();
         let mut r = 0;
         
         // Title
@@ -58,7 +58,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             r += 1;
         }
 
-        let full_name = sub_sok.header_title.clone();
+        let full_name = sub_sok.header_title.clone().trim().to_string();
         let name: String;
 
         if let Some(l) = full_name.split_terminator(",").last() {
@@ -82,7 +82,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             name = n.trim().to_owned();
         }
 
-        let sheet_name = capitalize_first(&validify_excel_string(&name));
+        // This is garbage code
+        let mut sheet_name = capitalize_first(&validify_excel_string(&name));
         
         if sheets.clone().into_iter().any(|(_, dp)| dp == sheet_name) {
             errors.push(ArchiveError::XlSheetError(format!(
@@ -94,12 +95,24 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             continue;
         }
         if !&sheet_name.is_empty() {
+            if wb.worksheets().into_iter().map(|e| e.name()).collect::<Vec<String>>().contains(&sheet_name) {
+                errors.push(ArchiveError::XlSheetError(format!(
+                    "Error: {}, {}. '{}' already a sheetname",
+                    sub_sok.title,
+                    sub_sok.header_title,
+                    &sheet_name)
+                , id.clone().to_string()));
+                sheet_name = format!("Sheet{}", i);
+                i += 1;
+            }
             sheets.push((sheet_name.clone(), full_name));
         } else {
             let sheet_name = format!("Sheet{}", i);
             sheets.push((sheet_name.clone(), full_name));
             i += 1;
         }
+
+       
 
         sheet.set_name(sheet_name)?;
 
@@ -215,6 +228,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             }
             r += 1;
         }
+
+        wb.push_worksheet(sheet);
     }
 
     // TODO: Rewrite this, its duplicate code, dipshit
