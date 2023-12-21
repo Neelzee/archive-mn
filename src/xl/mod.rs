@@ -94,12 +94,14 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             continue;
         }
         if !&sheet_name.is_empty() {
-            sheet.set_name(&sheet_name)?;
-            sheets.push((sheet_name, full_name));
+            sheets.push((sheet_name.clone(), full_name));
         } else {
-            sheet.set_name(format!("Sheet{}", i))?;
+            let sheet_name = format!("Sheet{}", i);
+            sheets.push((sheet_name.clone(), full_name));
             i += 1;
         }
+
+        sheet.set_name(sheet_name)?;
 
 
         // Title
@@ -115,7 +117,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                 let mut c = 0;
                 for cell in row {
                     // Try to parse as int
-                    match cell.parse::<i32>() {
+                    match cell.parse::<f32>() {
                         Ok(i) => {
                             sheet.write_number_with_format(r, c, i, &header_format)?;
                         },
@@ -123,7 +125,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                             // Lets try again with trim
                             let s = cell.clone();
                             let res = s.split_whitespace().collect::<Vec<&str>>().join("");
-                            match res.parse::<i32>() {
+                            match res.parse::<f32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &header_format)?;
                                 },
@@ -142,20 +144,20 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                 let mut c = 0;
                 for cell in row {
                     // Try to parse as int
-                    match cell.parse::<i32>() {
+                    match cell.parse::<f32>() {
                         Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &header_format)?;
+                            sheet.write_number_with_format(r, c, i, &row_format)?;
                         },
                         Err(_) => {
                             // Lets try again with trim
                             let s = cell.clone();
                             let res = s.split_whitespace().collect::<Vec<&str>>().join("");
-                            match res.parse::<i32>() {
+                            match res.parse::<f32>() {
                                 Ok(i) => {
-                                    sheet.write_number_with_format(r, c, i, &header_format)?;
+                                    sheet.write_number_with_format(r, c, i, &row_format)?;
                                 },
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &header_format)?;
+                                    sheet.write_with_format(r, c, cell, &row_format)?;
                                 },
                             }
                         },

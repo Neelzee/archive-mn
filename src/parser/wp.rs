@@ -350,7 +350,7 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
     Ok((sok_collection, errors))
 }
 
-#[deprecated(note="this sucks, dude")]
+/// Creates on req
 pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
@@ -362,9 +362,9 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
         .post(wp.get_url());
 
     let forms = wp.get_forms()?;
-
+    
+    let mut sok = wp.get_sok()?;
     if forms.is_empty() {
-        let mut sok = wp.get_sok()?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
@@ -381,60 +381,51 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
                     .join(",")
                 );
                 multiple_fo.push(fo.option_name());
+            } else {
+                form_data.insert(fo.option_name(), fo.options().pop().unwrap().0);
             }
         }
-        for form in forms.combinations() {
-            println!("{:?}", &form_data);
-            let mut title = String::new();
-            for (k, (v, d)) in form {
+        
+        println!("{:?}", &form_data);
+        let mut title = sok.title;
+        
+        form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+        
+        title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
 
-                if multiple_fo.contains(&k) {
-                    continue;
-                }
+        let req = request
+                .try_clone().expect("Should not be a stream")
+                .form(&form_data).build()?;
 
-                title += &d;
-                title += " ";
-                form_data.insert(k, v);
-            }
-            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+        match client.execute(req).await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    let raw_html = response.text().await?;
             
-            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
-    
-            let req = request
-                    .try_clone().expect("Should not be a stream")
-                    .form(&form_data).build()?;
-    
-            match client.execute(req).await {
-                Ok(response) => {
-                    if response.status().is_success() {
-                        let raw_html = response.text().await?;
-                
-                        let html = Html::parse_document(&raw_html);
-                
-                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
-                        
+                    let html = Html::parse_document(&raw_html);
+            
+                    let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                    
 
-                        match sub_wp.get_sok() {
-                            Ok(mut sok) => {
-                                sok.header_title = title.trim().to_string();
-                                sok_collection.add_sok(sok);
-                            }
-                            Err(err) => {
-                                errors.push(err.into());
-                            }
+                    match sub_wp.get_sok() {
+                        Ok(mut sok) => {
+                            sok.header_title = title.trim().to_string();
+                            sok_collection.add_sok(sok);
                         }
-                        
-                        
-                    } else {
-                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                        Err(err) => {
+                            errors.push(err.into());
+                        }
                     }
+                    
+                    
+                } else {
+                    errors.push(ArchiveError::ResponseError(response.status().to_string()));
                 }
-                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
-                Err(err) => {
-                    errors.push(err.into());
-                },
             }
-    
+            // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+            Err(err) => {
+                errors.push(err.into());
+            },
         }
     }
 
