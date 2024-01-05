@@ -9,7 +9,10 @@ use reqwest::Client;
 
 use crate::parser::medium::get_links_from_medium;
 
-
+/// # MAIN
+/// 
+/// Should do everything, tbh.
+/// ATM, does everything except offline.
 pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
     if args.len() == 0 {
         println!("Missing URL-argument.");
@@ -44,7 +47,6 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                 } else {
                     println!("Sok: {}", wp.get_id());
                     println!("Form Combo: {:?}", count);
-                    let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
                     match get_sok_collection_tmf(wp).await {
                         Ok((sokc, mut errs)) => {
 
@@ -72,7 +74,10 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                             }
                             continue;
                         },
-                        Err(_) => todo!(),
+                        Err(err) => {
+                            sok_log.push(err);
+                            continue;
+                        },
                     }
                 }
             }
