@@ -7,6 +7,8 @@ use crate::{error::ArchiveError, modules::{webpage::{Link, Webpage}, sok::{SokCo
 
 use std::path::Path;
 
+const OFFLINE_PATH: &str = "arkiv\\offline";
+
 pub fn visit_dirs(dir: &Path) -> std::io::Result<Vec<String>> {
     let mut paths = Vec::new();
     if dir.is_dir() {
@@ -106,7 +108,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
             let time_start = Instant::now();
 
             let link = wp.get_url();
-            let path = format!("arkiv\\test\\{}", medium.clone());
+            let path = format!("{}\\{}", OFFLINE_PATH, medium.clone());
 
             let mut sokc = SokCollection::new(id, medium);
 
@@ -228,7 +230,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                 let id = wp.get_id().clone();
                 println!("Multi Page Offline Sok: {}", &id);        
 
-                let path = format!("arkiv\\test\\{}", medium.clone());
+                let path = format!("{}\\{}", OFFLINE_PATH, medium.clone());
 
                 let r = fs::create_dir_all(path.clone());
                 if r.is_err() {
@@ -273,7 +275,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                 continue;
             }
 
-            match save_sok(sokc, "arkive\\test") {
+            match save_sok(sokc, OFFLINE_PATH) {
                 Ok(_) => {
                     println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
                 },
