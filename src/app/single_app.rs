@@ -73,10 +73,10 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                     let _ = write_failed_sok("0 tables".to_string(), &id);
                     sokc.title = sokc.title + &format!("_{}", sokc.id.clone());
                 }
-
+                let title = sokc.title.clone();
                 match save_sok(sokc, &path) {
                     Ok(_) => {
-                        checkmark_sok(&id);
+                        checkmark_sok(&id, &title);
                         println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
                     },
                     Err(e) => {

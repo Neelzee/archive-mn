@@ -102,11 +102,11 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                         let _ = write_failed_sok("0 tables".to_string(), &id);
                         sokc.title = sokc.title + &format!("_{}", sokc.id.clone());
                     }
-
+                    let title = sokc.title.clone();
                     match save_sok(sokc, &path) {
                         Ok(_) => {
                             save_count += 1;
-                            checkmark_sok(&id);
+                            checkmark_sok(&id, &title);
                             println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
                         },
                         Err(e) => {
@@ -164,12 +164,12 @@ pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn checkmark_sok(id: &usize) {
+pub fn checkmark_sok(id: &usize, title: &str) {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open("sok.log")
         .expect("sok.log File should exist");
 
-    writeln!(file, "{}", id).expect("Should be able to write to file");
+    writeln!(file, "{};{}", id, title).expect("Should be able to write to file");
 }
