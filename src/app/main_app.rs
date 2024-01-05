@@ -7,8 +7,6 @@ use crate::modules::webpage::{Webpage, Link};
 use crate::parser::wp::get_sok_collection;
 use reqwest::Client;
 
-use std::io::prelude::*;
-
 use crate::parser::medium::get_links_from_medium;
 
 

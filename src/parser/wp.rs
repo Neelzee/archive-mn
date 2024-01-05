@@ -102,9 +102,10 @@ impl Webpage {
                     for td in self.get_content().select(&th_selector) {
                         // This cell belongs to the current row
                         if has_ancestor(*td, tr.id()) {
-                            let txt = trim_string(&td.text().collect::<String>());
+                            let  txt = trim_string(&td.text().collect::<String>());
 
-                            if txt.len() == 0 || txt.contains('\u{a0}') {
+                            if txt.contains('\u{a0}') {
+                                row.push("".into());
                                 continue;
                             }
 
