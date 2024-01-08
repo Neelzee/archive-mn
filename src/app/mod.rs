@@ -1,7 +1,6 @@
 use std::fs;
 
 use crate::{
-    app::main_app::write_failed_sok,
     error::ArchiveError,
     modules::{
         sok::SokCollection,
@@ -30,12 +29,9 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
         return Err(vec![res.unwrap_err()]);
     }
 
-    let mut wp = res.unwrap();
+    let wp = res.unwrap();
 
     let medium = wp.get_medium();
-    let id = wp.get_id().clone();
-
-    wp.set_medium(medium.clone());
 
     println!("Sok: {}", wp.get_id());
 
