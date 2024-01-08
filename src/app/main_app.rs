@@ -116,12 +116,12 @@ pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn checkmark_sok(id: &usize) {
+pub fn checkmark_sok(id: &usize, title: &str) {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open("sok.log")
         .expect("sok.log File should exist");
 
-    writeln!(file, "{}", id).expect("Should be able to write to file");
+    writeln!(file, "{};{}", id, title).expect("Should be able to write to file");
 }
