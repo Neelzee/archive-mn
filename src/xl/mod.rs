@@ -1,26 +1,22 @@
 use std::cmp::min;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::{SokCollection, Merknad};
+use crate::modules::sok::{Merknad, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
-use rust_xlsxwriter::{Format, FormatAlign, Url, FormatBorder, Worksheet};
 use rust_xlsxwriter::Workbook;
+use rust_xlsxwriter::{Format, FormatAlign, FormatBorder, Url, Worksheet};
 
 pub const MAX_STR_LEN: usize = 150;
 
-pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
+pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
     let mut wb = Workbook::new();
     let wb_path: String;
     let mut errors: Vec<ArchiveError> = Vec::new();
     let id = soks.id.clone();
     let title = validify_excel_string(&soks.title.clone());
-    if path.len() != 0 {
-        wb_path = format!("{}\\{}.xlsx", path.to_string(), title);
-    } else {
-        wb_path = format!("{}\\{}.xlsx", soks.medium.clone(), title);
-    }
+    wb_path = format!("{}\\{}.xlsx", path.to_string(), title);
 
     let bold = Format::new().set_bold();
 
@@ -41,14 +37,14 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
         .set_align(FormatAlign::Left);
 
     let mut i = 0;
-    for sub_sok in soks.sok {
+    for sub_sok in soks.sok.clone() {
         let mut sheet = Worksheet::new();
         let mut r = 0;
-        
+
         // Title
         sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
         r += 1;
-        
+
         // Content
         for line in soks.text.clone() {
             for l in split_string(line) {
@@ -69,7 +65,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                 if n.chars().count() + c.len_utf16() <= split_point {
                     n.push(c);
                 }
-            } 
+            }
             name = n;
         } else {
             let mut n = String::new();
@@ -84,24 +80,32 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
 
         // This is garbage code
         let mut sheet_name = capitalize_first(&validify_excel_string(&name));
-        
+
         if sheets.clone().into_iter().any(|(_, dp)| dp == sheet_name) {
-            errors.push(ArchiveError::XlSheetError(format!(
-                "Skipping: {}, {}. '{}' already a sheetname",
-                sub_sok.title,
-                sub_sok.header_title,
-                &sheet_name)
-            , id.clone().to_string()));
+            errors.push(ArchiveError::XlSheetError(
+                format!(
+                    "Skipping: {}, {}. '{}' already a sheetname",
+                    sub_sok.title, sub_sok.header_title, &sheet_name
+                ),
+                id.clone().to_string(),
+            ));
             continue;
         }
         if !&sheet_name.is_empty() {
-            if wb.worksheets().into_iter().map(|e| e.name()).collect::<Vec<String>>().contains(&sheet_name) {
-                errors.push(ArchiveError::XlSheetError(format!(
-                    "Error: {}, {}. '{}' already a sheetname",
-                    sub_sok.title,
-                    sub_sok.header_title,
-                    &sheet_name)
-                , id.clone().to_string()));
+            if wb
+                .worksheets()
+                .into_iter()
+                .map(|e| e.name())
+                .collect::<Vec<String>>()
+                .contains(&sheet_name)
+            {
+                errors.push(ArchiveError::XlSheetError(
+                    format!(
+                        "Error: {}, {}. '{}' already a sheetname",
+                        sub_sok.title, sub_sok.header_title, &sheet_name
+                    ),
+                    id.clone().to_string(),
+                ));
                 sheet_name = format!("Sheet{}", i);
                 i += 1;
             }
@@ -112,10 +116,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             i += 1;
         }
 
-       
-
         sheet.set_name(sheet_name)?;
-
 
         // Title
         sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
@@ -123,7 +124,6 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
         r += 1;
         // Tables
         for t in sub_sok.tables {
-
             r += 1;
             // Header
             for row in t.header {
@@ -133,7 +133,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                     match cell.parse::<f32>() {
                         Ok(i) => {
                             sheet.write_number_with_format(r, c, i, &header_format)?;
-                        },
+                        }
                         Err(_) => {
                             // Lets try again with trim
                             let s = cell.clone();
@@ -141,12 +141,12 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                             match res.parse::<f32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &header_format)?;
-                                },
+                                }
                                 Err(_) => {
                                     sheet.write_with_format(r, c, cell, &header_format)?;
-                                },
+                                }
                             }
-                        },
+                        }
                     }
                     c += 1;
                 }
@@ -160,7 +160,7 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                     match cell.parse::<f32>() {
                         Ok(i) => {
                             sheet.write_number_with_format(r, c, i, &row_format)?;
-                        },
+                        }
                         Err(_) => {
                             // Lets try again with trim
                             let s = cell.clone();
@@ -168,14 +168,14 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                             match res.parse::<f32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &row_format)?;
-                                },
+                                }
                                 Err(_) => {
                                     sheet.write_with_format(r, c, cell, &row_format)?;
-                                },
+                                }
                             }
-                        },
+                        }
                     }
-                    
+
                     c += 1;
                 }
                 r += 1;
@@ -313,10 +313,8 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
             let link: &str = &format!("internal:'{}'!A1", "Informasjon");
             sheet.write_url_with_text(r, 0, link, "Informasjon")?;
         }
-        
-
     }
-    
+
     match wb.save(wb_path.clone()) {
         Ok(_) => Ok(errors),
         Err(err) => {
@@ -325,10 +323,10 @@ pub fn save_sok(soks: SokCollection, path: &str) -> Result<Vec<ArchiveError>, Ar
                 Ok(_) => {
                     errors.push(ArchiveError::XlSaveError(err.to_string(), wb_path));
                     Ok(errors)
-                },
+                }
                 Err(e) => Err(ArchiveError::XlSaveError(e.to_string(), p)),
             }
-        },
+        }
     }
 }
 
@@ -338,7 +336,8 @@ pub fn split_string(input: String) -> Vec<String> {
 
     let mut cur_line = String::new();
     for w in input.split_whitespace() {
-        if cur_line.len() + w.len() + 1 <= MAX_STR_LEN { // +1 for the space
+        if cur_line.len() + w.len() + 1 <= MAX_STR_LEN {
+            // +1 for the space
             if !cur_line.is_empty() {
                 cur_line.push(' ');
             }

@@ -122,3 +122,23 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
         Err(io::Error::new(io::ErrorKind::NotFound, "No files found in the folder"))
     }
 }
+
+
+/// # Cartesian Product
+/// 
+/// Creates the cartesian product of any 2d-vec.
+/// 
+/// # Example
+/// ```rs
+/// let set = vec![
+///     vec![1, 2, 3],
+///     vec![4, 5, 6],
+/// ];
+/// let r = cartesian_product(set);
+/// assert!(r, vec![(1, 4), (2, 5), (3, 6)]);
+/// ```
+pub fn cartesian_product<T>(set: Vec<Vec<T>>) -> Vec<(T, T)> {
+    let mut vecs = Vec::new();
+    
+    vecs
+}

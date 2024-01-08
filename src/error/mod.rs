@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use scraper::error::SelectorErrorKind;
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub enum ArchiveError {
@@ -13,27 +13,31 @@ pub enum ArchiveError {
     InvalidURL,
     IOError(String),
     ResponseError(String),
-    FailedParsing(usize, String)
+    FailedParsing(usize, String),
 }
 
-unsafe impl Sync for ArchiveError {
-    
-}
+unsafe impl Sync for ArchiveError {}
 
 impl Display for ArchiveError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ArchiveError::ScraperError(err) => write!(f, "Scraper Error: {}", err),
             ArchiveError::XlError(err) => write!(f, "Xl Error: {}", err),
-            ArchiveError::XlSaveError(err, path) => write!(f, "Xl Save Error: {}, path: '{}'", err, path),
-            ArchiveError::XlSheetError(info, id) => write!(f, "XL Sheet Name Error: Sok {}, {}", id, info),
+            ArchiveError::XlSaveError(err, path) => {
+                write!(f, "Xl Save Error: {}, path: '{}'", err, path)
+            }
+            ArchiveError::XlSheetError(info, id) => {
+                write!(f, "XL Sheet Name Error: Sok {}, {}", id, info)
+            }
             ArchiveError::ParserError(str) => write!(f, "Parser Error: {}", str),
             ArchiveError::UrlParseError(err) => write!(f, "Id Parse Error: {}", err),
             ArchiveError::MissingTitle => write!(f, "Missing Title Error"),
             ArchiveError::InvalidURL => write!(f, "Invalid URL Error"),
             ArchiveError::IOError(e) => write!(f, "IOError: {}", e),
             ArchiveError::ResponseError(err) => write!(f, "Response Error: {}", err),
-            ArchiveError::FailedParsing(id, url) => write!(f, "Found no tables for Sok: {}, at url: {}", id, url),
+            ArchiveError::FailedParsing(id, url) => {
+                write!(f, "Found no tables for Sok: {}, at url: {}", id, url)
+            }
         }
     }
 }
@@ -61,7 +65,6 @@ impl From<std::num::ParseIntError> for ArchiveError {
         ArchiveError::UrlParseError(value.to_string())
     }
 }
-
 
 impl From<std::io::Error> for ArchiveError {
     fn from(value: std::io::Error) -> Self {

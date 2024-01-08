@@ -1,9 +1,27 @@
-use std::{time::Instant, fs::{self, File}, io::Read, fmt::format};
+use std::{
+    fmt::format,
+    fs::{self, File},
+    io::Read,
+    time::Instant,
+};
 
 use itertools::Itertools;
 use scraper::Html;
 
-use crate::{error::ArchiveError, modules::{webpage::{Link, Webpage}, sok::{SokCollection, Merknad}}, parser::{wp::{get_sok_collection, get_kilde, get_metode}, medium, get_merknad}, xl::save_sok, app::main_app::{checkmark_sok, write_log}, utils::constants::ROOT_URL};
+use crate::{
+    app::main_app::{checkmark_sok, write_log},
+    error::ArchiveError,
+    modules::{
+        sok::{Merknad, SokCollection},
+        webpage::{Link, Webpage},
+    },
+    parser::{
+        get_merknad, medium,
+        wp::{get_kilde, get_metode, get_sok_collection},
+    },
+    utils::constants::ROOT_URL,
+    xl::save_sok,
+};
 
 use std::path::Path;
 
@@ -19,7 +37,12 @@ pub fn visit_dirs(dir: &Path) -> std::io::Result<Vec<String>> {
                 paths.append(&mut visit_dirs(&path)?);
             } else {
                 // Process each file in the sub-folder
-                paths.push(path.as_os_str().to_str().expect("Should be a valid string").to_owned());
+                paths.push(
+                    path.as_os_str()
+                        .to_str()
+                        .expect("Should be a valid string")
+                        .to_owned(),
+                );
             }
         }
     }
@@ -38,7 +61,7 @@ fn list_files_and_folders_in(folder_path: &str) -> Vec<(String, bool)> {
                 let is_directory = path.is_dir();
 
                 result.push((file_name, is_directory));
-                
+
                 // If it's a directory, recursively call the function to get its contents
                 if is_directory {
                     let subfolder_path = path.to_str().unwrap();
@@ -53,14 +76,13 @@ fn list_files_and_folders_in(folder_path: &str) -> Vec<(String, bool)> {
 }
 
 pub async fn get_soks_offline() -> Result<(), ArchiveError> {
-
     let files = list_files_and_folders_in("in");
-    
+
     for (raw_path, is_folder) in files {
         let path = format!("in\\{}", raw_path.clone());
         if !is_folder {
             let mut sok_log: Vec<ArchiveError> = Vec::new();
-            
+
             let res = File::open(path.clone());
 
             if res.is_err() {
@@ -77,12 +99,12 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                 eprintln!("Skipping: {}, due too: {}", &path, r.unwrap_err());
                 continue;
             }
-            
+
             let content = Html::parse_document(&raw_html);
 
             let mut id = 0;
             let mut medium = "unknown".to_string();
-            
+
             let mut str = path.split("\\").collect::<Vec<_>>().into_iter().rev();
 
             if let Some(i) = str.next() {
@@ -102,7 +124,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
             let wp = Webpage::from_html(id, url, content, medium);
             let medium = wp.get_medium();
             let id = wp.get_id().clone();
-            println!("Single Page Offline Sok: {}", &id);        
+            println!("Single Page Offline Sok: {}", &id);
             let time_start = Instant::now();
 
             let link = wp.get_url();
@@ -112,7 +134,11 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
 
             let r = fs::create_dir_all(path.clone());
             if r.is_err() {
-                println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                println!(
+                    "Could not create path: {}, got error: {}",
+                    path.clone(),
+                    r.unwrap_err()
+                );
             }
 
             let time_end = Instant::now();
@@ -135,7 +161,10 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
             }
 
             // Merknad
-            sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
+            sokc.add_merknad(Merknad {
+                title: "Merknad".to_string(),
+                content: wp.get_merknad()?,
+            });
 
             // text
             for t in wp.get_text()? {
@@ -148,22 +177,41 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                 sok_log.push(ArchiveError::FailedParsing(sokc.id.clone(), link));
                 continue;
             }
-
-            match save_sok(sokc, &path) {
+            match save_sok(&sokc, &path) {
                 Ok(_) => {
-                    println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
-                },
+                    println!(
+                        "Saved sok: {}, Took {}s",
+                        &id,
+                        (time_end - time_start).as_secs()
+                    );
+                }
                 Err(e) => {
-                    println!("Failed saving sok: {}, With Error: {}, Took {}s", &id, &e, (time_end - time_start).as_secs());
+                    println!(
+                        "Failed saving sok: {}, With Error: {}, Took {}s",
+                        &id,
+                        &e,
+                        (time_end - time_start).as_secs()
+                    );
                     sok_log.push(e);
-                }, 
+                }
             }
 
             if sok_log.len() != 0 {
                 println!("{} error(s) found.", sok_log.len());
-                let r = write_log(sok_log.clone().into_iter().map(|e| e.to_string()).collect_vec(), id);
+                let r = write_log(
+                    sok_log
+                        .clone()
+                        .into_iter()
+                        .map(|e| e.to_string())
+                        .collect_vec(),
+                    id,
+                );
                 if r.is_err() {
-                    println!("Failed writing Error Log for Sok: {}, due too {}, dumping log.", id, r.unwrap_err());
+                    println!(
+                        "Failed writing Error Log for Sok: {}, due too {}, dumping log.",
+                        id,
+                        r.unwrap_err()
+                    );
                     for err in sok_log {
                         println!("Sok {} Error: {:?}", id, err);
                     }
@@ -220,19 +268,23 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                 if r.is_err() {
                     eprintln!("Skipping: {}, due too: {}", p, r.unwrap_err());
                 }
-                
+
                 let content = Html::parse_document(&raw_html);
 
                 let wp = Webpage::from_html(id, url.clone(), content, medium.clone());
                 let medium = wp.get_medium();
                 let id = wp.get_id().clone();
-                println!("Multi Page Offline Sok: {}", &id);        
+                println!("Multi Page Offline Sok: {}", &id);
 
                 let path = format!("arkiv\\test\\{}", medium.clone());
 
                 let r = fs::create_dir_all(path.clone());
                 if r.is_err() {
-                    println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                    println!(
+                        "Could not create path: {}, got error: {}",
+                        path.clone(),
+                        r.unwrap_err()
+                    );
                 }
 
                 if i == 0 {
@@ -247,7 +299,10 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
                     }
 
                     // Merknad
-                    sokc.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
+                    sokc.add_merknad(Merknad {
+                        title: "Merknad".to_string(),
+                        content: wp.get_merknad()?,
+                    });
 
                     // text
                     for t in wp.get_text()? {
@@ -269,25 +324,48 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
             // Failed
             if sokc.sok.len() == 0 {
                 println!("Sok: {}, had 0 tables.", &id);
-                sok_log.push(ArchiveError::FailedParsing(id.clone(), "offline".to_string()));
+                sok_log.push(ArchiveError::FailedParsing(
+                    id.clone(),
+                    "offline".to_string(),
+                ));
                 continue;
             }
 
-            match save_sok(sokc, "arkive\\test") {
+            match save_sok(&sokc, "arkive\\test") {
                 Ok(_) => {
-                    println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
-                },
+                    println!(
+                        "Saved sok: {}, Took {}s",
+                        &id,
+                        (time_end - time_start).as_secs()
+                    );
+                }
                 Err(e) => {
-                    println!("Failed saving sok: {}, With Error: {}, Took {}s", &id, &e, (time_end - time_start).as_secs());
+                    println!(
+                        "Failed saving sok: {}, With Error: {}, Took {}s",
+                        &id,
+                        &e,
+                        (time_end - time_start).as_secs()
+                    );
                     sok_log.push(e);
-                }, 
+                }
             }
 
             if sok_log.len() != 0 {
                 println!("{} error(s) found.", sok_log.len());
-                let r = write_log(sok_log.clone().into_iter().map(|e| e.to_string()).collect_vec(), id);
+                let r = write_log(
+                    sok_log
+                        .clone()
+                        .into_iter()
+                        .map(|e| e.to_string())
+                        .collect_vec(),
+                    id,
+                );
                 if r.is_err() {
-                    println!("Failed writing Error Log for Sok: {}, due too {}, dumping log.", id, r.unwrap_err());
+                    println!(
+                        "Failed writing Error Log for Sok: {}, due too {}, dumping log.",
+                        id,
+                        r.unwrap_err()
+                    );
                     for err in sok_log {
                         println!("Sok {} Error: {:?}", id, err);
                     }

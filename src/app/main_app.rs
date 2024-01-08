@@ -1,16 +1,13 @@
-use std::{fs::{self, OpenOptions, File}, io::{self, Write}, time::Instant};
+use std::{fs::OpenOptions, io::Write};
 
+use crate::app::try_save_sok;
+use crate::{app::main_fn, modules::webpage::Link};
+use crate::{error::ArchiveError, parse_args, scraper::get_html_content, xl::save_sok};
 use itertools::Itertools;
-use scraper::Html;
-use crate::{error::ArchiveError, xl::save_sok, scraper::get_html_content, parse_args, modules::sok::{SokCollection, Merknad}, parser::wp::{get_kilde, get_metode, get_sok_collection_tmf}};
-use crate::modules::webpage::{Webpage, Link};
-use crate::parser::wp::get_sok_collection;
 use reqwest::Client;
-
-use std::io::prelude::*;
+use scraper::Html;
 
 use crate::parser::medium::get_links_from_medium;
-
 
 pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
     if args.len() == 0 {
@@ -18,136 +15,89 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
         return Err(ArchiveError::InvalidURL);
     }
 
-    let medium_links: Vec <Link> = parse_args(args)?;
+    let medium_links: Vec<Link> = parse_args(args)?;
 
     let mut wp_count = 0;
     let mut save_count = 0;
-    let mut mediums: Vec<String> = Vec::new();
 
     let client = Client::default();
     for medium_link in medium_links {
         let raw_html = get_html_content(&client, medium_link.to_string()).await?;
         let html = Html::parse_document(&raw_html);
         for link in get_links_from_medium(html)? {
-            let mut sok_log: Vec<ArchiveError> = Vec::new();
-            
-            let mut wp = Webpage::from_link(link.clone()).await?;
-            let medium = wp.get_medium();
-            let id = wp.get_id().clone();
-        
-            let time_start = Instant::now();
-
-            wp.set_medium(medium.clone());
-
-            if let Some(com) = wp.get_forms().ok() {
-                let count = com.combinations().collect::<Vec<_>>().len();
-                if count <= 30 {
-                    println!("Sok: {}", wp.get_id());
-                } else {
-                    println!("Sok: {}", wp.get_id());
-                    println!("Form Combo: {:?}", count);
-                    let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
-                    match get_sok_collection_tmf(wp).await {
-                        Ok((sokc, mut errs)) => {
-
-                            sok_log.append(&mut errs);                            
-                           
-                            let path = format!("error\\{}", medium.clone());
-                            if !mediums.contains(&medium) {
-                                mediums.push(medium.clone());
-                                let r = fs::create_dir_all(path.clone());
-                                if r.is_err() {
-                                    println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+            wp_count += 1;
+            match main_fn(&link).await {
+                Ok((sokc, mut sok_log)) => {
+                    let path = format!("archive\\");
+                    match try_save_sok(&sokc, &path, 2) {
+                        Ok(mut log) => {
+                            sok_log.append(&mut log);
+                            save_count += 1;
+                            if let Err(e) = write_log(
+                                sok_log
+                                    .clone()
+                                    .into_iter()
+                                    .map(|e| e.to_string())
+                                    .collect_vec(),
+                                sokc.id,
+                            ) {
+                                eprintln!("Error writing too logs: {}, dumping log to terminal", e);
+                                for l in sok_log {
+                                    eprintln!("{}", l);
                                 }
                             }
-
-                            match save_sok(sokc, &path) {
-                                Ok(mut err) => {
-                                    sok_log.append(&mut err);
-                                    println!("Saved sok: {}", &id);
-                                },
-                                Err(e) => {
-                                    println!("Failed saving sok: {}, With Error: {}", &id, &e);
-                                    sok_log.push(e.clone());
-                                    let _ = write_failed_sok(e.to_string(), &id);
-                                }, 
-                            }
-                            continue;
-                        },
-                        Err(_) => todo!(),
-                    }
-                }
-            }
-
-
-            match get_sok_collection(wp).await {
-                Ok((mut sokc, mut errs)) => {
-                    wp_count += 1;
-
-                    sok_log.append(&mut errs);
-
-                    let path = format!("arkiv\\{}", medium.clone());
-                    if !mediums.contains(&medium) {
-                        mediums.push(medium.clone());
-                        let r = fs::create_dir_all(path.clone());
-                        if r.is_err() {
-                            println!("Could not create path: {}, got error: {}", path.clone(), r.unwrap_err());
+                        }
+                        Err(err) => {
+                            eprintln!(
+                                "Failed saving sok: {};{}, due too errors: {}, dumping it to root",
+                                &sokc.id,
+                                &sokc.title,
+                                err.into_iter().map(|e| e.to_string()).join("\n")
+                            );
                         }
                     }
+                }
+                Err(err) => {
+                    let mut id = 0;
+                    let url_c = link.to_string().clone();
 
-                    let time_end = Instant::now();
+                    let mut str = url_c.split("/").collect::<Vec<_>>().into_iter().rev();
 
-                    // Failed
-                    if sokc.sok.len() == 0 {
-                        println!("Sok: {}, had 0 tables.", &sokc.id);
-                        sok_log.push(ArchiveError::FailedParsing(sokc.id.clone(), link.to_string().clone()));
-                        let _ = write_failed_sok("0 tables".to_string(), &id);
-                        sokc.title = sokc.title + &format!("_{}", sokc.id.clone());
+                    if let Some(i) = str.next() {
+                        id = i.parse::<usize>()?;
                     }
 
-                    match save_sok(sokc, &path) {
-                        Ok(_) => {
-                            save_count += 1;
-                            checkmark_sok(&id);
-                            println!("Saved sok: {}, Took {}s", &id, (time_end - time_start).as_secs());
-                        },
-                        Err(e) => {
-                            println!("Failed saving sok: {}, With Error: {}, Took {}s", &id, &e, (time_end - time_start).as_secs());
-                            sok_log.push(e.clone());
-                            let _ = write_failed_sok(e.to_string(), &id);
-                        }, 
-                    }
-                },
-                Err(e) => sok_log.push(e)
-            }
-            if sok_log.len() != 0 {
-                println!("{} error(s) found.", sok_log.len());
-                let r = write_log(sok_log.clone().into_iter().map(|e| e.to_string()).collect_vec(), id);
-                if r.is_err() {
-                    println!("Failed writing Error Log for Sok: {}, due too {}, dumping log.", id, r.unwrap_err());
-                    for err in sok_log {
-                        println!("Sok {} Error: {:?}", id, err);
+                    if let Err(e) = write_failed_sok(
+                        err.clone().into_iter().map(|e| e.to_string()).join("\n"),
+                        &id,
+                        "UNKNOWN".to_string(),
+                    ) {
+                        eprintln!(
+                            "Error writing too error logs: {}, dumping log to terminal",
+                            e
+                        );
+                        for l in err {
+                            eprintln!("{}", l);
+                        }
                     }
                 }
-            } else {
-                println!("No errors reported.");
             }
         }
     }
 
     println!("Found {} webpages, saved {} of them.", wp_count, save_count);
-    
+
     Ok(())
 }
 
-pub fn write_failed_sok(error: String, id: &usize) -> std::io::Result<()> {
+pub fn write_failed_sok(error: String, id: &usize, title: String) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open("failed_sok.log")
         .expect("failed_sok.log File should exist");
 
-    writeln!(file, "Sok: {}, Error: {}", id, error)
+    writeln!(file, "Sok: {};{}, Error: {}", id, title, error)
 }
 
 pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {
@@ -158,7 +108,7 @@ pub fn write_log(logs: Vec<String>, id: usize) -> std::io::Result<()> {
         .expect("log.log File should exist");
 
     writeln!(file, "Sok: {}", id)?;
-    
+
     for line in logs {
         writeln!(file, "{}", line)?;
     }

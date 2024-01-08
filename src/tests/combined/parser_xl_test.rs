@@ -1,4 +1,4 @@
-use crate::{utils::funcs::get_random_webpage, parser::wp::get_sok_collection, xl::save_sok};
+use crate::{parser::wp::get_sok_collection, utils::funcs::get_random_webpage, xl::save_sok};
 
 #[tokio::test]
 async fn test_parsing_saving() {
@@ -9,7 +9,7 @@ async fn test_parsing_saving() {
 
         let (sc, _) = res.unwrap();
 
-        let res2 = save_sok(sc, "src\\tests");
+        let res2 = save_sok(&sc, "src\\tests");
         eprintln!("{:?}", &res2);
         assert!(res2.is_ok());
     } else {
