@@ -1,4 +1,6 @@
-use std::fs;
+use std::{collections::HashMap, fs};
+
+use once_cell::sync::Lazy;
 
 use crate::{
     error::ArchiveError,
@@ -8,6 +10,7 @@ use crate::{
     },
     parser::wp::{get_sok_collection, get_sok_collection_tmf},
     xl::save_sok,
+    ALLOW_DUPS, CHECKED_SOK_ID, CHECKED_SOK_TITLE,
 };
 
 pub mod main_app;
@@ -33,7 +36,22 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
 
     let medium = wp.get_medium();
 
-    println!("Sok: {}", wp.get_id());
+    let id = wp.get_id().clone();
+
+    if let Ok(allow_dup) = ALLOW_DUPS.lock() {
+        if let Ok(title) = wp.get_title() {
+            if !*allow_dup {
+                if skip_sok(Some(&id), Some(&title)) {
+                    println!("Skipping sok: {}, is duplicate", id);
+                    return Err(vec![ArchiveError::DuplicateSok]);
+                } else {
+                    add_sok(Some(id), Some(title));
+                }
+            }
+        }
+    }
+
+    println!("Sok: {}", id);
 
     if let Some(com) = wp.get_forms().ok() {
         let count = com.combinations().collect::<Vec<_>>().len();
@@ -109,6 +127,40 @@ pub fn try_save_sok(
                     }
                 }
             }
+        }
+    }
+}
+
+pub fn skip_sok(id: Option<&usize>, title: Option<&str>) -> bool {
+    if let Some(id) = id {
+        if let Ok(map) = CHECKED_SOK_ID.lock() {
+            if map.contains_key(id) {
+                return true;
+            }
+        }
+    }
+
+    if let Some(title) = title {
+        if let Ok(map) = CHECKED_SOK_TITLE.lock() {
+            if map.contains_key(title) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+pub fn add_sok(id: Option<usize>, title: Option<String>) {
+    if let Some(id) = id {
+        if let Ok(mut map_id) = CHECKED_SOK_ID.lock() {
+            map_id.insert(id, true);
+        }
+    }
+
+    if let Some(title) = title {
+        if let Ok(mut map_title) = CHECKED_SOK_TITLE.lock() {
+            map_title.insert(title, true);
         }
     }
 }

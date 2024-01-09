@@ -14,6 +14,7 @@ pub enum ArchiveError {
     IOError(String),
     ResponseError(String),
     FailedParsing(usize, String),
+    DuplicateSok,
 }
 
 unsafe impl Sync for ArchiveError {}
@@ -38,6 +39,7 @@ impl Display for ArchiveError {
             ArchiveError::FailedParsing(id, url) => {
                 write!(f, "Found no tables for Sok: {}, at url: {}", id, url)
             }
+            ArchiveError::DuplicateSok => write!(f, "DuplicateSok"),
         }
     }
 }

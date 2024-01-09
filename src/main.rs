@@ -1,18 +1,37 @@
-use std::{env, io};
-use error::ArchiveError;
-use modules::webpage::Link;
-use std::fs::File;
-use std::time::Instant;
-use crate::app::{main_app::run_app, single_app::get_soks, offline_app::get_soks_offline, interactive_app::interactive, mf_app::mf_app};
+use crate::app::{
+    interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
+    single_app::get_soks,
+};
 
+use error::ArchiveError;
+use lazy_static::lazy_static;
+use modules::webpage::Link;
+use once_cell::sync::Lazy;
+use std::borrow::BorrowMut;
+use std::collections::HashMap;
+use std::fs::{File, OpenOptions};
+use std::io::{BufRead, BufReader};
+use std::os::raw;
+use std::sync::Mutex;
+use std::sync::{Arc, RwLock};
+use std::time::Instant;
+use std::{env, io};
+
+mod app;
 mod error;
 mod modules;
 mod parser;
-mod utils;
-mod xl;
-mod app;
 mod scraper;
 mod tests;
+mod utils;
+mod xl;
+
+lazy_static! {
+    pub static ref CHECKED_SOK_ID: Mutex<HashMap<usize, bool>> = Mutex::new(HashMap::new());
+    pub static ref CHECKED_SOK_TITLE: Mutex<HashMap<String, bool>> = Mutex::new(HashMap::new());
+    pub static ref ALLOW_DUPS: Mutex<bool> = Mutex::new(false);
+}
+
 /// # Setup
 /// Ensures that all the *.log files are available, before exec.
 /// Can throw an io::Error
@@ -20,15 +39,68 @@ fn setup() -> io::Result<()> {
     File::create("sok.log")?;
     File::create("log.log")?;
     File::create("failed_sok.log")?;
+
+    let file = OpenOptions::new().read(true).open("skip.log")?;
+
+    let reader = BufReader::new(file);
+
+    if let Ok(mut map_title) = CHECKED_SOK_TITLE.lock() {
+        if let Ok(mut map_id) = CHECKED_SOK_ID.lock() {
+            for line in reader.lines() {
+                let line = line?;
+
+                let mut parts = line.split(";").collect::<Vec<&str>>();
+
+                if parts.len() == 2 {
+                    let raw_id = parts.pop().unwrap();
+                    let title = parts.pop().unwrap();
+                    map_title.insert(title.to_owned(), true);
+
+                    if let Ok(id) = raw_id.parse::<usize>() {
+                        map_id.insert(id, true);
+                    }
+                } else if parts.len() == 1 {
+                    let r = parts.pop().unwrap();
+                    match r.parse::<usize>() {
+                        Ok(id) => {
+                            map_id.insert(id, true);
+                            continue;
+                        }
+                        Err(_) => {
+                            map_title.insert(r.to_owned(), true);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 
-#[tokio::main(flavor="current_thread")]
+#[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), ArchiveError> {
     if let Err(e) = setup() {
         eprintln!("Error during setup: {}", e);
     }
     let mut args: Vec<String> = env::args().collect();
+
+    if args.contains(&"-dup".to_string()) {
+        let mut j = 0;
+        for i in 0..args.len() {
+            if args.get(i).unwrap() == &"-dup".to_string() {
+                j = i;
+                break;
+            }
+        }
+
+        args.swap_remove(j);
+
+        if let Ok(mut dups) = ALLOW_DUPS.lock() {
+            *dups = true;
+        }
+    }
 
     if args.contains(&"-cli".to_string()) {
         interactive().await;
@@ -37,20 +109,18 @@ async fn main() -> Result<(), ArchiveError> {
 
     args.remove(0); // First argument is path to the exe
     if args.len() == 0 {
-        args.append(
-            &mut vec![
-                "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-                "https://medienorge.uib.no/statistikk/medium/ikt".to_string()
-            ]
-        );
+        args.append(&mut vec![
+            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
+        ]);
     }
 
     if args.contains(&"-err".to_string()) {
@@ -70,8 +140,9 @@ async fn main() -> Result<(), ArchiveError> {
             "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
             "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
             "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ikt".to_string()
-        ]).await;
+            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
+        ])
+        .await;
         let time_end = Instant::now();
         let duration = time_end - time_start;
         println!("That took: {} seconds", duration.as_secs());
@@ -102,10 +173,9 @@ async fn main() -> Result<(), ArchiveError> {
             Ok(links) => get_soks(links).await?,
             Err(err) => println!("Failed parsing args: {}", err),
         }
-        
+
         return Ok(());
     }
-
 
     let time_start = Instant::now();
     let r = run_app(args).await;
