@@ -206,6 +206,9 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
 
     for l in &links {
         let url = l.create_full().to_string();
+        if !l.is_metode() {
+            continue;
+        }
         let mut title = String::new();
         let content = get_html_content(&Client::default(), url).await?;
         for h in Html::parse_document(&content).select(&h3_selector) {

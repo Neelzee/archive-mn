@@ -26,6 +26,10 @@ impl Link {
         }
     }
 
+    pub fn is_metode(&self) -> bool {
+        self.url.contains("metode")
+    }
+
     pub fn to_string(&self) -> String {
         return self.url.clone();
     }
