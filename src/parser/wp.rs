@@ -113,7 +113,7 @@ impl Webpage {
                             let txt = trim_string(&td.text().collect::<String>());
 
                             if txt.contains('\u{a0}') {
-                                row.push("".into());
+                                row.push(" ".into());
                                 continue;
                             }
 
@@ -141,7 +141,8 @@ impl Webpage {
                         if has_ancestor(*td, tr.id()) {
                             let txt = trim_string(&td.text().collect::<String>());
 
-                            if txt.len() == 0 || txt.contains('\u{a0}') {
+                            if txt.contains('\u{a0}') {
+                                row.push(" ".into());
                                 continue;
                             }
 

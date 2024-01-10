@@ -1,13 +1,15 @@
 use std::cmp::min;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::{Merknad, SokCollection};
+use crate::modules::sok::{Kilde, Merknad, Metode, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
-use rust_xlsxwriter::Workbook;
+use once_cell::sync::Lazy;
 use rust_xlsxwriter::{Format, FormatAlign, FormatBorder, Url, Worksheet};
+use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
+const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold());
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
@@ -18,12 +20,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     let title = validify_excel_string(&soks.title.clone());
     wb_path = format!("{}\\{}.xlsx", path.to_string(), title);
 
-    let bold = Format::new().set_bold();
-
     {
         let sheet = wb.add_worksheet();
         sheet.set_name("Framside")?;
-        sheet.write_with_format(0, 0, "Innhald", &bold)?;
+        sheet.write_with_format(0, 0, "Innhald", &BOLD)?;
     }
 
     // Table row format
@@ -42,7 +42,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         let mut r = 0;
 
         // Title
-        sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
+        sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
         r += 1;
 
         // Content
@@ -119,7 +119,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         sheet.set_name(sheet_name)?;
 
         // Title
-        sheet.write_with_format(r, 0, &sub_sok.title, &bold)?;
+        sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
         sheet.set_column_width_pixels(0, 180)?;
         r += 1;
         // Tables
@@ -129,8 +129,8 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             for row in t.header {
                 let mut c = 0;
                 for cell in row {
-                    // Try to parse as int
-                    match cell.parse::<f32>() {
+                    // Try to parse as int, header is most likley some year
+                    match cell.parse::<i32>() {
                         Ok(i) => {
                             sheet.write_number_with_format(r, c, i, &header_format)?;
                         }
@@ -138,7 +138,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                             // Lets try again with trim
                             let s = cell.clone();
                             let res = s.split_whitespace().collect::<Vec<&str>>().join("");
-                            match res.parse::<f32>() {
+                            match res.parse::<i32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &header_format)?;
                                 }
@@ -156,7 +156,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             for row in t.rows {
                 let mut c = 0;
                 for cell in row {
-                    // Try to parse as int
+                    // Try to parse as float
                     match cell.parse::<f32>() {
                         Ok(i) => {
                             sheet.write_number_with_format(r, c, i, &row_format)?;
@@ -175,116 +175,37 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                             }
                         }
                     }
-
                     c += 1;
                 }
                 r += 1;
             }
         }
 
-        // Merknad
-        r += 1;
-        sheet.write_with_format(r, 0, "Merknad", &bold)?;
-        r += 1;
-        for merknad in soks.merknad.clone() {
-            for long_line in merknad.content {
-                for l in split_string(long_line) {
-                    sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
-
-        // Metode
-        sheet.write_with_format(r, 0, "Metode", &bold)?;
-        r += 1;
-        for metode in soks.metode.clone() {
-            sheet.write_with_format(r, 0, metode.title, &bold)?;
-            r += 1;
-            for long_line in metode.content {
-                for l in split_string(long_line) {
-                    sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
-
-        // Kilde
-        sheet.write_with_format(r, 0, "Kilde", &bold)?;
-        r += 1;
-        for kilde in soks.kilde.clone() {
-            sheet.write_with_format(r, 0, kilde.title, &bold)?;
-            r += 1;
-            for long_line in kilde.content {
-                for l in split_string(long_line) {
-                    sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
+        let sheet = write_metode(
+            sheet,
+            soks.metode.clone(),
+            soks.kilde.clone(),
+            soks.merknad.clone(),
+        )?;
 
         wb.push_worksheet(sheet);
     }
 
-    // TODO: Rewrite this, its duplicate code, dipshit
-    // Info
+    // Info sheet
     {
-        let info_sheet = wb.add_worksheet();
+        let mut info_sheet = Worksheet::new();
         let sheet_name = String::from("Informasjon");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
-        // Merknad
-        let mut r = 0;
-        info_sheet.write_with_format(r, 0, "Merknad", &bold)?;
-        r += 1;
-        for merknad in soks.merknad.clone() {
-            for long_line in merknad.content {
-                for l in split_string(long_line) {
-                    info_sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
 
-        // Metode
-        info_sheet.write_with_format(r, 0, "Metode", &bold)?;
-        r += 1;
-        for metode in soks.metode.clone() {
-            info_sheet.write_with_format(r, 0, metode.title, &bold)?;
-            r += 1;
-            for long_line in metode.content {
-                for l in split_string(long_line) {
-                    info_sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
+        let info_sheet = write_metode(
+            info_sheet,
+            soks.metode.clone(),
+            soks.kilde.clone(),
+            soks.merknad.clone(),
+        )?;
 
-        // Kilde
-        info_sheet.write_with_format(r, 0, "Kilde", &bold)?;
-        r += 1;
-        for kilde in soks.kilde.clone() {
-            info_sheet.write_with_format(r, 0, kilde.title, &bold)?;
-            r += 1;
-            for long_line in kilde.content {
-                for l in split_string(long_line) {
-                    info_sheet.write(r, 0, l)?;
-                    r += 1;
-                }
-                r += 1;
-            }
-            r += 1;
-        }
+        wb.push_worksheet(info_sheet);
     }
 
     // Table of Contents
@@ -299,7 +220,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         if let Ok(sheet) = wb.worksheet_from_name("Framside") {
             let mut r = 1;
 
-            sheet.write_with_format(0, 0, soks.title.clone(), &bold)?;
+            sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
 
             for (nm, dp) in temp {
                 if dp.contains("Informasjon") {
@@ -328,6 +249,77 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
         }
     }
+}
+
+pub fn write_metode(
+    mut sheet: Worksheet,
+    metoder: Vec<Metode>,
+    kilder: Vec<Kilde>,
+    merknader: Vec<Merknad>,
+) -> Result<Worksheet, XlsxError> {
+    // Merknad
+    let mut r = 0;
+    sheet.write_with_format(r, 0, "Merknad", &BOLD)?;
+    r += 1;
+    for merknad in merknader {
+        for long_line in merknad.content {
+            if long_line.trim().is_empty() {
+                continue;
+            }
+            for l in split_string(long_line) {
+                if l.trim().is_empty() {
+                    continue;
+                }
+                sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+    }
+
+    // Kilde
+    sheet.write_with_format(r, 0, "Kilde", &BOLD)?;
+    r += 1;
+    for kilde in kilder {
+        sheet.write_with_format(r, 0, kilde.title, &BOLD)?;
+        r += 1;
+        for long_line in kilde.content {
+            if long_line.trim().is_empty() {
+                continue;
+            }
+            for l in split_string(long_line) {
+                if l.trim().is_empty() {
+                    continue;
+                }
+                sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+        r += 1;
+    }
+
+    // Metode
+    for metode in metoder {
+        sheet.write_with_format(r, 0, metode.title, &BOLD)?;
+        r += 1;
+        for long_line in metode.content {
+            if long_line.trim().is_empty() {
+                continue;
+            }
+            for l in split_string(long_line) {
+                if l.trim().is_empty() {
+                    continue;
+                }
+                sheet.write(r, 0, l)?;
+                r += 1;
+            }
+            r += 1;
+        }
+        r += 1;
+    }
+
+    Ok(sheet)
 }
 
 pub fn split_string(input: String) -> Vec<String> {
