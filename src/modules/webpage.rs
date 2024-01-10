@@ -1,7 +1,7 @@
 use reqwest::Client;
-use scraper::{self, Html, selector::Selector, error::SelectorErrorKind};
+use scraper::{self, error::SelectorErrorKind, selector::Selector, Html};
 
-use crate::{utils::constants::ROOT_URL, error::ArchiveError, scraper::get_html_content};
+use crate::{error::ArchiveError, scraper::get_html_content, utils::constants::ROOT_URL};
 
 use super::sok::Sok;
 
@@ -55,10 +55,14 @@ pub struct Webpage {
     content: Html,
 }
 
-
 impl Webpage {
     pub fn from_html(id: usize, url: String, content: Html, medium: String) -> Webpage {
-        Webpage { id, url, content, medium }
+        Webpage {
+            id,
+            url,
+            content,
+            medium,
+        }
     }
 
     pub fn set_medium(&mut self, medium: String) {
@@ -93,14 +97,12 @@ impl Webpage {
             medium = m.to_owned();
         }
 
-        Ok(
-            Webpage {
-                id,
-                medium,
-                url,
-                content,
-            }
-        )
+        Ok(Webpage {
+            id,
+            medium,
+            url,
+            content,
+        })
     }
 
     pub fn get_content(&self) -> Html {
@@ -111,4 +113,3 @@ impl Webpage {
         self.url.clone()
     }
 }
-

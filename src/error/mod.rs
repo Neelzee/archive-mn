@@ -1,5 +1,8 @@
+use itertools::Itertools;
 use scraper::error::SelectorErrorKind;
 use std::fmt::Display;
+
+use crate::modules::webpage::Link;
 
 #[derive(Debug, Clone)]
 pub enum ArchiveError {
@@ -15,6 +18,7 @@ pub enum ArchiveError {
     ResponseError(String),
     FailedParsing(usize, String),
     DuplicateSok,
+    InvalidMetode { link: Vec<Link>, id: usize },
 }
 
 unsafe impl Sync for ArchiveError {}
@@ -40,6 +44,12 @@ impl Display for ArchiveError {
                 write!(f, "Found no tables for Sok: {}, at url: {}", id, url)
             }
             ArchiveError::DuplicateSok => write!(f, "DuplicateSok"),
+            ArchiveError::InvalidMetode { link, id } => write!(
+                f,
+                "InvalidMetode Error, link: {}, id: {}",
+                link.into_iter().map(|e| e.to_string()).join(", "),
+                id
+            ),
         }
     }
 }

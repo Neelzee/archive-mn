@@ -1,9 +1,18 @@
 use std::collections::HashMap;
 
 use reqwest::Client;
-use scraper::{Selector, Html};
+use scraper::{Html, Selector};
 
-use crate::{modules::{webpage::{Webpage, Link}, form::{Form, FormOption}, sok::{Sok, Table, SokCollection, Merknad}}, error::ArchiveError, utils::funcs::{trim_string, has_ancestor}, scraper::get_html_content};
+use crate::{
+    error::ArchiveError,
+    modules::{
+        form::{Form, FormOption},
+        sok::{Merknad, Sok, SokCollection, Table},
+        webpage::{Link, Webpage},
+    },
+    scraper::get_html_content,
+    utils::funcs::{has_ancestor, trim_string},
+};
 
 // TODO: Change these from methods to functions
 impl Webpage {
@@ -22,13 +31,11 @@ impl Webpage {
     pub fn get_text(&self) -> Result<Vec<String>, ArchiveError> {
         let text_selector = Selector::parse(r#"div[id="forklaringTxt"] p"#)?;
 
-        Ok(
-            self
-                .get_content()
-                .select(&text_selector)
-                .map(|e| trim_string(&e.text().collect::<String>()))
-                .collect::<Vec<String>>()
-        )
+        Ok(self
+            .get_content()
+            .select(&text_selector)
+            .map(|e| trim_string(&e.text().collect::<String>()))
+            .collect::<Vec<String>>())
     }
 
     pub fn get_forms(&self) -> Result<Form, ArchiveError> {
@@ -45,9 +52,12 @@ impl Webpage {
                         if p.id() != select.id() {
                             continue;
                         }
-                        
+
                         if let Some(v) = option.attr("value") {
-                            options.push((v.to_string(), trim_string(&option.text().collect::<String>())));
+                            options.push((
+                                v.to_string(),
+                                trim_string(&option.text().collect::<String>()),
+                            ));
                         }
                     }
                 }
@@ -59,7 +69,6 @@ impl Webpage {
                         fo.multiple();
                     }
                 }
-
 
                 form.add_options(fo);
             }
@@ -86,7 +95,6 @@ impl Webpage {
 
         let mut tables: Vec<Table> = Vec::new();
 
-        
         // This is stupid, motherfucker
         for table in self.get_content().select(&table_selector) {
             let mut cur_table = Table::new();
@@ -102,7 +110,7 @@ impl Webpage {
                     for td in self.get_content().select(&th_selector) {
                         // This cell belongs to the current row
                         if has_ancestor(*td, tr.id()) {
-                            let  txt = trim_string(&td.text().collect::<String>());
+                            let txt = trim_string(&td.text().collect::<String>());
 
                             if txt.contains('\u{a0}') {
                                 row.push("".into());
@@ -149,7 +157,6 @@ impl Webpage {
             cur_table.rows = rows;
 
             tables.push(cur_table);
-
         }
 
         sok.tables = tables;
@@ -170,7 +177,6 @@ impl Webpage {
     }
 }
 
-
 pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
     let mut metoder: Vec<(String, Vec<String>)> = Vec::new();
 
@@ -181,7 +187,11 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     let h3_selector = Selector::parse("h3")?;
 
     // METODE
-    for a in wp.get_content().select(&merknad_head_selector).filter_map(|e| e.parent()) {
+    for a in wp
+        .get_content()
+        .select(&merknad_head_selector)
+        .filter_map(|e| e.parent())
+    {
         for child in a.children() {
             if let Some(el) = child.value().as_element() {
                 if el.name() == "a" {
@@ -193,27 +203,30 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         }
     }
 
-    for l in links {
+    for l in &links {
         let url = l.create_full().to_string();
         let mut title = String::new();
         let content = get_html_content(&Client::default(), url).await?;
         for h in Html::parse_document(&content).select(&h3_selector) {
             title = trim_string(&h.text().collect::<String>());
-            break;   
+            break;
         }
 
-        metoder.push(
-            (
-                title,
-                Html::parse_document(&content)
-                    .select(&p_selector)
-                    .map(|p| trim_string(&p.text().collect::<String>()))
-                    .collect::<Vec<String>>()
-            )
-        );
-
+        metoder.push((
+            title,
+            Html::parse_document(&content)
+                .select(&p_selector)
+                .map(|p| trim_string(&p.text().collect::<String>()))
+                .collect::<Vec<String>>(),
+        ));
     }
 
+    if metoder.len() >= 20 {
+        return Err(ArchiveError::InvalidMetode {
+            link: links,
+            id: wp.get_id(),
+        });
+    }
 
     Ok(metoder)
 }
@@ -243,34 +256,31 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
         let content = get_html_content(&Client::default(), url).await?;
         for h in Html::parse_document(&content).select(&h2_selector) {
             title = trim_string(&h.text().collect::<String>());
-            break;   
+            break;
         }
 
-        kilder.push(
-            (
-                title,
-                Html::parse_document(&content)
-                    .select(&div_selector)
-                    .map(|p| trim_string(&p.text().collect::<String>()))
-                    .collect::<Vec<String>>()
-            )
-        );
-
+        kilder.push((
+            title,
+            Html::parse_document(&content)
+                .select(&div_selector)
+                .map(|p| trim_string(&p.text().collect::<String>()))
+                .collect::<Vec<String>>(),
+        ));
     }
-
 
     Ok(kilder)
 }
 
-pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+pub async fn get_sok_collection(
+    wp: Webpage,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
     let mut errors: Vec<ArchiveError> = Vec::new();
 
     let client = Client::default();
 
-    let request = client
-        .post(wp.get_url());
+    let request = client.post(wp.get_url());
 
     let forms = wp.get_forms()?;
 
@@ -288,22 +298,23 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
                 form_data.insert(k, v);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
-            
+
             title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
-    
+
             let req = request
-                    .try_clone().expect("Should not be a stream")
-                    .form(&form_data).build()?;
-    
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()?;
+
             match client.execute(req).await {
                 Ok(response) => {
                     if response.status().is_success() {
                         let raw_html = response.text().await?;
-                
+
                         let html = Html::parse_document(&raw_html);
-                
+
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
-                        
 
                         match sub_wp.get_sok() {
                             Ok(mut sok) => {
@@ -314,8 +325,6 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
                                 errors.push(err.into());
                             }
                         }
-                        
-                        
                     } else {
                         errors.push(ArchiveError::ResponseError(response.status().to_string()));
                     }
@@ -323,14 +332,14 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
                 // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
                 Err(err) => {
                     errors.push(err.into());
-                },
+                }
             }
-    
         }
     }
 
     sok_collection.title = wp.get_title()?;
-    let _ = wp.get_text()?
+    let _ = wp
+        .get_text()?
         .into_iter()
         .map(|e| sok_collection.add_text(e))
         .collect::<Vec<_>>();
@@ -343,27 +352,28 @@ pub async fn get_sok_collection(wp: Webpage) -> Result<(SokCollection, Vec<Archi
         sok_collection.add_kilde(kilde.into());
     }
 
-    sok_collection.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
-
-
-
+    sok_collection.add_merknad(Merknad {
+        title: "Merknad".to_string(),
+        content: wp.get_merknad()?,
+    });
 
     Ok((sok_collection, errors))
 }
 
 /// Creates on req
-pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+pub async fn get_sok_collection_tmf(
+    wp: Webpage,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
 
     let mut errors: Vec<ArchiveError> = Vec::new();
 
     let client = Client::default();
 
-    let request = client
-        .post(wp.get_url());
+    let request = client.post(wp.get_url());
 
     let forms = wp.get_forms()?;
-    
+
     if forms.is_empty() {
         let mut sok = wp.get_sok()?;
         sok.header_title = sok.title.clone();
@@ -375,20 +385,24 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
         for fo in forms.options() {
             if fo.get_multiple() {
                 form_data.insert(
-                    fo.option_name(), 
+                    fo.option_name(),
                     fo.options()
-                    .into_iter()
-                    .map(|(e, _)| e.trim().to_string())
-                    .collect::<Vec<String>>()
-                    .join(",")
+                        .into_iter()
+                        .map(|(e, _)| e.trim().to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
                 );
             } else {
                 new_fo.add_options(fo);
             }
         }
 
-        println!("New Form Combo: {} singles, {} multiple", new_fo.clone().combinations().count(), form_data.len());
-        
+        println!(
+            "New Form Combo: {} singles, {} multiple",
+            new_fo.clone().combinations().count(),
+            form_data.len()
+        );
+
         for form in new_fo.combinations() {
             let mut title = String::new();
             for (k, (v, d)) in form {
@@ -398,22 +412,22 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
-            
             title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
-    
+
             let req = request
-                    .try_clone().expect("Should not be a stream")
-                    .form(&form_data).build()?;
-    
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()?;
+
             match client.execute(req).await {
                 Ok(response) => {
                     if response.status().is_success() {
                         let raw_html = response.text().await?;
-                
+
                         let html = Html::parse_document(&raw_html);
-                
+
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
-                        
 
                         match sub_wp.get_sok() {
                             Ok(mut sok) => {
@@ -424,8 +438,6 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
                                 errors.push(err.into());
                             }
                         }
-                        
-                        
                     } else {
                         errors.push(ArchiveError::ResponseError(response.status().to_string()));
                     }
@@ -433,13 +445,14 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
                 // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
                 Err(err) => {
                     errors.push(err.into());
-                },
+                }
             }
         }
     }
 
     sok_collection.title = wp.get_title()?;
-    let _ = wp.get_text()?
+    let _ = wp
+        .get_text()?
         .into_iter()
         .map(|e| sok_collection.add_text(e))
         .collect::<Vec<_>>();
@@ -452,10 +465,10 @@ pub async fn get_sok_collection_tmf(wp: Webpage) -> Result<(SokCollection, Vec<A
         sok_collection.add_kilde(kilde.into());
     }
 
-    sok_collection.add_merknad(Merknad { title: "Merknad".to_string(), content: wp.get_merknad()? });
-
-
-
+    sok_collection.add_merknad(Merknad {
+        title: "Merknad".to_string(),
+        content: wp.get_merknad()?,
+    });
 
     Ok((sok_collection, errors))
 }
