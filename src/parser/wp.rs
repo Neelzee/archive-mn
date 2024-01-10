@@ -11,7 +11,10 @@ use crate::{
         webpage::{Link, Webpage},
     },
     scraper::get_html_content,
-    utils::funcs::{has_ancestor, trim_string},
+    utils::{
+        constants::ROOT_URL,
+        funcs::{has_ancestor, trim_string},
+    },
 };
 
 // TODO: Change these from methods to functions
@@ -256,6 +259,11 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
 
     for l in links {
         let url = l.create_full().to_string();
+
+        if url.trim() == ROOT_URL {
+            continue;
+        }
+
         let mut title = String::new();
         let content = get_html_content(&Client::default(), url).await?;
         for h in Html::parse_document(&content).select(&h2_selector) {
