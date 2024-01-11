@@ -31,7 +31,7 @@ mod xl;
 lazy_static! {
     pub static ref CHECKED_SOK_ID: Mutex<HashMap<usize, bool>> = Mutex::new(HashMap::new());
     pub static ref CHECKED_SOK_TITLE: Mutex<HashMap<String, bool>> = Mutex::new(HashMap::new());
-    pub static ref ALLOW_DUPS: Mutex<bool> = Mutex::new(false);
+    pub static ref ALLOW_DUPS: Mutex<bool> = Mutex::new(true);
 }
 
 /// # Setup
@@ -100,7 +100,7 @@ async fn main() -> Result<(), ArchiveError> {
         args.swap_remove(j);
 
         if let Ok(mut dups) = ALLOW_DUPS.lock() {
-            *dups = true;
+            *dups = false;
         }
     }
 
