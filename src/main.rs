@@ -125,6 +125,7 @@ async fn main() -> Result<(), ArchiveError> {
                     if let Err(err) = get_soks(random_sok).await {
                         eprintln!("{}", err);
                     }
+                    return Ok(());
                 }
                 Err(_) => continue,
             }
