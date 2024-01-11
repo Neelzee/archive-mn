@@ -1,7 +1,7 @@
 use std::cmp::min;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::{Kilde, Merknad, Metode, SokCollection};
+use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use once_cell::sync::Lazy;
@@ -64,7 +64,13 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             r += 1;
         }
 
-        let full_name = sub_sok.header_title.clone().trim().to_string();
+        let full_name: String;
+        if sub_sok.display_names.is_empty() {
+            full_name = sub_sok.header_title.clone().trim().to_string();
+        } else {
+            full_name = sub_sok.display_names.clone().join(" ").trim().to_string();
+        }
+
         let name: String;
 
         if let Some(l) = full_name.split_terminator(",").last() {
@@ -250,8 +256,10 @@ pub fn write_metode(
     mut r: u32,
 ) -> Result<(Worksheet, u32), XlsxError> {
     // Merknad
-    sheet.write_with_format(r, 0, "Merknad", &BOLD)?;
-    r += 1;
+    if !merknader.is_empty() || merknader.clone().into_iter().all(|e| e.is_empty()) {
+        sheet.write_with_format(r, 0, "Merknad", &BOLD)?;
+        r += 1;
+    }
     for merknad in merknader {
         for long_line in merknad.content {
             if long_line.trim().is_empty() {
@@ -269,8 +277,10 @@ pub fn write_metode(
     }
 
     // Kilde
-    sheet.write_with_format(r, 0, "Kilde", &BOLD)?;
-    r += 1;
+    if !kilder.is_empty() || kilder.clone().into_iter().all(|e| e.is_empty()) {
+        sheet.write_with_format(r, 0, "Kilde", &BOLD)?;
+        r += 1;
+    }
     for kilde in kilder {
         sheet.write_with_format(r, 0, kilde.title, &BOLD)?;
         r += 1;

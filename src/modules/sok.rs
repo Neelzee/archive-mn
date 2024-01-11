@@ -110,6 +110,23 @@ macro_rules! impl_ac {
     };
 }
 
+macro_rules! impl_ie {
+    ($struct_name:ident) => {
+        impl IsEmpty for $struct_name {
+            fn is_empty(&self) -> bool {
+                self.content.is_empty()
+            }
+        }
+    };
+}
+
 impl_ac!(Merknad);
+impl_ie!(Merknad);
 impl_ac!(Metode);
+impl_ie!(Metode);
 impl_ac!(Kilde);
+impl_ie!(Kilde);
+
+pub trait IsEmpty {
+    fn is_empty(&self) -> bool;
+}
