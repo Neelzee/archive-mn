@@ -5,11 +5,31 @@ use crate::modules::sok::{Kilde, Merknad, Metode, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use once_cell::sync::Lazy;
-use rust_xlsxwriter::{Format, FormatAlign, FormatBorder, Url, Worksheet};
+use rust_xlsxwriter::{Color, Format, FormatAlign, FormatBorder, Url, Worksheet};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
 const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold());
+const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
+    Format::new()
+        .set_bold()
+        .set_align(FormatAlign::Right)
+        .set_background_color(Color::RGB(0x918E8E))
+});
+
+const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
+    Format::new()
+        .set_bold()
+        .set_align(FormatAlign::Right)
+        .set_background_color(Color::RGB(0xACACAC))
+});
+
+const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
+    Format::new()
+        .set_bold()
+        .set_align(FormatAlign::Right)
+        .set_background_color(Color::RGB(0xBCBCBC))
+});
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
@@ -25,16 +45,6 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         sheet.set_name("Framside")?;
         sheet.write_with_format(0, 0, "Innhald", &BOLD)?;
     }
-
-    // Table row format
-    let row_format = Format::new()
-        .set_border(FormatBorder::Thin)
-        .set_align(FormatAlign::Left);
-
-    let header_format = Format::new()
-        .set_border(FormatBorder::Thick)
-        .set_bold()
-        .set_align(FormatAlign::Left);
 
     let mut i = 0;
     for sub_sok in soks.sok.clone() {
@@ -132,7 +142,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                     // Try to parse as int, header is most likley some year
                     match cell.parse::<i32>() {
                         Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &header_format)?;
+                            sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
                         }
                         Err(_) => {
                             // Lets try again with trim
@@ -140,10 +150,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                             let res = s.split_whitespace().collect::<Vec<&str>>().join("");
                             match res.parse::<i32>() {
                                 Ok(i) => {
-                                    sheet.write_number_with_format(r, c, i, &header_format)?;
+                                    sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
                                 }
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &header_format)?;
+                                    sheet.write_with_format(r, c, cell, &HEADER_FORMAT)?;
                                 }
                             }
                         }
@@ -156,6 +166,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             for row in t.rows {
                 let mut c = 0;
                 for cell in row {
+                    let mut row_format = ROW_FORMAT_ODD;
+                    if r == 0 || r & 2 == 0 {
+                        row_format = ROW_FORMAT_EVEN;
+                    }
                     // Try to parse as float
                     match cell.parse::<f32>() {
                         Ok(i) => {
