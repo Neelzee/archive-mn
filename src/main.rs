@@ -110,6 +110,7 @@ async fn main() -> Result<(), ArchiveError> {
     }
 
     if args.contains(&"-rand".to_string()) {
+        println!("Fetching random soks...");
         while let Some(n) = args.pop() {
             match n.parse::<u32>() {
                 Ok(n) => {
@@ -125,11 +126,13 @@ async fn main() -> Result<(), ArchiveError> {
                     if let Err(err) = get_soks(random_sok).await {
                         eprintln!("{}", err);
                     }
-                    return Ok(());
+                    break;
                 }
                 Err(_) => continue,
             }
         }
+        println!("Finished fetching random sok, exiting...");
+        return Ok(());
     }
 
     args.remove(0); // First argument is path to the exe
