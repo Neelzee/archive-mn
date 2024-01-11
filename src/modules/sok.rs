@@ -1,6 +1,5 @@
 use std::cmp::max;
 
-
 #[derive(Debug, Clone)]
 pub struct Table {
     pub header: Vec<Vec<String>>,
@@ -21,8 +20,8 @@ pub struct Sok {
     pub title: String,
     pub header_title: String,
     pub tables: Vec<Table>,
+    pub display_names: Vec<String>,
 }
-
 
 impl Sok {
     pub fn new() -> Sok {
@@ -30,6 +29,7 @@ impl Sok {
             title: String::new(),
             header_title: String::new(),
             tables: Vec::new(),
+            display_names: Vec::new(),
         }
     }
 }
@@ -83,19 +83,19 @@ impl SokCollection {
 #[derive(Debug, Clone)]
 pub struct Merknad {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Kilde {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Metode {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 type ArchiveContent = (String, Vec<String>);
