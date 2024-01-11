@@ -28,7 +28,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
             wp_count += 1;
             match main_fn(&link).await {
                 Ok((sokc, mut sok_log)) => {
-                    let path = format!("arkiv\\");
+                    let path = format!("arkiv\\{}", sokc.medium.clone());
                     match try_save_sok(&sokc, &path, 2) {
                         Ok(mut log) => {
                             sok_log.append(&mut log);
