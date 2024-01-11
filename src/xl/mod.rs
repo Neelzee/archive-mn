@@ -182,9 +182,13 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                             sheet.write_number_with_format(r, c, i, &row_format)?;
                         }
                         Err(_) => {
-                            // Lets try again with trim
+                            // Lets try again with trim, and replace . with ,
                             let s = cell.clone();
-                            let res = s.split_whitespace().collect::<Vec<&str>>().join("");
+                            let res = s
+                                .split_whitespace()
+                                .collect::<Vec<&str>>()
+                                .join("")
+                                .replace(",", ".");
                             match res.parse::<f32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &row_format)?;
