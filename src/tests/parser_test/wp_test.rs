@@ -4,14 +4,15 @@ Webpage test
 
 use std::{fs::File, io::Read, iter::zip};
 
+use reqwest::Client;
 use scraper::Html;
 
-use crate::{modules::webpage::Webpage, parser::wp::{get_metode, get_kilde}};
+use crate::{modules::webpage::Webpage, parser::{wp::{get_metode, get_kilde}, medium::get_links_from_medium}};
 
 fn get_webpage() -> Result<Webpage, std::io::Error> {
     let mut content = String::new();
 
-    let mut file = File::open("src\\tests\\html\\sok_346.html")?;
+    let mut file = File::open("src\\tests\\html\\346")?;
     file.read_to_string(&mut content)?;
 
     Ok(Webpage::from_html(
@@ -21,33 +22,6 @@ fn get_webpage() -> Result<Webpage, std::io::Error> {
         "avis".to_string()))
 }
 
-
-#[test]
-fn test_get_links() {
-    if let Ok(wp) = get_webpage() {
-        let res = wp.get_links();
-
-        assert!(res.is_ok());
-
-        let links = res.unwrap();
-
-        assert!(links.len() != 0);
-
-        assert_eq!(
-            "https://medienorge.uib.no/files/institusjon.cfm?institusjon_id=38".to_owned(),
-            links.get(0).unwrap().create_full().to_string()
-        );
-
-        assert_eq!(
-            "https://medienorge.uib.no/metode/346".to_owned(),
-            links.get(1).unwrap().create_full().to_string()
-        );
-
-        println!("{:?}", links);
-    } else {
-        panic!("Could not get webpage to test");
-    }
-}
 
 #[test]
 fn test_get_title() {
@@ -124,10 +98,6 @@ fn test_get_sok() {
 
         let sok = res.unwrap();
 
-        for t in sok.clone().tables {
-            t.show();
-        }
-
         println!("{:?}", sok);
     } else {
         panic!("Could not get webpage to test");
@@ -184,4 +154,35 @@ async fn test_get_kilde() {
     } else {
         panic!("Could not get webpage to test");
     }
+}
+
+
+#[tokio::test]
+async fn test_get_medium_links() {
+    let client = Client::default();
+    let res = client
+        .get("https://medienorge.uib.no/statistikk/medium/boker")
+        .send()
+        .await;
+
+    assert!(res.is_ok());
+
+    let response = res.unwrap();
+
+    assert!(response.status().is_success());
+
+    let res = response.text().await;
+
+    assert!(res.is_ok());
+
+
+    let html = Html::parse_document(&res.unwrap());
+
+    let res = get_links_from_medium(html);
+
+    assert!(res.is_ok());
+
+    let links = res.unwrap();
+
+    println!("Count: {}, {:?}", links.len(), links);
 }

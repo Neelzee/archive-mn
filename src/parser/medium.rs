@@ -1,4 +1,4 @@
-use scraper::{Html, Selector, Element, selector::CssLocalName};
+use scraper::{Html, Selector};
 
 use crate::{modules::webpage::Link, error::ArchiveError};
 

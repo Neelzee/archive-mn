@@ -1,10 +1,8 @@
 use std::cmp::max;
 
-
 #[derive(Debug, Clone)]
 pub struct Table {
     pub header: Vec<Vec<String>>,
-    pub styles: Vec<Vec<String>>,
     pub rows: Vec<Vec<String>>,
 }
 
@@ -12,44 +10,8 @@ impl Table {
     pub fn new() -> Table {
         Table {
             header: Vec::new(),
-            styles: Vec::new(),
             rows: Vec::new(),
         }
-    }
-
-    /// Prints the table, adds `' ,'` between every element.
-    pub fn show(&self) {
-        let header = self.header
-        .iter()
-        .fold(
-            String::new(), 
-            |mut acc, e| {
-                acc += &e.iter().fold(String::new(), |mut ac, x| {
-                    ac += x;
-                    ac += ", ";
-                    ac
-                });
-                acc += "\n";
-                acc
-            });
-
-        let rows = self.rows
-            .iter()
-            .fold(
-                String::new(), 
-                |mut acc, e| {
-                    acc += &e.iter().fold(String::new(), |mut ac, x| {
-                        ac += x;
-                        ac += ", ";
-                        ac
-                    });
-                    acc += "\n";
-                    acc
-                });
-        println!("{}", "=".repeat(max(header.len(), rows.len())));
-        println!("{}", header);
-        println!("{}", rows);
-        println!("{}", "=".repeat(max(header.len(), rows.len())));
     }
 }
 
@@ -58,8 +20,8 @@ pub struct Sok {
     pub title: String,
     pub header_title: String,
     pub tables: Vec<Table>,
+    pub display_names: Vec<String>,
 }
-
 
 impl Sok {
     pub fn new() -> Sok {
@@ -67,6 +29,7 @@ impl Sok {
             title: String::new(),
             header_title: String::new(),
             tables: Vec::new(),
+            display_names: Vec::new(),
         }
     }
 }
@@ -96,11 +59,6 @@ impl SokCollection {
             metode: Vec::new(),
         }
     }
-
-    pub fn set_title(&mut self, title: String) {
-        self.title = title;
-    }
-
     pub fn add_text(&mut self, text: String) {
         self.text.push(text);
     }
@@ -125,19 +83,19 @@ impl SokCollection {
 #[derive(Debug, Clone)]
 pub struct Merknad {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Kilde {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Metode {
     pub title: String,
-    pub content: Vec<String>
+    pub content: Vec<String>,
 }
 
 type ArchiveContent = (String, Vec<String>);
@@ -152,6 +110,23 @@ macro_rules! impl_ac {
     };
 }
 
+macro_rules! impl_ie {
+    ($struct_name:ident) => {
+        impl IsEmpty for $struct_name {
+            fn is_empty(&self) -> bool {
+                self.content.is_empty()
+            }
+        }
+    };
+}
+
 impl_ac!(Merknad);
+impl_ie!(Merknad);
 impl_ac!(Metode);
+impl_ie!(Metode);
 impl_ac!(Kilde);
+impl_ie!(Kilde);
+
+pub trait IsEmpty {
+    fn is_empty(&self) -> bool;
+}

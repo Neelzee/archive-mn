@@ -1,18 +1,22 @@
-use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{self, Read, Error};
-use std::path::Path;
+
 use rand::Rng;
 use rand::distributions::Uniform;
 use ego_tree::{NodeId, NodeRef};
 use scraper::Html;
-use scraper::{Node, ElementRef};
+use scraper::Node;
+
+
 
 use crate::modules::webpage::Webpage;
 
+
+
 use super::constants::ROOT_URL;
 
+// Might cause issues
 pub fn capitalize_first(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
@@ -29,8 +33,24 @@ pub fn get_html_content_test() -> Result<Html, Error> {
     Ok(Html::parse_document(&content))
 }
 
+pub fn validify_excel_string(str: &str) -> String {
+    str.replace(":", "")
+        .replace("{", "")
+        .replace("}", "")
+        .replace(";", "")
+        .replace(",", "")
+        .replace(".", "")
+        .replace("]", "")
+        .replace("[", "")
+        .replace("*", "")
+        .replace("?", "")
+        .replace("/", "-")
+        .replace("\\", "")
+
+}
+
 pub fn trim_string(str: &str) -> String {
-    return str.split_whitespace().collect::<Vec<&str>>().join(" ");
+    str.split_whitespace().collect::<Vec<&str>>().join(" ")
 } 
 
 pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
@@ -103,6 +123,22 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
     }
 }
 
-pub fn format_form_to_title(k: String, v: String) -> String {
-    return format!("{} {}", k, v)
+
+/// # Cartesian Product
+/// 
+/// Creates the cartesian product of any 2d-vec.
+/// 
+/// # Example
+/// ```rs
+/// let set = vec![
+///     vec![1, 2, 3],
+///     vec![4, 5, 6],
+/// ];
+/// let r = cartesian_product(set);
+/// assert!(r, vec![(1, 4), (2, 5), (3, 6)]);
+/// ```
+pub fn cartesian_product<T>(set: Vec<Vec<T>>) -> Vec<(T, T)> {
+    let mut vecs = Vec::new();
+    
+    vecs
 }
