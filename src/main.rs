@@ -119,14 +119,16 @@ async fn main() -> Result<(), ArchiveError> {
                     for _ in 0..n {
                         let random_index = rng.gen_range(0..VALID_SOKS.len());
                         random_sok.push(
-                            Link::new(format!("medium/{}", VALID_SOKS[random_index])).create_full(),
+                            Link::new(format!("/statistikk/medium/test/{}", VALID_SOKS[random_index])).create_full(),
                         )
                     }
-
-                    if let Err(err) = get_soks(random_sok).await {
-                        eprintln!("{}", err);
+                    match get_soks(random_sok).await {
+                        Ok(_) => continue,
+                        Err(err) => {
+                            eprintln!("{}", err);
+                            continue
+                        }
                     }
-                    break;
                 }
                 Err(_) => continue,
             }
