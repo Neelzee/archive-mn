@@ -9,6 +9,12 @@ async fn test_parsing_saving() {
 
         let (sc, _) = res.unwrap();
 
+        println!("id: {}", &sc.id);
+
+        for sk in sc.sok.clone() {
+            println!("\n{:?}\n", sk);
+        }
+
         let res2 = save_sok(&sc, "src\\tests");
         assert!(res2.is_ok());
     } else {
