@@ -12,7 +12,7 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
     for link in links {
         match main_fn(&link).await {
             Ok((sokc, mut sok_log)) => {
-                let path = format!("arkiv\\");
+                let path = format!("arkiv\\{}", sokc.medium);
                 match try_save_sok(&sokc, &path, 2) {
                     Ok(mut log) => {
                         sok_log.append(&mut log);
