@@ -212,6 +212,24 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         wb.push_worksheet(sheet);
     }
 
+    // Info sheet
+    {
+        let mut info_sheet = Worksheet::new();
+        let sheet_name = String::from("Merknad");
+        info_sheet.set_name(&sheet_name)?;
+        sheets.push((sheet_name.clone(), sheet_name));
+
+        let (info_sheet, _) = write_metode(
+            info_sheet,
+            soks.metode.clone(),
+            soks.kilde.clone(),
+            soks.merknad.clone(),
+            0,
+        )?;
+
+        wb.push_worksheet(info_sheet);
+    }
+
     // Table of Contents
     {
         let mut temp = Vec::new();
@@ -223,12 +241,22 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
         if let Ok(sheet) = wb.worksheet_from_name("Framside") {
             let mut r = 1;
-
+            let mut has_merk = false;
             sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
+
             for (nm, dp) in temp {
+                if dp.contains("Merknad") {
+                    has_merk = true;
+                    continue;
+                }
                 let link: &str = &format!("internal:'{}'!A1", nm);
-                sheet.write_url_with_text(r, 0, link, format!("Fordelt på: {}", dp))?;
+                sheet.write_url_with_text(r, 0, link, format!("{}", dp))?;
                 r += 1;
+            }
+
+            if has_merk {
+                let link: &str = &format!("internal:'{}'!A1", "Merknad");
+                sheet.write_url_with_text(r, 0, link, "Merknad")?;
             }
         }
     }
