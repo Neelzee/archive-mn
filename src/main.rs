@@ -107,6 +107,20 @@ async fn main() -> Result<(), ArchiveError> {
         return Ok(());
     }
 
+    if args.contains(&"-rand".to_string()) {
+        while let Some(n) = args.pop() {
+            match n.parse::<u32>() {
+                Ok(n) => {
+                    let random_sok: Vec<Link> = Vec::new();
+                    for _ in 0..n {
+                        
+                    }
+                },
+                Err(_) => continue,
+            }
+        }
+    }
+
     args.remove(0); // First argument is path to the exe
     if args.len() == 0 {
         args.append(&mut vec![
