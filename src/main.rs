@@ -2,11 +2,13 @@ use crate::app::{
     interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
     single_app::get_soks,
 };
+use crate::utils::constants::VALID_SOKS;
 
 use error::ArchiveError;
 use lazy_static::lazy_static;
 use modules::webpage::Link;
 use once_cell::sync::Lazy;
+use rand::Rng;
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
@@ -111,11 +113,19 @@ async fn main() -> Result<(), ArchiveError> {
         while let Some(n) = args.pop() {
             match n.parse::<u32>() {
                 Ok(n) => {
-                    let random_sok: Vec<Link> = Vec::new();
+                    let mut random_sok: Vec<Link> = Vec::new();
+                    let mut rng = rand::thread_rng();
                     for _ in 0..n {
-                        
+                        let random_index = rng.gen_range(0..VALID_SOKS.len());
+                        random_sok.push(
+                            Link::new(format!("medium/{}", VALID_SOKS[random_index])).create_full(),
+                        )
                     }
-                },
+
+                    if let Err(err) = get_soks(random_sok).await {
+                        eprintln!("{}", err);
+                    }
+                }
                 Err(_) => continue,
             }
         }
