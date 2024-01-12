@@ -1,18 +1,15 @@
 use std::fs;
 use std::fs::File;
-use std::io::{self, Read, Error};
+use std::io::{self, Error, Read};
 
-use rand::Rng;
-use rand::distributions::Uniform;
 use ego_tree::{NodeId, NodeRef};
+use rand::distributions::Uniform;
+use rand::Rng;
+use reqwest::Client;
 use scraper::Html;
 use scraper::Node;
 
-
-
 use crate::modules::webpage::Webpage;
-
-
 
 use super::constants::ROOT_URL;
 
@@ -46,15 +43,13 @@ pub fn validify_excel_string(str: &str) -> String {
         .replace("?", "")
         .replace("/", "-")
         .replace("\\", "")
-
 }
 
 pub fn trim_string(str: &str) -> String {
     str.split_whitespace().collect::<Vec<&str>>().join(" ")
-} 
+}
 
 pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
-
     if node.ancestors().collect::<Vec<_>>().len() == 0 {
         return false;
     }
@@ -65,12 +60,16 @@ pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
         }
     }
 
-    node.ancestors().into_iter().flat_map(|e| e.ancestors()).any(|e| has_ancestor(e, id))
+    node.ancestors()
+        .into_iter()
+        .flat_map(|e| e.ancestors())
+        .any(|e| has_ancestor(e, id))
 }
 
 pub fn get_random_webpage() -> Option<Webpage> {
-    if let Ok((file_name, raw_content)) = get_random_file_and_contents("src\\tests\\html".to_string()) {
-
+    if let Ok((file_name, raw_content)) =
+        get_random_file_and_contents("src\\tests\\html".to_string())
+    {
         let url = format!("{}/{}", ROOT_URL, file_name.clone());
         let content = Html::parse_document(&raw_content);
 
@@ -94,16 +93,18 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
     let entries = fs::read_dir(folder_path)?;
 
     // Collect file paths into a vector
-    let files: Vec<_> = entries.filter_map(|entry| {
-        entry.ok().and_then(|e| {
-            let path = e.path();
-            if path.is_file() {
-                Some(path)
-            } else {
-                None
-            }
+    let files: Vec<_> = entries
+        .filter_map(|entry| {
+            entry.ok().and_then(|e| {
+                let path = e.path();
+                if path.is_file() {
+                    Some(path)
+                } else {
+                    None
+                }
+            })
         })
-    }).collect();
+        .collect();
 
     // Choose a random file
     if !files.is_empty() {
@@ -115,30 +116,25 @@ pub fn get_random_file_and_contents(folder_path: String) -> io::Result<(String, 
         let contents = fs::read_to_string(random_file)?;
 
         // Get file name as String
-        let file_name = random_file.file_name().unwrap().to_str().unwrap().to_string();
+        let file_name = random_file
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_string();
 
         Ok((file_name, contents))
     } else {
-        Err(io::Error::new(io::ErrorKind::NotFound, "No files found in the folder"))
+        Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            "No files found in the folder",
+        ))
     }
 }
 
-
-/// # Cartesian Product
-/// 
-/// Creates the cartesian product of any 2d-vec.
-/// 
-/// # Example
-/// ```rs
-/// let set = vec![
-///     vec![1, 2, 3],
-///     vec![4, 5, 6],
-/// ];
-/// let r = cartesian_product(set);
-/// assert!(r, vec![(1, 4), (2, 5), (3, 6)]);
-/// ```
-pub fn cartesian_product<T>(set: Vec<Vec<T>>) -> Vec<(T, T)> {
-    let mut vecs = Vec::new();
-    
-    vecs
+pub async fn can_reqwest() -> bool {
+    match Client::default().get("https://www.uib.no/").send().await {
+        Ok(res) => res.status().is_success(),
+        Err(_) => false,
+    }
 }

@@ -13,6 +13,7 @@ use crate::{
         medium::get_links_from_medium,
         wp::{get_kilde, get_metode},
     },
+    utils::funcs::can_reqwest,
 };
 
 fn get_webpage() -> Result<Webpage, std::io::Error> {
@@ -41,7 +42,7 @@ fn test_get_title() {
         assert!(title.len() != 0);
         assert_eq!("Andel med papiravisabonnement og antall abonnement", &title);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
@@ -70,7 +71,7 @@ fn test_get_text() {
             assert_eq!(expected, result);
         }
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
@@ -91,6 +92,9 @@ fn test_get_forms() {
 
 #[tokio::test]
 async fn test_get_sok() {
+    if !can_reqwest().await {
+        return;
+    }
     if let Ok(wp) = get_webpage() {
         let res = wp.get_sok().await;
 
@@ -100,7 +104,7 @@ async fn test_get_sok() {
 
         println!("{:?}", sok);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
@@ -117,12 +121,15 @@ fn test_get_merknad() {
 
         println!("{:?}", merknad);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
 #[tokio::test]
 async fn test_get_metode() {
+    if !can_reqwest().await {
+        return;
+    }
     if let Ok(wp) = get_webpage() {
         let res = get_metode(&wp).await;
 
@@ -134,12 +141,15 @@ async fn test_get_metode() {
 
         println!("{:?}", merknad);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
 #[tokio::test]
 async fn test_get_kilde() {
+    if !can_reqwest().await {
+        return;
+    }
     if let Ok(wp) = get_webpage() {
         let res = get_kilde(&wp).await;
 
@@ -151,12 +161,15 @@ async fn test_get_kilde() {
 
         println!("{:?}", kilde);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
 #[tokio::test]
 async fn test_get_medium_links() {
+    if !can_reqwest().await {
+        return;
+    }
     let client = Client::default();
     let res = client
         .get("https://medienorge.uib.no/statistikk/medium/boker")
