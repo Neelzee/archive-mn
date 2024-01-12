@@ -5,11 +5,13 @@ use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use once_cell::sync::Lazy;
-use rust_xlsxwriter::{Color, Format, FormatAlign, FormatBorder, Url, Worksheet};
+use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
-const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold());
+
+const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold().set_align(FormatAlign::Left));
+
 const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
@@ -159,7 +161,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                                     sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
                                 }
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &HEADER_FORMAT)?;
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &HEADER_FORMAT.clone().set_align(FormatAlign::Left),
+                                    )?;
                                 }
                             }
                         }
@@ -194,7 +201,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                                     sheet.write_number_with_format(r, c, i, &row_format)?;
                                 }
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &row_format)?;
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &row_format.clone().set_align(FormatAlign::Left),
+                                    )?;
                                 }
                             }
                         }
