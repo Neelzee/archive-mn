@@ -214,6 +214,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         }
     }
 
+    // TODO: Fix?
     for l in &links {
         let url = l.create_full().to_string();
         if !l.is_metode() {
