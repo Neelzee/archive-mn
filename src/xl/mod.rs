@@ -180,7 +180,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                 let mut c = 0;
                 for cell in row {
                     let mut row_format = ROW_FORMAT_ODD;
-                    if r == 0 || r & 2 == 0 {
+                    if r == 0 || r % 2 == 0 {
                         row_format = ROW_FORMAT_EVEN;
                     }
                     // Try to parse as float
