@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use reqwest::Client;
-use scraper::{Html, Selector};
+use scraper::{Element, Html, Selector};
 
 use crate::{
     error::ArchiveError,
@@ -193,6 +193,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     let mut links = Vec::new();
 
     let merknad_head_selector = Selector::parse(".merknadHeader")?;
+    let merknad_fragment = Selector::parse(".metode-tekst")?;
     let p_selector = Selector::parse("p")?;
     let h3_selector = Selector::parse("h3")?;
 
@@ -226,14 +227,17 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         }
 
         metoder.push((
-            title,
+            title.clone(),
             Html::parse_document(&content)
-                .select(&p_selector)
+                .select(&merknad_fragment)
+                .into_iter()
+                .filter(|e| !e.text().collect::<String>().contains(&title))
                 .map(|p| trim_string(&p.text().collect::<String>()))
                 .collect::<Vec<String>>(),
         ));
     }
 
+    // TODO: Probably not needed
     if metoder.len() >= 20 {
         return Err(ArchiveError::InvalidMetode {
             link: links,
