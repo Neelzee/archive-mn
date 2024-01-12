@@ -295,7 +295,7 @@ pub fn write_metode(
     }
     for merknad in merknader {
         for long_line in merknad.content {
-            if long_line.trim().is_empty() {
+            if long_line.trim().is_empty() || long_line.trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder." {
                 continue;
             }
             for l in split_string(long_line) {
