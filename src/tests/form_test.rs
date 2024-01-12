@@ -4,13 +4,15 @@ use reqwest::Client;
 use scraper::Html;
 
 use crate::{
-    modules::webpage::Webpage,
+    modules::webpage::{Link, Webpage},
     utils::funcs::{can_reqwest, get_html_content_test, get_random_link, get_random_webpage},
 };
 
 #[tokio::test]
 async fn test_form() {
-    let lnk = get_random_link();
+    // let lnk = get_random_link();
+    let lnk =
+        Link::new("https://medienorge.uib.no/statistikk/medium/avis,oppdatering/219".to_string());
     let res = Webpage::from_link(lnk.clone()).await;
 
     if let Ok(wp) = res.clone() {

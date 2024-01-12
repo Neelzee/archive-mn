@@ -5,6 +5,7 @@ use crate::error::ArchiveError;
 use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, Sok, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
+use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
 use rust_xlsxwriter::{Workbook, XlsxError};
@@ -20,19 +21,17 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
-        .set_background_color(Color::RGB(0x279bc1))
+        .set_background_color(Color::RGB(0x69A9BD))
 });
 
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
     Format::new()
-        .set_bold()
         .set_align(FormatAlign::Right)
         .set_background_color(Color::RGB(0xcee8f1))
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
     Format::new()
-        .set_bold()
         .set_align(FormatAlign::Right)
         .set_background_color(Color::RGB(0xe6f3f8))
 });
@@ -353,44 +352,53 @@ fn write_tables(
                 if r == 0 || r % 2 == 0 {
                     row_format = ROW_FORMAT_EVEN;
                 }
-                // Try to parse as float
-                match cell.parse::<f32>() {
+                // Try to parse as int
+                match cell.parse::<i32>() {
                     Ok(i) => {
                         sheet.write_number_with_format(r, c, i, &row_format)?;
                     }
                     Err(_) => {
-                        // Lets try again with trim, and replace . with ,
+                        // Trying again, but with trimming, since it could be "- 42"
                         let s = cell.clone();
-                        let res = s
-                            .split_whitespace()
-                            .collect::<Vec<&str>>()
-                            .join("")
-                            .replace(",", ".");
-                        match res.parse::<f32>() {
+                        match s.split_whitespace().join("").parse::<i32>() {
                             Ok(i) => {
-                                sheet.write_number_with_format(
-                                    r,
-                                    c,
-                                    i,
-                                    &row_format.clone().set_num_format("0.0"),
-                                )?;
+                                sheet.write_number_with_format(r, c, i, &row_format)?;
                             }
                             Err(_) => {
-                                // Could be a `-` char, and if so, its alignment should be right aligned
-                                if cell.clone().trim() == "-" {
-                                    sheet.write_with_format(
-                                        r,
-                                        c,
-                                        cell,
-                                        &row_format.clone().set_align(FormatAlign::Right),
-                                    )?;
-                                } else {
-                                    sheet.write_with_format(
-                                        r,
-                                        c,
-                                        cell,
-                                        &row_format.clone().set_align(FormatAlign::Left),
-                                    )?;
+                                // Lets try again with trim, and replace . with ,
+                                let s = cell.clone();
+                                let res = s
+                                    .split_whitespace()
+                                    .collect::<Vec<&str>>()
+                                    .join("")
+                                    .replace(",", ".");
+                                match res.parse::<f32>() {
+                                    Ok(i) => {
+                                        sheet.write_number_with_format(
+                                            r,
+                                            c,
+                                            i,
+                                            &row_format.clone().set_num_format("0.0"),
+                                        )?;
+                                    }
+                                    Err(_) => {
+                                        // Could be a `-` char, and if so, its alignment should be right aligned
+                                        if cell.clone().trim() == "-" {
+                                            sheet.write_with_format(
+                                                r,
+                                                c,
+                                                cell,
+                                                &row_format.clone().set_align(FormatAlign::Right),
+                                            )?;
+                                        } else {
+                                            sheet.write_with_format(
+                                                r,
+                                                c,
+                                                cell,
+                                                &row_format.clone().set_align(FormatAlign::Left),
+                                            )?;
+                                        }
+                                    }
                                 }
                             }
                         }
