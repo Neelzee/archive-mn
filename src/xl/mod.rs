@@ -340,7 +340,7 @@ pub fn write_metode(
         sheet.write_with_format(r, 0, metode.title, &BOLD)?;
         r += 1;
         for long_line in metode.content {
-            if long_line.trim().is_empty() {
+            if long_line.trim().is_empty() || long_line.trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder." {
                 continue;
             }
             for l in split_string(long_line) {
