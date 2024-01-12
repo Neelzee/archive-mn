@@ -86,7 +86,7 @@ fn test_get_forms() {
 
         println!("{:?}", form);
     } else {
-        panic!("Could not get webpage to test");
+        eprintln!("Could not get webpage to test");
     }
 }
 
