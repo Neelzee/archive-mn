@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use reqwest::Client;
 use scraper::{Html, Selector};
 
@@ -7,7 +8,7 @@ use crate::{
     error::ArchiveError,
     modules::{
         form::{Form, FormOption},
-        sok::{Merknad, Sok, SokCollection, Table},
+        sok::{Kilde, Merknad, Metode, Sok, SokCollection, Table},
         webpage::{Link, Webpage},
     },
     scraper::get_html_content,
@@ -80,16 +81,16 @@ impl Webpage {
         Ok(form)
     }
 
-    pub fn get_sok(&self) -> Result<Sok, ArchiveError> {
+    pub async fn get_sok(&self) -> Result<Sok, ArchiveError> {
         let mut sok = Sok::new();
 
         let title_selector = Selector::parse(r#"div[id="sokResult"] h4"#)?;
 
         let table_selector = Selector::parse(r#"div[id="sokResult"] table"#)?;
 
-        let tr_selector = Selector::parse(r#"div[id="sokResult"] tr"#)?;
-        let th_selector = Selector::parse(r#"div[id="sokResult"] th"#)?;
-        let td_selector = Selector::parse(r#"div[id="sokResult"] td"#)?;
+        let tr_selector = Selector::parse("tr")?;
+        let th_selector = Selector::parse("th")?;
+        let td_selector = Selector::parse("td")?;
 
         for t in self.get_content().select(&title_selector) {
             sok.title = trim_string(&t.text().collect::<String>());
@@ -98,35 +99,28 @@ impl Webpage {
 
         let mut tables: Vec<Table> = Vec::new();
 
-        // This is stupid, motherfucker
         for table in self.get_content().select(&table_selector) {
             let mut cur_table = Table::new();
-
             // Header
-            // Rows
             let mut headers: Vec<Vec<String>> = Vec::new();
-            for tr in self.get_content().select(&tr_selector) {
-                // This row belongs to the current table
-                if has_ancestor(*tr, table.id()) {
-                    // Iterating over all cells
-                    let mut row: Vec<String> = Vec::new();
-                    for td in self.get_content().select(&th_selector) {
-                        // This cell belongs to the current row
-                        if has_ancestor(*td, tr.id()) {
-                            let txt = trim_string(&td.text().collect::<String>());
 
-                            if txt.contains('\u{a0}') {
-                                row.push(" ".into());
-                                continue;
-                            }
+            for tr in table.select(&tr_selector) {
+                // Iterating over all cells
+                let mut row: Vec<String> = Vec::new();
+                for th in tr.select(&th_selector) {
+                    // This cell belongs to the current row
+                    let txt = trim_string(&th.text().collect::<String>());
 
-                            row.push(txt);
-                        }
+                    if txt.contains('\u{a0}') {
+                        row.push(" ".into());
+                        continue;
                     }
 
-                    if row.len() != 0 {
-                        headers.push(row);
-                    }
+                    row.push(txt);
+                }
+
+                if row.len() != 0 {
+                    headers.push(row);
                 }
             }
 
@@ -134,27 +128,23 @@ impl Webpage {
 
             // Rows
             let mut rows: Vec<Vec<String>> = Vec::new();
-            for tr in self.get_content().select(&tr_selector) {
+            for tr in table.select(&tr_selector) {
                 // This row belongs to the current table
-                if has_ancestor(*tr, table.id()) {
-                    // Iterating over all cells
-                    let mut row: Vec<String> = Vec::new();
-                    for td in self.get_content().select(&td_selector) {
-                        // This cell belongs to the current row
-                        if has_ancestor(*td, tr.id()) {
-                            let txt = trim_string(&td.text().collect::<String>());
+                // Iterating over all cells
+                let mut row: Vec<String> = Vec::new();
+                for td in tr.select(&td_selector) {
+                    // This cell belongs to the current row
+                    let txt = trim_string(&td.text().collect::<String>());
 
-                            if txt.contains('\u{a0}') {
-                                row.push(" ".into());
-                                continue;
-                            }
+                    if txt.contains('\u{a0}') {
+                        row.push(" ".into());
+                        continue;
+                    }
 
-                            row.push(txt);
-                        }
-                    }
-                    if row.len() != 0 {
-                        rows.push(row);
-                    }
+                    row.push(txt);
+                }
+                if row.len() != 0 {
+                    rows.push(row);
                 }
             }
 
@@ -164,6 +154,22 @@ impl Webpage {
         }
 
         sok.tables = tables;
+        sok.metode = get_metode(self)
+            .await?
+            .into_iter()
+            .map(|e| Into::<Metode>::into(e))
+            .collect_vec();
+
+        sok.kilde = get_kilde(self)
+            .await?
+            .into_iter()
+            .map(|e| Into::<Kilde>::into(e))
+            .collect_vec();
+
+        sok.merknad = vec![Merknad {
+            title: "Merk".to_string(),
+            content: self.get_merknad()?,
+        }];
 
         Ok(sok)
     }
@@ -297,7 +303,7 @@ pub async fn get_sok_collection(
     let forms = wp.get_forms()?;
 
     if forms.is_empty() {
-        let mut sok = wp.get_sok()?;
+        let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
@@ -330,7 +336,7 @@ pub async fn get_sok_collection(
 
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
 
-                        match sub_wp.get_sok() {
+                        match sub_wp.get_sok().await {
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();
@@ -390,7 +396,7 @@ pub async fn get_sok_collection_tmf(
     let forms = wp.get_forms()?;
 
     if forms.is_empty() {
-        let mut sok = wp.get_sok()?;
+        let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
@@ -446,7 +452,7 @@ pub async fn get_sok_collection_tmf(
 
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
 
-                        match sub_wp.get_sok() {
+                        match sub_wp.get_sok().await {
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();

@@ -5,11 +5,13 @@ use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use once_cell::sync::Lazy;
-use rust_xlsxwriter::{Color, Format, FormatAlign, FormatBorder, Url, Worksheet};
+use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
-const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold());
+
+const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold().set_align(FormatAlign::Left));
+
 const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
@@ -43,7 +45,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     {
         let sheet = wb.add_worksheet();
         sheet.set_name("Framside")?;
-        sheet.write_with_format(0, 0, "Innhald", &BOLD)?;
+        sheet.write_with_format(0, 0, "Innhold", &BOLD)?;
     }
 
     let mut i = 0;
@@ -159,7 +161,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                                     sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
                                 }
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &HEADER_FORMAT)?;
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &HEADER_FORMAT.clone().set_align(FormatAlign::Left),
+                                    )?;
                                 }
                             }
                         }
@@ -182,15 +189,24 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                             sheet.write_number_with_format(r, c, i, &row_format)?;
                         }
                         Err(_) => {
-                            // Lets try again with trim
+                            // Lets try again with trim, and replace . with ,
                             let s = cell.clone();
-                            let res = s.split_whitespace().collect::<Vec<&str>>().join("");
+                            let res = s
+                                .split_whitespace()
+                                .collect::<Vec<&str>>()
+                                .join("")
+                                .replace(",", ".");
                             match res.parse::<f32>() {
                                 Ok(i) => {
                                     sheet.write_number_with_format(r, c, i, &row_format)?;
                                 }
                                 Err(_) => {
-                                    sheet.write_with_format(r, c, cell, &row_format)?;
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &row_format.clone().set_align(FormatAlign::Left),
+                                    )?;
                                 }
                             }
                         }
@@ -201,13 +217,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
         }
         r += 1;
-        let (sheet, _) = write_metode(
-            sheet,
-            soks.metode.clone(),
-            soks.kilde.clone(),
-            soks.merknad.clone(),
-            r,
-        )?;
+        let (sheet, _) = write_metode(sheet, sub_sok.metode, sub_sok.kilde, Vec::new(), r)?;
 
         wb.push_worksheet(sheet);
     }
@@ -215,17 +225,14 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     // Info sheet
     {
         let mut info_sheet = Worksheet::new();
-        let sheet_name = String::from("Merknad");
+        let sheet_name = String::from("Merk");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
 
-        let (info_sheet, _) = write_metode(
-            info_sheet,
-            soks.metode.clone(),
-            soks.kilde.clone(),
-            soks.merknad.clone(),
-            0,
-        )?;
+        let (mut info_sheet, r) =
+            write_metode(info_sheet, Vec::new(), Vec::new(), soks.merknad.clone(), 0)?;
+
+        info_sheet.write_with_format(r + 1, 0, "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.", &Format::new().set_align(FormatAlign::Left).set_italic())?;
 
         wb.push_worksheet(info_sheet);
     }
@@ -245,7 +252,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
 
             for (nm, dp) in temp {
-                if dp.contains("Merknad") {
+                if dp.contains("Merk") {
                     has_merk = true;
                     continue;
                 }
@@ -255,8 +262,8 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
 
             if has_merk {
-                let link: &str = &format!("internal:'{}'!A1", "Merknad");
-                sheet.write_url_with_text(r, 0, link, "Merknad")?;
+                let link: &str = &format!("internal:'{}'!A1", "Merk");
+                sheet.write_url_with_text(r, 0, link, "Merk")?;
             }
         }
     }
@@ -285,12 +292,12 @@ pub fn write_metode(
 ) -> Result<(Worksheet, u32), XlsxError> {
     // Merknad
     if !merknader.is_empty() || merknader.clone().into_iter().all(|e| e.is_empty()) {
-        sheet.write_with_format(r, 0, "Merknad", &BOLD)?;
+        sheet.write_with_format(r, 0, "Merk", &BOLD)?;
         r += 1;
     }
     for merknad in merknader {
         for long_line in merknad.content {
-            if long_line.trim().is_empty() {
+            if long_line.trim().is_empty() || long_line.trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder." {
                 continue;
             }
             for l in split_string(long_line) {

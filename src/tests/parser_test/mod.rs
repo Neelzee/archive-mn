@@ -1,18 +1,23 @@
 mod wp_test;
 
-
-
-
 use reqwest::Client;
 use scraper::Html;
 
 use crate::parser::medium::get_links_from_medium;
 use crate::scraper::get_html_content;
-
+use crate::utils::funcs::can_reqwest;
 
 #[tokio::test]
 async fn get_links_from_medium_test() {
-    if let Ok(raw_html) = get_html_content(&Client::default(), "https://medienorge.uib.no/statistikk/medium/avis".to_string()).await {
+    if !can_reqwest().await {
+        return;
+    }
+    if let Ok(raw_html) = get_html_content(
+        &Client::default(),
+        "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
+    )
+    .await
+    {
         let html = Html::parse_document(&raw_html);
 
         let res = get_links_from_medium(html);

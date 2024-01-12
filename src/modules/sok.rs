@@ -21,6 +21,9 @@ pub struct Sok {
     pub header_title: String,
     pub tables: Vec<Table>,
     pub display_names: Vec<String>,
+    pub merknad: Vec<Merknad>,
+    pub kilde: Vec<Kilde>,
+    pub metode: Vec<Metode>,
 }
 
 impl Sok {
@@ -30,6 +33,9 @@ impl Sok {
             header_title: String::new(),
             tables: Vec::new(),
             display_names: Vec::new(),
+            merknad: Vec::new(),
+            kilde: Vec::new(),
+            metode: Vec::new(),
         }
     }
 }
@@ -121,7 +127,7 @@ macro_rules! impl_ie {
 }
 
 impl_ac!(Merknad);
-impl_ie!(Merknad);
+
 impl_ac!(Metode);
 impl_ie!(Metode);
 impl_ac!(Kilde);
@@ -129,4 +135,10 @@ impl_ie!(Kilde);
 
 pub trait IsEmpty {
     fn is_empty(&self) -> bool;
+}
+
+impl IsEmpty for Merknad {
+    fn is_empty(&self) -> bool {
+        self.content.is_empty() || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
+    }
 }
