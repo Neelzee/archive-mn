@@ -1,6 +1,6 @@
 # Archive-MN
 
-[badge](https://github.com/Neelzee/archive-mn/actions/workflows/rust.yml/badge.svg)
+![badge](https://github.com/Neelzee/archive-mn/actions/workflows/rust.yml/badge.svg)
 
 This script was used too archive [medienorge](https://web.archive.org/web/20231201215514/https://medienorge.uib.no/).
 In this content, `archive`, means getting all the `sok`s and converting them into excel files, for long-term offline storage.
