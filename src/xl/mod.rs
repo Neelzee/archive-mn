@@ -20,21 +20,21 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
-        .set_background_color(Color::RGB(0x918E8E))
+        .set_background_color(Color::RGB(0x279bc1))
 });
 
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
-        .set_background_color(Color::RGB(0xACACAC))
+        .set_background_color(Color::RGB(0xcee8f1))
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
-        .set_background_color(Color::RGB(0xBCBCBC))
+        .set_background_color(Color::RGB(0xe6f3f8))
 });
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
