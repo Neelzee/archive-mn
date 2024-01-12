@@ -9,9 +9,9 @@ use reqwest::Client;
 use scraper::Html;
 use scraper::Node;
 
-use crate::modules::webpage::Webpage;
+use crate::modules::webpage::{Link, Webpage};
 
-use super::constants::ROOT_URL;
+use super::constants::{ROOT_URL, VALID_SOKS};
 
 // Might cause issues
 pub fn capitalize_first(s: &str) -> String {
@@ -64,6 +64,15 @@ pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
         .into_iter()
         .flat_map(|e| e.ancestors())
         .any(|e| has_ancestor(e, id))
+}
+
+pub fn get_random_link() -> Link {
+    let mut rng = rand::thread_rng();
+    let random_index = rng.gen_range(0..VALID_SOKS.len());
+    Link::new(format!(
+        "/statistikk/medium/test/{}",
+        VALID_SOKS[random_index]
+    ))
 }
 
 pub fn get_random_webpage() -> Option<Webpage> {

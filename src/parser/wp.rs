@@ -300,22 +300,21 @@ pub async fn get_sok_collection(
 
     let request = client.post(wp.get_url());
 
-    let forms = wp.get_forms()?;
+    let mut forms = wp.get_forms()?;
 
     if forms.is_empty() {
         let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
-        for form in forms.combinations() {
+        forms.order();
+        for (form, disps) in forms.combinations() {
             let mut form_data: HashMap<String, String> = HashMap::new();
             let mut title = String::new();
-            let mut disps: Vec<String> = Vec::new();
             for (k, (v, d)) in form {
                 title += &d;
                 title += " ";
                 form_data.insert(k, v);
-                disps.push(d);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
@@ -424,14 +423,14 @@ pub async fn get_sok_collection_tmf(
             form_data.len()
         );
 
-        for form in new_fo.combinations() {
+        new_fo.order();
+
+        for (form, disps) in new_fo.combinations() {
             let mut title = String::new();
-            let mut disps: Vec<String> = Vec::new();
             for (k, (v, d)) in form {
                 title += &d;
                 title += " ";
                 form_data.insert(k, v);
-                disps.push(d);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 

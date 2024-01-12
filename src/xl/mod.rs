@@ -366,7 +366,12 @@ fn write_tables(
                             .replace(",", ".");
                         match res.parse::<f32>() {
                             Ok(i) => {
-                                sheet.write_number_with_format(r, c, i, &row_format)?;
+                                sheet.write_number_with_format(
+                                    r,
+                                    c,
+                                    i,
+                                    &row_format.clone().set_num_format("0.0"),
+                                )?;
                             }
                             Err(_) => {
                                 // Could be a `-` char, and if so, its alignment should be right aligned

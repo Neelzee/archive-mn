@@ -5,23 +5,52 @@ use scraper::Html;
 
 use crate::{
     modules::webpage::Webpage,
-    utils::funcs::{can_reqwest, get_html_content_test, get_random_webpage},
+    utils::funcs::{can_reqwest, get_html_content_test, get_random_link, get_random_webpage},
 };
 
-#[test]
-fn test_form() {
-    if let Some(wp) = get_random_webpage() {
+#[tokio::test]
+async fn test_form() {
+    let lnk = get_random_link();
+    let res = Webpage::from_link(lnk.clone()).await;
+
+    if let Ok(wp) = res.clone() {
         let res = wp.get_forms();
 
         assert!(res.is_ok());
 
-        let form = res.unwrap();
+        let mut form = res.unwrap();
 
-        println!("{:?}", form);
-
-        for ar in form.combinations() {
-            println!("{:?}", ar);
+        if form.is_empty() {
+            println!("Form is empty!");
+            return;
         }
+
+        for op in form.options() {
+            op.show();
+        }
+
+        println!("");
+
+        for (ar, d) in form.clone().combinations() {
+            println!("{:?}", ar);
+            println!("{:?}", d);
+        }
+
+        form.order();
+        println!("");
+
+        for op in form.options() {
+            op.show();
+        }
+
+        println!("");
+
+        for (ar, d) in form.combinations() {
+            println!("{:?}", ar);
+            println!("{:?}", d);
+        }
+    } else {
+        eprintln!("{:?}, link: {}", res.unwrap_err(), lnk.to_string());
     }
 }
 
@@ -50,7 +79,7 @@ async fn test_form_requester() {
 
         let request = client.post(url.clone());
 
-        for form in form.combinations() {
+        for (form, _) in form.combinations() {
             let mut form_data = HashMap::new();
 
             for (k, (v, _)) in form {
