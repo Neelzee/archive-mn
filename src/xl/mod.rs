@@ -152,16 +152,31 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     }
 
     // Info sheet
-    {
+    if !soks.metode.is_empty() && !soks.metode.clone().into_iter().all(|e| e.is_empty()) {
         let mut info_sheet = Worksheet::new();
-        let sheet_name = String::from("Merk");
+        let sheet_name = String::from("Metode");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
-
-        let (mut info_sheet, r) =
-            write_metode(info_sheet, Vec::new(), Vec::new(), soks.merknad.clone(), 0)?;
-
-        info_sheet.write_with_format(r + 1, 0, "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.", &Format::new().set_align(FormatAlign::Left).set_italic())?;
+        let mut r = 0;
+        // Metode
+        for metode in soks.metode.clone() {
+            info_sheet.write_with_format(r, 0, metode.title, &BOLD)?;
+            r += 1;
+            for long_line in metode.content {
+                if long_line.trim().is_empty() || long_line.trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder." {
+                continue;
+            }
+                for l in split_string(long_line) {
+                    if l.trim().is_empty() {
+                        continue;
+                    }
+                    info_sheet.write(r, 0, l)?;
+                    r += 1;
+                }
+                r += 1;
+            }
+            r += 1;
+        }
 
         wb.push_worksheet(info_sheet);
     }
@@ -181,7 +196,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
 
             for (nm, dp) in temp {
-                if dp.contains("Merk") {
+                if dp.contains("Metode") {
                     has_merk = true;
                     continue;
                 }
@@ -191,8 +206,8 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
 
             if has_merk {
-                let link: &str = &format!("internal:'{}'!A1", "Merk");
-                sheet.write_url_with_text(r, 0, link, "Merk")?;
+                let link: &str = &format!("internal:'{}'!A1", "Metode");
+                sheet.write_url_with_text(r, 0, link, "Metode")?;
             }
         }
     }
@@ -264,27 +279,14 @@ pub fn write_metode(
         r += 1;
     }
 
-    // Metode
-    for metode in metoder {
-        sheet.write_with_format(r, 0, metode.title, &BOLD)?;
-        r += 1;
-        for long_line in metode.content {
-            if long_line.trim().is_empty() || long_line.trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder." {
-                continue;
-            }
-            for l in split_string(long_line) {
-                if l.trim().is_empty() {
-                    continue;
-                }
-                sheet.write(r, 0, l)?;
-                r += 1;
-            }
-            r += 1;
-        }
-        r += 1;
-    }
+    sheet.write_with_format(
+        r,
+        0,
+        "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.",
+        &Format::new().set_align(FormatAlign::Left).set_italic(),
+    )?;
 
-    Ok((sheet, r))
+    Ok((sheet, r + 1))
 }
 
 fn write_tables(
