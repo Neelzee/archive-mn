@@ -1,7 +1,8 @@
 use std::cmp::min;
+use std::collections::HashMap;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, SokCollection};
+use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, Sok, SokCollection};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use once_cell::sync::Lazy;
@@ -9,6 +10,9 @@ use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
+
+const MAX_COL_WIDTH: f64 = 50.0;
+const DEFAULT_COL_WIDTH: f64 = 8.43;
 
 const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold().set_align(FormatAlign::Left));
 
@@ -138,84 +142,9 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
         // Title
         sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
-        sheet.set_column_width_pixels(0, 180)?;
         r += 1;
         // Tables
-        for t in sub_sok.tables {
-            r += 1;
-            // Header
-            for row in t.header {
-                let mut c = 0;
-                for cell in row {
-                    // Try to parse as int, header is most likley some year
-                    match cell.parse::<i32>() {
-                        Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
-                        }
-                        Err(_) => {
-                            // Lets try again with trim
-                            let s = cell.clone();
-                            let res = s.split_whitespace().collect::<Vec<&str>>().join("");
-                            match res.parse::<i32>() {
-                                Ok(i) => {
-                                    sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
-                                }
-                                Err(_) => {
-                                    sheet.write_with_format(
-                                        r,
-                                        c,
-                                        cell,
-                                        &HEADER_FORMAT.clone().set_align(FormatAlign::Left),
-                                    )?;
-                                }
-                            }
-                        }
-                    }
-                    c += 1;
-                }
-                r += 1;
-            }
-            // Data
-            for row in t.rows {
-                let mut c = 0;
-                for cell in row {
-                    let mut row_format = ROW_FORMAT_ODD;
-                    if r == 0 || r % 2 == 0 {
-                        row_format = ROW_FORMAT_EVEN;
-                    }
-                    // Try to parse as float
-                    match cell.parse::<f32>() {
-                        Ok(i) => {
-                            sheet.write_number_with_format(r, c, i, &row_format)?;
-                        }
-                        Err(_) => {
-                            // Lets try again with trim, and replace . with ,
-                            let s = cell.clone();
-                            let res = s
-                                .split_whitespace()
-                                .collect::<Vec<&str>>()
-                                .join("")
-                                .replace(",", ".");
-                            match res.parse::<f32>() {
-                                Ok(i) => {
-                                    sheet.write_number_with_format(r, c, i, &row_format)?;
-                                }
-                                Err(_) => {
-                                    sheet.write_with_format(
-                                        r,
-                                        c,
-                                        cell,
-                                        &row_format.clone().set_align(FormatAlign::Left),
-                                    )?;
-                                }
-                            }
-                        }
-                    }
-                    c += 1;
-                }
-                r += 1;
-            }
-        }
+        let (sheet, mut r) = write_tables(sub_sok.clone(), r, sheet)?;
         r += 1;
         let (sheet, _) = write_metode(sheet, sub_sok.metode, sub_sok.kilde, Vec::new(), r)?;
 
@@ -353,6 +282,125 @@ pub fn write_metode(
             r += 1;
         }
         r += 1;
+    }
+
+    Ok((sheet, r))
+}
+
+fn write_tables(
+    sok: Sok,
+    mut r: u32,
+    mut sheet: Worksheet,
+) -> Result<(Worksheet, u32), ArchiveError> {
+    let mut column_width: HashMap<u16, f64> = HashMap::new();
+    for t in sok.tables {
+        r += 1;
+        // Header
+        for row in t.header {
+            let mut c = 0;
+            for cell in row {
+                if let Some(width) = column_width.get(&c) {
+                    if width.to_owned() as usize <= cell.len() {
+                        column_width.insert(c, cell.len() as f64);
+                    }
+                } else {
+                    column_width.insert(c, cell.len() as f64);
+                }
+
+                // Try to parse as int, header is most likley some year
+                match cell.parse::<i32>() {
+                    Ok(i) => {
+                        sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
+                    }
+                    Err(_) => {
+                        // Lets try again with trim
+                        let s = cell.clone();
+                        let res = s.split_whitespace().collect::<Vec<&str>>().join("");
+                        match res.parse::<i32>() {
+                            Ok(i) => {
+                                sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
+                            }
+                            Err(_) => {
+                                sheet.write_with_format(
+                                    r,
+                                    c,
+                                    cell,
+                                    &HEADER_FORMAT.clone().set_align(FormatAlign::Left),
+                                )?;
+                            }
+                        }
+                    }
+                }
+                c += 1;
+            }
+            r += 1;
+        }
+
+        // Data
+        for row in t.rows {
+            let mut c = 0;
+            for cell in row {
+                if let Some(width) = column_width.get(&c) {
+                    if width.to_owned() as usize <= cell.len() {
+                        column_width.insert(c, cell.len() as f64);
+                    }
+                } else {
+                    column_width.insert(c, cell.len() as f64);
+                }
+                let mut row_format = ROW_FORMAT_ODD;
+                if r == 0 || r % 2 == 0 {
+                    row_format = ROW_FORMAT_EVEN;
+                }
+                // Try to parse as float
+                match cell.parse::<f32>() {
+                    Ok(i) => {
+                        sheet.write_number_with_format(r, c, i, &row_format)?;
+                    }
+                    Err(_) => {
+                        // Lets try again with trim, and replace . with ,
+                        let s = cell.clone();
+                        let res = s
+                            .split_whitespace()
+                            .collect::<Vec<&str>>()
+                            .join("")
+                            .replace(",", ".");
+                        match res.parse::<f32>() {
+                            Ok(i) => {
+                                sheet.write_number_with_format(r, c, i, &row_format)?;
+                            }
+                            Err(_) => {
+                                // Could be a `-` char, and if so, its alignment should be right aligned
+                                if cell.clone().trim() == "-" {
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &row_format.clone().set_align(FormatAlign::Right),
+                                    )?;
+                                } else {
+                                    sheet.write_with_format(
+                                        r,
+                                        c,
+                                        cell,
+                                        &row_format.clone().set_align(FormatAlign::Left),
+                                    )?;
+                                }
+                            }
+                        }
+                    }
+                }
+                c += 1;
+            }
+            r += 1;
+        }
+    }
+
+    for (k, v) in column_width {
+        if v > MAX_COL_WIDTH {
+            sheet.set_column_width(k, MAX_COL_WIDTH)?;
+        } else if v > DEFAULT_COL_WIDTH {
+            sheet.set_column_width(k, v)?;
+        }
     }
 
     Ok((sheet, r))
