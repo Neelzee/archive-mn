@@ -43,7 +43,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     {
         let sheet = wb.add_worksheet();
         sheet.set_name("Framside")?;
-        sheet.write_with_format(0, 0, "Innhald", &BOLD)?;
+        sheet.write_with_format(0, 0, "Innhold", &BOLD)?;
     }
 
     let mut i = 0;
@@ -209,7 +209,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             sheet,
             soks.metode.clone(),
             soks.kilde.clone(),
-            soks.merknad.clone(),
+            Vec::new(),
             r,
         )?;
 
@@ -219,17 +219,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     // Info sheet
     {
         let mut info_sheet = Worksheet::new();
-        let sheet_name = String::from("Merknad");
+        let sheet_name = String::from("Merk");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
 
-        let (info_sheet, _) = write_metode(
-            info_sheet,
-            soks.metode.clone(),
-            soks.kilde.clone(),
-            soks.merknad.clone(),
-            0,
-        )?;
+        let (info_sheet, _) =
+            write_metode(info_sheet, Vec::new(), Vec::new(), soks.merknad.clone(), 0)?;
 
         wb.push_worksheet(info_sheet);
     }
@@ -249,7 +244,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
 
             for (nm, dp) in temp {
-                if dp.contains("Merknad") {
+                if dp.contains("Merk") {
                     has_merk = true;
                     continue;
                 }
@@ -259,8 +254,8 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
 
             if has_merk {
-                let link: &str = &format!("internal:'{}'!A1", "Merknad");
-                sheet.write_url_with_text(r, 0, link, "Merknad")?;
+                let link: &str = &format!("internal:'{}'!A1", "Merk");
+                sheet.write_url_with_text(r, 0, link, "Merk")?;
             }
         }
     }
@@ -289,7 +284,7 @@ pub fn write_metode(
 ) -> Result<(Worksheet, u32), XlsxError> {
     // Merknad
     if !merknader.is_empty() || merknader.clone().into_iter().all(|e| e.is_empty()) {
-        sheet.write_with_format(r, 0, "Merknad", &BOLD)?;
+        sheet.write_with_format(r, 0, "Merk", &BOLD)?;
         r += 1;
     }
     for merknad in merknader {
