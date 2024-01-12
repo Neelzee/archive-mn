@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use reqwest::Client;
 use scraper::Html;
 
-use crate::{utils::funcs::{get_random_webpage, get_html_content_test}, modules::webpage::Webpage};
+use crate::{
+    modules::webpage::Webpage,
+    utils::funcs::{get_html_content_test, get_random_webpage},
+};
 
 #[test]
 fn test_form() {
@@ -19,7 +22,6 @@ fn test_form() {
         for ar in form.combinations() {
             println!("{:?}", ar);
         }
-
     }
 }
 
@@ -31,7 +33,6 @@ fn test_form_titler() {
         assert!(res.is_ok());
 
         let form = res.unwrap();
-
     }
 }
 
@@ -46,11 +47,9 @@ async fn test_form_requester() {
         let form = res.unwrap();
         let client = Client::default();
 
-        let request = client
-            .post(url.clone());
+        let request = client.post(url.clone());
 
         for form in form.combinations() {
-
             let mut form_data = HashMap::new();
 
             for (k, (v, _)) in form {
@@ -59,8 +58,11 @@ async fn test_form_requester() {
 
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
             let req = request
-                .try_clone().expect("Should not be a stream")
-                .form(&form_data).build().expect("Should work :)");
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()
+                .expect("Should work :)");
 
             let res = client.execute(req).await;
 
@@ -80,14 +82,13 @@ async fn test_form_requester() {
 
             let sub_wp = Webpage::from_html(346, url.clone(), html, "avis".to_string());
 
-            let res = sub_wp.get_sok();
+            let res = sub_wp.get_sok().await;
             assert!(res.is_ok());
 
             let sok = res.unwrap();
 
             assert!(sok.tables.len() != 0);
         }
-        
     } else {
         println!("Failed to get webpage");
         assert!(false);

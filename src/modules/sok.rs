@@ -21,6 +21,9 @@ pub struct Sok {
     pub header_title: String,
     pub tables: Vec<Table>,
     pub display_names: Vec<String>,
+    pub merknad: Vec<Merknad>,
+    pub kilde: Vec<Kilde>,
+    pub metode: Vec<Metode>,
 }
 
 impl Sok {
@@ -30,6 +33,9 @@ impl Sok {
             header_title: String::new(),
             tables: Vec::new(),
             display_names: Vec::new(),
+            merknad: Vec::new(),
+            kilde: Vec::new(),
+            metode: Vec::new(),
         }
     }
 }

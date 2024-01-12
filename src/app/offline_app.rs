@@ -147,7 +147,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
 
             sokc.title = wp.get_title()?;
 
-            let mut sok = wp.get_sok()?;
+            let mut sok = wp.get_sok().await?;
             sok.header_title = sok.title.clone();
 
             sokc.add_sok(sok);
@@ -316,7 +316,7 @@ pub async fn get_soks_offline() -> Result<(), ArchiveError> {
 
                 i += 1;
 
-                let mut sok = wp.get_sok()?;
+                let mut sok = wp.get_sok().await?;
                 sok.header_title = sok.title.clone();
                 sokc.add_sok(sok);
             }

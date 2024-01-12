@@ -205,13 +205,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             }
         }
         r += 1;
-        let (sheet, _) = write_metode(
-            sheet,
-            soks.metode.clone(),
-            soks.kilde.clone(),
-            Vec::new(),
-            r,
-        )?;
+        let (sheet, _) = write_metode(sheet, sub_sok.metode, sub_sok.kilde, Vec::new(), r)?;
 
         wb.push_worksheet(sheet);
     }

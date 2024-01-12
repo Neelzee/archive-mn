@@ -8,7 +8,7 @@ use crate::{
     error::ArchiveError,
     modules::{
         form::{Form, FormOption},
-        sok::{Merknad, Sok, SokCollection, Table},
+        sok::{Kilde, Merknad, Metode, Sok, SokCollection, Table},
         webpage::{Link, Webpage},
     },
     scraper::get_html_content,
@@ -81,7 +81,7 @@ impl Webpage {
         Ok(form)
     }
 
-    pub fn get_sok(&self) -> Result<Sok, ArchiveError> {
+    pub async fn get_sok(&self) -> Result<Sok, ArchiveError> {
         let mut sok = Sok::new();
 
         let title_selector = Selector::parse(r#"div[id="sokResult"] h4"#)?;
@@ -154,6 +154,22 @@ impl Webpage {
         }
 
         sok.tables = tables;
+        sok.metode = get_metode(self)
+            .await?
+            .into_iter()
+            .map(|e| Into::<Metode>::into(e))
+            .collect_vec();
+
+        sok.kilde = get_kilde(self)
+            .await?
+            .into_iter()
+            .map(|e| Into::<Kilde>::into(e))
+            .collect_vec();
+
+        sok.merknad = vec![Merknad {
+            title: "Merk".to_string(),
+            content: self.get_merknad()?,
+        }];
 
         Ok(sok)
     }
@@ -287,7 +303,7 @@ pub async fn get_sok_collection(
     let forms = wp.get_forms()?;
 
     if forms.is_empty() {
-        let mut sok = wp.get_sok()?;
+        let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
@@ -320,7 +336,7 @@ pub async fn get_sok_collection(
 
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
 
-                        match sub_wp.get_sok() {
+                        match sub_wp.get_sok().await {
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();
@@ -380,7 +396,7 @@ pub async fn get_sok_collection_tmf(
     let forms = wp.get_forms()?;
 
     if forms.is_empty() {
-        let mut sok = wp.get_sok()?;
+        let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
@@ -436,7 +452,7 @@ pub async fn get_sok_collection_tmf(
 
                         let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
 
-                        match sub_wp.get_sok() {
+                        match sub_wp.get_sok().await {
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();
