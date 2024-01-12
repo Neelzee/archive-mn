@@ -229,8 +229,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
 
-        let (info_sheet, _) =
+        let (mut info_sheet, r) =
             write_metode(info_sheet, Vec::new(), Vec::new(), soks.merknad.clone(), 0)?;
+
+        info_sheet.write_with_format(r + 1, 0, "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.", &Format::new().set_align(FormatAlign::Left).set_italic())?;
 
         wb.push_worksheet(info_sheet);
     }
