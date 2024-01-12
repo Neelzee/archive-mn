@@ -291,7 +291,7 @@ pub fn write_metode(
     mut r: u32,
 ) -> Result<(Worksheet, u32), XlsxError> {
     // Merknad
-    if !merknader.is_empty() || merknader.clone().into_iter().all(|e| e.is_empty()) {
+    if !merknader.is_empty() || !merknader.clone().into_iter().all(|e| e.is_empty()) {
         sheet.write_with_format(r, 0, "Merk", &BOLD)?;
         r += 1;
     }
@@ -312,7 +312,7 @@ pub fn write_metode(
     }
 
     // Kilde
-    if !kilder.is_empty() || kilder.clone().into_iter().all(|e| e.is_empty()) {
+    if !kilder.is_empty() || !kilder.clone().into_iter().all(|e| e.is_empty()) {
         sheet.write_with_format(r, 0, "Kilde", &BOLD)?;
         r += 1;
     }

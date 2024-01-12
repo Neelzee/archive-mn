@@ -120,7 +120,7 @@ macro_rules! impl_ie {
     ($struct_name:ident) => {
         impl IsEmpty for $struct_name {
             fn is_empty(&self) -> bool {
-                self.content.is_empty()
+                self.content.is_empty() || self.content.clone().into_iter().all(|e| e.is_empty())
             }
         }
     };
