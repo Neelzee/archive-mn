@@ -443,7 +443,11 @@ pub async fn get_sok_collection_tmf(
                         sok_collection.title = wp.get_title()?;
                         match sub_wp.get_sok().await {
                             Ok(mut sok) => {
-                                sok.display_names = forms.combinations().next().unwrap().1;
+                                sok.display_names = new_fo
+                                    .options()
+                                    .into_iter()
+                                    .map(|e| e.option_name())
+                                    .collect_vec();
                                 sok.header_title = sok.title.clone();
                                 sok_collection.add_sok(sok);
                             }
