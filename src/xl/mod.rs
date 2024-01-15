@@ -234,7 +234,7 @@ pub fn write_metode(
     mut r: u32,
 ) -> Result<(Worksheet, u32), XlsxError> {
     // Merknad
-    if !merknader.is_empty() || !merknader.clone().into_iter().all(|e| e.is_empty()) {
+    if !merknader.is_empty() && !merknader.clone().into_iter().all(|e| e.is_empty()) {
         sheet.write_with_format(r, 0, "Merk", &BOLD)?;
         r += 1;
     }
@@ -255,7 +255,7 @@ pub fn write_metode(
     }
 
     // Kilde
-    if !kilder.is_empty() || !kilder.clone().into_iter().all(|e| e.is_empty()) {
+    if !kilder.is_empty() && !kilder.clone().into_iter().all(|e| e.is_empty()) {
         sheet.write_with_format(r, 0, "Kilde", &BOLD)?;
         r += 1;
     }
@@ -300,10 +300,10 @@ fn write_tables(
         for row in t.header {
             let mut c = 0;
             for cell in row {
-                if let Some(width) = column_width.get(&c) {
-                    if width.to_owned() as usize <= cell.len() {
-                        column_width.insert(c, cell.len() as f64);
-                    }
+                if let Some(width) = column_width.get(&c)
+                    && width.to_owned() as usize <= cell.len()
+                {
+                    column_width.insert(c, cell.len() as f64);
                 } else {
                     column_width.insert(c, cell.len() as f64);
                 }
@@ -341,10 +341,10 @@ fn write_tables(
         for row in t.rows {
             let mut c = 0;
             for cell in row {
-                if let Some(width) = column_width.get(&c) {
-                    if width.to_owned() as usize <= cell.len() {
-                        column_width.insert(c, cell.len() as f64);
-                    }
+                if let Some(width) = column_width.get(&c)
+                    && width.to_owned() as usize <= cell.len()
+                {
+                    column_width.insert(c, cell.len() as f64);
                 } else {
                     column_width.insert(c, cell.len() as f64);
                 }

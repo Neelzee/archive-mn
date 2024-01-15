@@ -120,7 +120,12 @@ macro_rules! impl_ie {
     ($struct_name:ident) => {
         impl IsEmpty for $struct_name {
             fn is_empty(&self) -> bool {
-                self.content.is_empty() || self.content.clone().into_iter().all(|e| e.is_empty())
+                self.content.is_empty()
+                    || self
+                        .content
+                        .clone()
+                        .into_iter()
+                        .all(|e| e.is_empty() || e.split_whitespace().count() == 0)
             }
         }
     };
@@ -139,6 +144,12 @@ pub trait IsEmpty {
 
 impl IsEmpty for Merknad {
     fn is_empty(&self) -> bool {
-        self.content.is_empty() || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
+        self.content.is_empty()
+        || self
+            .content
+            .clone()
+            .into_iter()
+            .all(|e| e.is_empty() || e.split_whitespace().count() == 0)
+        || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
     }
 }

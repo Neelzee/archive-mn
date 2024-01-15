@@ -1,17 +1,12 @@
 use std::{
-    fs::{self, File, OpenOptions},
-    io::{self, Write},
+    fs::{self, OpenOptions},
     time::Instant,
 };
 
 use crate::modules::webpage::{Link, Webpage};
 use crate::parser::wp::get_sok_collection;
 use crate::{
-    error::ArchiveError,
-    modules::sok::{Merknad, SokCollection},
-    parse_args,
-    parser::wp::{get_kilde, get_metode, get_sok_collection_tmf},
-    scraper::get_html_content,
+    error::ArchiveError, parse_args, parser::wp::get_sok_collection_tmf, scraper::get_html_content,
     xl::save_sok,
 };
 use itertools::Itertools;

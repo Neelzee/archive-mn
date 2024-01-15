@@ -1,3 +1,4 @@
+#![feature(let_chains)]
 use crate::app::{
     interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
     single_app::get_soks,
@@ -5,17 +6,14 @@ use crate::app::{
 use crate::utils::constants::VALID_SOKS;
 
 use error::ArchiveError;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use modules::webpage::Link;
-use once_cell::sync::Lazy;
 use rand::Rng;
-use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader};
-use std::os::raw;
 use std::sync::Mutex;
-use std::sync::{Arc, RwLock};
 use std::time::Instant;
 use std::{env, io};
 
@@ -46,32 +44,32 @@ fn setup() -> io::Result<()> {
 
     let reader = BufReader::new(file);
 
-    if let Ok(mut map_title) = CHECKED_SOK_TITLE.lock() {
-        if let Ok(mut map_id) = CHECKED_SOK_ID.lock() {
-            for line in reader.lines() {
-                let line = line?;
+    if let Ok(mut map_title) = CHECKED_SOK_TITLE.lock()
+        && let Ok(mut map_id) = CHECKED_SOK_ID.lock()
+    {
+        for line in reader.lines() {
+            let line = line?;
 
-                let mut parts = line.split(";").collect::<Vec<&str>>();
+            let mut parts = line.split(";").collect::<Vec<&str>>();
 
-                if parts.len() == 2 {
-                    let raw_id = parts.pop().unwrap();
-                    let title = parts.pop().unwrap();
-                    map_title.insert(title.to_owned(), true);
+            if parts.len() == 2 {
+                let raw_id = parts.pop().unwrap();
+                let title = parts.pop().unwrap();
+                map_title.insert(title.to_owned(), true);
 
-                    if let Ok(id) = raw_id.parse::<usize>() {
+                if let Ok(id) = raw_id.parse::<usize>() {
+                    map_id.insert(id, true);
+                }
+            } else if parts.len() == 1 {
+                let r = parts.pop().unwrap();
+                match r.parse::<usize>() {
+                    Ok(id) => {
                         map_id.insert(id, true);
+                        continue;
                     }
-                } else if parts.len() == 1 {
-                    let r = parts.pop().unwrap();
-                    match r.parse::<usize>() {
-                        Ok(id) => {
-                            map_id.insert(id, true);
-                            continue;
-                        }
-                        Err(_) => {
-                            map_title.insert(r.to_owned(), true);
-                            continue;
-                        }
+                    Err(_) => {
+                        map_title.insert(r.to_owned(), true);
+                        continue;
                     }
                 }
             }
@@ -193,17 +191,7 @@ async fn main() -> Result<(), ArchiveError> {
     }
 
     if args.contains(&"-sok".to_string()) {
-        let mut j = 0;
-        for i in 0..args.len() {
-            if args.get(i).unwrap() == &"-sok".to_string() {
-                j = i;
-                break;
-            }
-        }
-
-        args.swap_remove(j);
-
-        match parse_args(args) {
+        match parse_args(args.into_iter().filter(|e| e != "-sok").collect_vec()) {
             Ok(links) => get_soks(links).await?,
             Err(err) => println!("Failed parsing args: {}", err),
         }

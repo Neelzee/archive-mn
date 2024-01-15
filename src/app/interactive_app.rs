@@ -1,9 +1,19 @@
-use std::{io::{self, Read}, path::Path, fs::File, collections::HashMap};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{self, Read},
+    path::Path,
+};
 
 use reqwest::Client;
 use scraper::Html;
 
-use crate::{modules::webpage::{Webpage, Link}, scraper::get_html_content, error::ArchiveError, utils::constants::ROOT_URL};
+use crate::{
+    error::ArchiveError,
+    modules::webpage::{Link, Webpage},
+    scraper::get_html_content,
+    utils::constants::ROOT_URL,
+};
 
 use super::offline_app::visit_dirs;
 
@@ -13,9 +23,8 @@ enum Cmd {
     LoadFromIndex(usize),
     CreateRequest,
     DisplayHtml,
-    Quit
+    Quit,
 }
-
 
 pub async fn interactive() {
     let mut buffer = String::new();
@@ -45,19 +54,16 @@ pub async fn interactive() {
                             }
                         }
                     }
-                },
-                Cmd::LoadFromUrl(link) => {
-                    match Webpage::from_link(link).await {
-                        Ok(w) => {
+                }
+                Cmd::LoadFromUrl(link) => match Webpage::from_link(link).await {
+                    Ok(w) => {
+                        if let Ok(title) = w.get_title() {
+                            println!("Loaded: {}", title);
+                        }
 
-                            if let Ok(title) = w.get_title() {
-                                println!("Loaded: {}", title);
-                            }
-
-                            wp = Some(w);
-                        },
-                        Err(err) => eprintln!("Failed getting webpage from url: {}", err),
+                        wp = Some(w);
                     }
+                    Err(err) => eprintln!("Failed getting webpage from url: {}", err),
                 },
                 Cmd::DisplayHtml => {
                     let res = visit_dirs(Path::new("in"));
@@ -68,37 +74,37 @@ pub async fn interactive() {
                     }
                     let mut index = 0;
                     for path in res.unwrap() {
-                        
                         match load_html(path.clone()) {
                             Ok(w) => {
                                 ins.push(path);
-                                println!("{} Medium: {}, Sok ID: {}, URL: {}", index, w.get_medium(), w.get_id(), w.get_url());
+                                println!(
+                                    "{} Medium: {}, Sok ID: {}, URL: {}",
+                                    index,
+                                    w.get_medium(),
+                                    w.get_id(),
+                                    w.get_url()
+                                );
                                 index += 1;
-                            },
+                            }
                             Err(_) => todo!(),
                         }
                     }
                     println!("/display");
-                },
-                Cmd::LoadFromIndex(id) => {
-                    match ins.get(id) {
-                        Some(path) => {
-                            match load_html(path.to_string()) {
-                                Ok(w) => {
-                                    println!("Loaded html");
-                                    wp = Some(w);
-                                },
-                                Err(err) => eprintln!("Error loading file from index: {}", err),
-                            }
-                        },
-                        None => eprintln!("Invalid index: {}", id),
-                    }
+                }
+                Cmd::LoadFromIndex(id) => match ins.get(id) {
+                    Some(path) => match load_html(path.to_string()) {
+                        Ok(w) => {
+                            println!("Loaded html");
+                            wp = Some(w);
+                        }
+                        Err(err) => eprintln!("Error loading file from index: {}", err),
+                    },
+                    None => eprintln!("Invalid index: {}", id),
                 },
                 Cmd::CreateRequest => {
                     // TODO: Add way to create request
-                },
+                }
                 Cmd::Quit => return,
-                
             }
         } else {
             println!("Didn't understand: '{:?}'", &buffer);
@@ -114,13 +120,13 @@ fn parse_input(str: &str) -> Option<Cmd> {
         match el {
             "form" => {
                 return Some(Cmd::DisplayForm);
-            },
+            }
             "load" => {
                 if let Some(e) = its.next() {
                     match e.parse::<usize>() {
                         Ok(index) => {
                             return Some(Cmd::LoadFromIndex(index));
-                        },
+                        }
                         Err(_) => {
                             let url = its.collect::<String>();
                             let mut link = Link::new(url);
@@ -132,10 +138,10 @@ fn parse_input(str: &str) -> Option<Cmd> {
                                 eprintln!("URL is partial, changed it too: {:?}", link);
                             }
                             return Some(Cmd::LoadFromUrl(link));
-                        },
+                        }
                     }
                 }
-            },
+            }
             "display" => {
                 return Some(Cmd::DisplayHtml);
             }
@@ -155,24 +161,23 @@ fn load_html(path: String) -> Result<Webpage, ArchiveError> {
 
     let mut raw_html = String::new();
     file.read_to_string(&mut raw_html)?;
-    
+
     let mut id = 0;
     let mut medium = "unknown".to_string();
-    
+
     let mut str = path.split("\\").collect::<Vec<_>>().into_iter().rev();
 
-    if let Some(i) = str.next() {
+    if let Some(i) = str.next()
+        && let Some(m) = str.next()
+    {
         id = i.parse::<usize>()?;
-    }
-
-    if let Some(m) = str.next() {
         medium = m.to_owned();
     }
 
     if medium == "in".to_string() {
         medium = "unknown".to_string();
     }
-    
+
     let url = format!("{}/{}/{}", ROOT_URL, &medium, &id);
     let content = Html::parse_document(&raw_html);
 

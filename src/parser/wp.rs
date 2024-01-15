@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use reqwest::Client;
-use scraper::{Element, Html, Selector};
+use scraper::{Html, Selector};
 
 use crate::{
     error::ArchiveError,
@@ -12,10 +12,7 @@ use crate::{
         webpage::{Link, Webpage},
     },
     scraper::get_html_content,
-    utils::{
-        constants::ROOT_URL,
-        funcs::{has_ancestor, trim_string},
-    },
+    utils::{constants::ROOT_URL, funcs::trim_string},
 };
 
 // TODO: Change these from methods to functions
@@ -52,26 +49,23 @@ impl Webpage {
             if let Some(option_name) = select.attr("name") {
                 let mut options: Vec<(String, String)> = Vec::new();
                 for option in self.get_content().select(&option_selector) {
-                    if let Some(p) = option.parent() {
-                        if p.id() != select.id() {
-                            continue;
-                        }
-
-                        if let Some(v) = option.attr("value") {
-                            options.push((
-                                v.to_string(),
-                                trim_string(&option.text().collect::<String>()),
-                            ));
-                        }
+                    if let Some(p) = option.parent()
+                        && p.id() == select.id()
+                        && let Some(v) = option.attr("value")
+                    {
+                        options.push((
+                            v.to_string(),
+                            trim_string(&option.text().collect::<String>()),
+                        ));
                     }
                 }
                 let mut fo = FormOption::new(option_name.to_string(), options);
 
                 // Checks if it can has multiple
-                if let Some(v) = select.attr("multiple") {
-                    if v == "multiple" {
-                        fo.multiple();
-                    }
+                if let Some(v) = select.attr("multiple")
+                    && v == "multiple"
+                {
+                    fo.multiple();
                 }
 
                 form.add_options(fo);
@@ -194,7 +188,6 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
 
     let merknad_head_selector = Selector::parse(".merknadHeader")?;
     let merknad_fragment = Selector::parse(".metode-tekst")?;
-    let p_selector = Selector::parse("p")?;
     let h3_selector = Selector::parse("h3")?;
 
     // METODE
@@ -294,6 +287,7 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
     Ok(kilder)
 }
 
+#[deprecated]
 pub async fn get_sok_collection(
     wp: Webpage,
 ) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
@@ -454,7 +448,8 @@ pub async fn get_sok_collection_tmf(
 
                         let html = Html::parse_document(&raw_html);
 
-                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                        let sub_wp =
+                            Webpage::from_html(wp.get_id(), wp.get_url(), html, wp.get_medium());
 
                         match sub_wp.get_sok().await {
                             Ok(mut sok) => {
@@ -494,7 +489,7 @@ pub async fn get_sok_collection_tmf(
     }
 
     sok_collection.add_merknad(Merknad {
-        title: "Merknad".to_string(),
+        title: "Merk".to_string(),
         content: wp.get_merknad()?,
     });
 

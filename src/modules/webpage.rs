@@ -1,9 +1,7 @@
 use reqwest::Client;
-use scraper::{self, error::SelectorErrorKind, selector::Selector, Html};
+use scraper::Html;
 
 use crate::{error::ArchiveError, scraper::get_html_content, utils::constants::ROOT_URL};
-
-use super::sok::Sok;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Link {
@@ -40,14 +38,6 @@ impl Link {
 
     pub fn is_external(&self) -> bool {
         !self.url.contains("medienorge") || !self.url.contains("uib")
-    }
-
-    pub fn is_internal(&self) -> bool {
-        !self.is_external()
-    }
-
-    pub fn is_sok(&self) -> bool {
-        self.url.contains("medium") || self.url.contains("statestikk")
     }
 }
 
