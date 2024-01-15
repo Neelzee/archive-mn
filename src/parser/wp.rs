@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use itertools::Itertools;
 use reqwest::Client;
-use scraper::{Html, Selector};
+use scraper::{Element, Html, Selector};
 
 use crate::{
     error::ArchiveError,
@@ -193,6 +193,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     let mut links = Vec::new();
 
     let merknad_head_selector = Selector::parse(".merknadHeader")?;
+    let merknad_fragment = Selector::parse(".metode-tekst")?;
     let p_selector = Selector::parse("p")?;
     let h3_selector = Selector::parse("h3")?;
 
@@ -213,6 +214,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         }
     }
 
+    // TODO: Fix?
     for l in &links {
         let url = l.create_full().to_string();
         if !l.is_metode() {
@@ -226,14 +228,17 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         }
 
         metoder.push((
-            title,
+            title.clone(),
             Html::parse_document(&content)
-                .select(&p_selector)
+                .select(&merknad_fragment)
+                .into_iter()
+                .filter(|e| !e.text().collect::<String>().contains(&title))
                 .map(|p| trim_string(&p.text().collect::<String>()))
                 .collect::<Vec<String>>(),
         ));
     }
 
+    // TODO: Probably not needed
     if metoder.len() >= 20 {
         return Err(ArchiveError::InvalidMetode {
             link: links,
@@ -300,22 +305,21 @@ pub async fn get_sok_collection(
 
     let request = client.post(wp.get_url());
 
-    let forms = wp.get_forms()?;
+    let mut forms = wp.get_forms()?;
 
     if forms.is_empty() {
         let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
-        for form in forms.combinations() {
+        forms.order();
+        for (form, disps) in forms.combinations() {
             let mut form_data: HashMap<String, String> = HashMap::new();
             let mut title = String::new();
-            let mut disps: Vec<String> = Vec::new();
             for (k, (v, d)) in form {
                 title += &d;
                 title += " ";
                 form_data.insert(k, v);
-                disps.push(d);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
@@ -424,14 +428,14 @@ pub async fn get_sok_collection_tmf(
             form_data.len()
         );
 
-        for form in new_fo.combinations() {
+        new_fo.order();
+
+        for (form, disps) in new_fo.combinations() {
             let mut title = String::new();
-            let mut disps: Vec<String> = Vec::new();
             for (k, (v, d)) in form {
                 title += &d;
                 title += " ";
                 form_data.insert(k, v);
-                disps.push(d);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
