@@ -67,6 +67,10 @@ impl Form {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.options.clear();
+    }
+
     pub fn get_option(&self, option: String) -> Option<FormOption> {
         for op in self.options() {
             if op.option_name == option {

@@ -182,6 +182,7 @@ async fn create_req(wp: Option<&Webpage>) {
                         new_form = forms.fill_form_data(&new_form);
                     }
                 }
+                ["clear"] => new_form.clear(),
                 ["send"] => {
                     if forms.missing_options(&new_form) {
                         new_form = forms.fill_form_data(&new_form);
