@@ -300,10 +300,10 @@ fn write_tables(
         for row in t.header {
             let mut c = 0;
             for cell in row {
-                if let Some(width) = column_width.get(&c)
-                    && width.to_owned() as usize <= cell.len()
-                {
-                    column_width.insert(c, cell.len() as f64);
+                if let Some(width) = column_width.get(&c) {
+                    if width.clone() as usize <= cell.len() {
+                        column_width.insert(c, cell.len() as f64);
+                    }
                 } else {
                     column_width.insert(c, cell.len() as f64);
                 }
@@ -341,10 +341,10 @@ fn write_tables(
         for row in t.rows {
             let mut c = 0;
             for cell in row {
-                if let Some(width) = column_width.get(&c)
-                    && width.to_owned() as usize <= cell.len()
-                {
-                    column_width.insert(c, cell.len() as f64);
+                if let Some(width) = column_width.get(&c) {
+                    if width.clone() as usize <= cell.len() {
+                        column_width.insert(c, cell.len() as f64);
+                    }
                 } else {
                     column_width.insert(c, cell.len() as f64);
                 }

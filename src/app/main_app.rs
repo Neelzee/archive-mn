@@ -41,7 +41,7 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                                     .collect_vec(),
                                 sokc.id,
                             ) {
-                                eprintln!("Error writing too logs: {}, dumping log to terminal", e);
+                                eprintln!("Error writing to logs: {}, dumping log to terminal", e);
                                 for l in sok_log {
                                     eprintln!("{}", l);
                                 }

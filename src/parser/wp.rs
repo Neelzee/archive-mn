@@ -424,6 +424,46 @@ pub async fn get_sok_collection_tmf(
 
         new_fo.order();
 
+        if new_fo.clone().combinations().count() == 0 {
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+            let req = request
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()?;
+            match client.execute(req).await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let raw_html = response.text().await?;
+
+                        let html = Html::parse_document(&raw_html);
+
+                        let sub_wp =
+                            Webpage::from_html(wp.get_id(), wp.get_url(), html, wp.get_medium());
+                        sok_collection.title = wp.get_title()?;
+                        match sub_wp.get_sok().await {
+                            Ok(mut sok) => {
+                                sok.display_names = forms.combinations().next().unwrap().1;
+                                sok.header_title = sok.title.clone();
+                                sok_collection.add_sok(sok);
+                            }
+                            Err(err) => {
+                                errors.push(err.into());
+                            }
+                        }
+                    } else {
+                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                    }
+                }
+                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+                Err(err) => {
+                    errors.push(err.into());
+                }
+            }
+
+            return Ok((sok_collection, errors));
+        }
+
         for (form, disps) in new_fo.combinations() {
             let mut title = String::new();
             for (k, (v, d)) in form {

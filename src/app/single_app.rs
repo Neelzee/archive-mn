@@ -24,15 +24,17 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                                 .collect_vec(),
                             sokc.id,
                         ) {
-                            eprintln!("Error writing too logs: {}, dumping log to terminal", e);
+                            eprintln!("Error writing to logs: {}, dumping log to terminal", e);
                             for l in sok_log {
                                 eprintln!("{}", l);
                             }
+                        } else {
+                            println!("Saved sok to {}", path);
                         }
                     }
                     Err(err) => {
                         eprintln!(
-                            "Failed saving sok: {};{}, due too errors: {}, dumping it to root",
+                            "Failed saving sok: {};{}, due to errors: {}, dumping it to root",
                             &sokc.id,
                             &sokc.title,
                             err.into_iter().map(|e| e.to_string()).join("\n")
@@ -41,6 +43,7 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                 }
             }
             Err(err) => {
+                eprintln!("Failed");
                 let mut id = 0;
                 let url_c = link.to_string().clone();
 
@@ -56,7 +59,7 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                     "UNKNOWN".to_string(),
                 ) {
                     eprintln!(
-                        "Error writing too error logs: {}, dumping log to terminal",
+                        "Error writing to error logs: {}, dumping log to terminal",
                         e
                     );
                     for l in err {
