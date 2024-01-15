@@ -7,7 +7,7 @@ pub struct Form {
     options: Vec<FormOption>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FormOption {
     option_name: String,
     /// Request Name, Display Name
@@ -24,10 +24,21 @@ impl FormOption {
         }
     }
 
+    pub fn add_options(&mut self, option: (String, String)) {
+        self.options.push(option);
+    }
+
+    pub fn contains_req(&self, req_name: String) -> bool {
+        self.options().into_iter().any(|(e, _)| e == req_name)
+    }
+
     pub fn show(&self) {
         println!("Option Name: {}", self.option_name);
         for (req, dis) in self.options.clone() {
-            println!("Request Name: {}, Display Name: {}", req, dis);
+            println!(
+                "Request Name: {}, Display Name: {}, Multiple: {}",
+                req, dis, self.multiple
+            );
         }
     }
 
@@ -56,6 +67,45 @@ impl Form {
         }
     }
 
+    pub fn get_option(&self, option: String) -> Option<FormOption> {
+        for op in self.options() {
+            if op.option_name == option {
+                return Some(op);
+            }
+        }
+        None
+    }
+
+    pub fn missing_options(&self, form: &Form) -> bool {
+        self.options()
+            .into_iter()
+            .any(|op| form.options.contains(&op))
+    }
+
+    pub fn fill_form_data(&self, form: &Form) -> Form {
+        let mut form_data = form.clone();
+        for op in self.options() {
+            if !form_data.options.contains(&op) {
+                form_data.add_options(op);
+            }
+        }
+        return form_data;
+    }
+
+    pub fn contains_option(&self, option: String) -> bool {
+        self.options
+            .clone()
+            .into_iter()
+            .any(|e| e.option_name == option)
+    }
+
+    pub fn contains_choice(&self, choice: String) -> bool {
+        self.options
+            .clone()
+            .into_iter()
+            .any(|e| e.options.into_iter().any(|c| c.0 == choice))
+    }
+
     pub fn order(&mut self) {
         let mut vec = Vec::new();
         for el in self.options() {
@@ -80,7 +130,14 @@ impl Form {
         self.options.is_empty()
     }
 
+    /// Overwrites old fo
     pub fn add_options(&mut self, fo: FormOption) {
+        for i in 0..self.options().len() {
+            if self.options.get(i).unwrap().option_name == fo.option_name {
+                self.options.swap_remove(i);
+                break;
+            }
+        }
         self.options.push(fo);
     }
 
@@ -104,5 +161,17 @@ impl Form {
             }
             (form_data, disp)
         })
+    }
+
+    /// Returns the display of the given option
+    pub fn get_display(&self, req: String) -> String {
+        for op in self.options() {
+            for (r, d) in op.options() {
+                if r == req {
+                    return d;
+                }
+            }
+        }
+        return "MISSING".to_string();
     }
 }
