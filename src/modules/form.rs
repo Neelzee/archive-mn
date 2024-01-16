@@ -67,6 +67,20 @@ impl Form {
         }
     }
 
+    pub fn form_data(&self) -> HashMap<String, (String, String)> {
+        let mut form_data: HashMap<String, (String, String)> = HashMap::new();
+        for op in self.options() {
+            form_data.insert(
+                op.option_name(),
+                (
+                    op.options().into_iter().map(|(r, _)| r).join(","),
+                    op.options().into_iter().map(|(_, d)| d).join(" "),
+                ),
+            );
+        }
+        form_data
+    }
+
     pub fn clear(&mut self) {
         self.options.clear();
     }
