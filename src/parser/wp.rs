@@ -30,7 +30,7 @@ impl Webpage {
     }
 
     pub fn get_text(&self) -> Result<Vec<String>, ArchiveError> {
-        let text_selector = Selector::parse(r#"div[id="forklaringTxt"] p"#)?;
+        let text_selector = Selector::parse(r#"div[id="forklaringTxt"]"#)?;
 
         Ok(self
             .get_content()
