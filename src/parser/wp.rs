@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use itertools::{Combinations, Itertools};
 use reqwest::Client;
@@ -185,7 +185,7 @@ impl Webpage {
 pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
     let mut metoder: Vec<(String, Vec<String>)> = Vec::new();
 
-    let mut links = Vec::new();
+    let mut links: HashSet<Link> = HashSet::new();
 
     let merknad_head_selector = Selector::parse(".merknadHeader")?;
     let merknad_fragment = Selector::parse(".metode-tekst")?;
@@ -201,7 +201,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
             if let Some(el) = child.value().as_element() {
                 if el.name() == "a" {
                     if let Some(a) = el.attr("href") {
-                        links.push(Link::new(a.to_owned()));
+                        links.insert(Link::new(a.to_owned()));
                     }
                 }
             }
@@ -235,7 +235,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     // TODO: Probably not needed
     if metoder.len() >= 20 {
         return Err(ArchiveError::InvalidMetode {
-            link: links,
+            link: links.into_iter().collect_vec(),
             id: wp.get_id(),
         });
     }

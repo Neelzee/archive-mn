@@ -3,7 +3,7 @@ use scraper::Html;
 
 use crate::{error::ArchiveError, scraper::get_html_content, utils::constants::ROOT_URL};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Link {
     url: String,
 }
