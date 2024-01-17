@@ -4,7 +4,6 @@ use std::{
 };
 
 use crate::modules::webpage::{Link, Webpage};
-use crate::parser::wp::get_sok_collection;
 use crate::{
     error::ArchiveError, parse_args, parser::wp::get_sok_collection_tmf, scraper::get_html_content,
     xl::save_sok,
@@ -88,7 +87,7 @@ pub async fn mf_app(args: Vec<String>) -> Result<(), ArchiveError> {
                 }
             }
 
-            match get_sok_collection(wp).await {
+            match get_sok_collection_tmf(wp).await {
                 Ok((mut sokc, mut errs)) => {
                     wp_count += 1;
 

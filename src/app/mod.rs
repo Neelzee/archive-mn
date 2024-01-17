@@ -8,7 +8,7 @@ use crate::{
         sok::SokCollection,
         webpage::{Link, Webpage},
     },
-    parser::wp::{get_sok_collection, get_sok_collection_tmf},
+    parser::wp::get_sok_collection_tmf,
     xl::save_sok,
     ALLOW_DUPS, CHECKED_SOK_ID, CHECKED_SOK_TITLE,
 };

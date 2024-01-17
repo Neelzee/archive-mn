@@ -57,7 +57,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         let mut r = 0;
 
         // Title
-        sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
+        sheet.write_with_format(r, 0, &soks.title, &BOLD)?;
         r += 1;
 
         // Content
@@ -139,7 +139,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
         sheet.set_name(sheet_name)?;
 
-        // Title
+        // Table Title
         sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
         r += 1;
         // Tables
