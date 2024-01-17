@@ -169,7 +169,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         // Tables
         let (sheet, mut r) = write_tables(sub_sok.clone(), r, sheet)?;
         r += 1;
-        let (sheet, _) = write_metode(sheet, sub_sok.metode, sub_sok.kilde, sub_sok.merknad, r)?;
+        let (sheet, _) = write_mkm(sheet, sub_sok.metode, sub_sok.kilde, sub_sok.merknad, r)?;
 
         wb.push_worksheet(sheet);
     }
@@ -294,7 +294,8 @@ fn header_format(table: &Table) -> Vec<Format> {
     formats
 }
 
-pub fn write_metode(
+/// Metode, Kilde, Merknad
+pub fn write_mkm(
     mut sheet: Worksheet,
     metoder: Vec<Metode>,
     kilder: Vec<Kilde>,
@@ -343,7 +344,6 @@ pub fn write_metode(
             }
             r += 1;
         }
-        r += 1;
     }
 
     sheet.write_with_format(
