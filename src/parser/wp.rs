@@ -224,7 +224,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         metoder.push((
             title.clone(),
             Html::parse_document(&content)
-                .select(&merknad_fragment)
+                .select(&Selector::parse("p")?)
                 .into_iter()
                 .filter(|e| !e.text().collect::<String>().contains(&title))
                 .map(|p| trim_string(&p.text().collect::<String>()))
