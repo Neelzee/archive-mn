@@ -378,21 +378,6 @@ pub async fn get_sok_collection_tmf(
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();
-                                sok.merknad = vec![Merknad {
-                                    title: "Merk".to_string(),
-                                    content: wp.get_merknad()?,
-                                }];
-                                sok.metode = get_metode(&sub_wp)
-                                    .await?
-                                    .into_iter()
-                                    .map(|e| e.into())
-                                    .collect_vec();
-
-                                sok.kilde = get_kilde(&sub_wp)
-                                    .await?
-                                    .into_iter()
-                                    .map(|e| e.into())
-                                    .collect_vec();
                                 sok_collection.add_sok(sok);
                             }
                             Err(err) => {

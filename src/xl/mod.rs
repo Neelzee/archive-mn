@@ -2,13 +2,14 @@ use std::cmp::min;
 use std::collections::HashMap;
 
 use crate::error::ArchiveError;
-use crate::modules::form;
+use crate::modules::form::{self, Form};
 use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, Sok, SokCollection, Table};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use itertools::Itertools;
 use once_cell::sync::Lazy;
 use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
+use rust_xlsxwriter::{FormatUnderline, Url};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
 pub const MAX_STR_LEN: usize = 150;
@@ -16,13 +17,21 @@ pub const MAX_STR_LEN: usize = 150;
 const MAX_COL_WIDTH: f64 = 50.0;
 const DEFAULT_COL_WIDTH: f64 = 8.43;
 
-const BOLD: Lazy<Format> = Lazy::new(|| Format::new().set_bold().set_align(FormatAlign::Left));
+const BOLD: Lazy<Format> = Lazy::new(|| {
+    Format::new()
+        .set_bold()
+        .set_align(FormatAlign::Left)
+        .set_font_size(FONT_SIZE)
+});
+
+const FONT_SIZE: f64 = 12.0;
 
 const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
         .set_background_color(Color::RGB(0x69A9BD))
+        .set_font_size(FONT_SIZE)
 });
 
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
@@ -30,6 +39,7 @@ const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
         .set_align(FormatAlign::Right)
         .set_num_format("#,##") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xcee8f1))
+        .set_font_size(FONT_SIZE)
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
@@ -37,11 +47,22 @@ const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
         .set_align(FormatAlign::Right)
         .set_num_format("#,##") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xe6f3f8))
+        .set_font_size(FONT_SIZE)
 });
+
+const URL_FORMAT: Lazy<Format> = Lazy::new(|| {
+    Format::new()
+        .set_font_size(FONT_SIZE)
+        .set_font_color(Color::Blue)
+        .set_underline(FormatUnderline::Single)
+});
+
+const PLAIN_FORMAT: Lazy<Format> = Lazy::new(|| Format::new().set_font_size(FONT_SIZE));
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
     let mut wb = Workbook::new();
+
     let wb_path: String;
     let mut errors: Vec<ArchiveError> = Vec::new();
     let id = soks.id.clone();
@@ -66,7 +87,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         // Content
         for line in soks.text.clone() {
             for l in split_string(line) {
-                sheet.write(r, 0, l)?;
+                sheet.write_with_format(r, 0, l, &PLAIN_FORMAT)?;
                 r += 1;
             }
             r += 1;
@@ -172,7 +193,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                     if l.trim().is_empty() {
                         continue;
                     }
-                    info_sheet.write(r, 0, l)?;
+                    info_sheet.write_with_format(r, 0, l, &PLAIN_FORMAT)?;
                     r += 1;
                 }
                 r += 1;
@@ -203,13 +224,13 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                     continue;
                 }
                 let link: &str = &format!("internal:'{}'!A1", nm);
-                sheet.write_url_with_text(r, 0, link, format!("{}", dp))?;
+                sheet.write_with_format(r, 0, Url::new(link).set_text(dp), &URL_FORMAT)?;
                 r += 1;
             }
 
             if has_merk {
                 let link: &str = &format!("internal:'{}'!A1", "Metode");
-                sheet.write_url_with_text(r, 0, link, "Metode")?;
+                sheet.write_with_format(r, 0, Url::new(link).set_text("Metode"), &URL_FORMAT)?;
             }
         }
     }
@@ -294,7 +315,7 @@ pub fn write_metode(
                 if l.trim().is_empty() {
                     continue;
                 }
-                sheet.write(r, 0, l)?;
+                sheet.write_with_format(r, 0, l, &PLAIN_FORMAT)?;
                 r += 1;
             }
             r += 1;
@@ -317,7 +338,7 @@ pub fn write_metode(
                 if l.trim().is_empty() {
                     continue;
                 }
-                sheet.write(r, 0, l)?;
+                sheet.write_with_format(r, 0, l, &PLAIN_FORMAT)?;
                 r += 1;
             }
             r += 1;
@@ -329,7 +350,7 @@ pub fn write_metode(
         r,
         0,
         "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.",
-        &Format::new().set_align(FormatAlign::Left).set_italic(),
+        &PLAIN_FORMAT.clone().set_italic(),
     )?;
 
     Ok((sheet, r + 1))
