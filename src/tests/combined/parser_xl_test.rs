@@ -1,5 +1,5 @@
 use crate::{
-    parser::wp::get_sok_collection,
+    parser::wp::get_sok_collection_tmf,
     utils::funcs::{can_reqwest, get_random_webpage},
     xl::save_sok,
 };
@@ -11,7 +11,7 @@ async fn test_parsing_saving() {
     }
 
     if let Some(wp) = get_random_webpage() {
-        let res = get_sok_collection(wp).await;
+        let res = get_sok_collection_tmf(wp).await;
 
         assert!(res.is_ok());
 
