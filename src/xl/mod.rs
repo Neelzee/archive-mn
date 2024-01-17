@@ -2,7 +2,8 @@ use std::cmp::min;
 use std::collections::HashMap;
 
 use crate::error::ArchiveError;
-use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, Sok, SokCollection};
+use crate::modules::form;
+use crate::modules::sok::{IsEmpty, Kilde, Merknad, Metode, Sok, SokCollection, Table};
 use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use itertools::Itertools;
@@ -226,6 +227,50 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     }
 }
 
+/// A header cell should be left aligned if it's column contains only text.
+/// A header cell should be right aligned if it's column contains numbers or '-'.
+fn header_format(table: &Table) -> Vec<Format> {
+    if table.header.is_empty() {
+        return Vec::new();
+    }
+
+    if table.rows.is_empty() {
+        return Vec::new();
+    }
+
+    let row = table.rows.get(0).unwrap();
+
+    let mut formats: Vec<Format> = Vec::new();
+
+    // Iterate over last header row.
+    for i in 0..table.header.get(table.header.len() - 1).unwrap().len() {
+        match row.get(i) {
+            Some(i) => match i.trim() {
+                "-" => {
+                    formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right));
+                    continue;
+                }
+                _ => match i.parse::<u32>() {
+                    Ok(_) => {
+                        formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right));
+                        continue;
+                    }
+                    _ => {
+                        formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left));
+                        continue;
+                    }
+                },
+            },
+            None => {
+                formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left));
+                continue;
+            }
+        }
+    }
+
+    formats
+}
+
 pub fn write_metode(
     mut sheet: Worksheet,
     metoder: Vec<Metode>,
@@ -295,6 +340,7 @@ fn write_tables(
 ) -> Result<(Worksheet, u32), ArchiveError> {
     let mut column_width: HashMap<u16, f64> = HashMap::new();
     for t in sok.tables {
+        let mut header_format = header_format(&t);
         r += 1;
         // Header
         for row in t.header {
@@ -309,27 +355,17 @@ fn write_tables(
                 }
 
                 // Try to parse as int, header is most likley some year
-                match cell.parse::<i32>() {
+                let format = match header_format.pop() {
+                    Some(format) => format,
+                    _ => HEADER_FORMAT.clone(),
+                };
+
+                match cell.parse::<f64>() {
                     Ok(i) => {
-                        sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
+                        sheet.write_number_with_format(r, c, i, &format)?;
                     }
                     Err(_) => {
-                        // Lets try again with trim
-                        let s = cell.clone();
-                        let res = s.split_whitespace().collect::<Vec<&str>>().join("");
-                        match res.parse::<i32>() {
-                            Ok(i) => {
-                                sheet.write_number_with_format(r, c, i, &HEADER_FORMAT)?;
-                            }
-                            Err(_) => {
-                                sheet.write_with_format(
-                                    r,
-                                    c,
-                                    cell,
-                                    &HEADER_FORMAT.clone().set_align(FormatAlign::Left),
-                                )?;
-                            }
-                        }
+                        sheet.write_with_format(r, c, cell, &format)?;
                     }
                 }
                 c += 1;
