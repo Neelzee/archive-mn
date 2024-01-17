@@ -28,12 +28,14 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_align(FormatAlign::Right)
+        .set_num_format("#,##") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xcee8f1))
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_align(FormatAlign::Right)
+        .set_num_format("#,##") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xe6f3f8))
 });
 
@@ -414,7 +416,7 @@ fn write_tables(
                                             r,
                                             c,
                                             i,
-                                            &row_format.clone().set_num_format("0.0"),
+                                            &row_format.clone().set_num_format("#,##0.0"),
                                         )?;
                                     }
                                     Err(_) => {
