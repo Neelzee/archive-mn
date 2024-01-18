@@ -24,11 +24,12 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
     for medium_link in medium_links {
         let raw_html = get_html_content(&client, medium_link.to_string()).await?;
         let html = Html::parse_document(&raw_html);
-        for link in get_links_from_medium(html)? {
+        for (medium, link) in get_links_from_medium(html)? {
             wp_count += 1;
             match main_fn(&link).await {
-                Ok((sokc, mut sok_log)) => {
-                    let path = format!("arkiv\\{}", sokc.medium.clone());
+                Ok((mut sokc, mut sok_log)) => {
+                    sokc.medium = medium.clone();
+                    let path = format!("arkiv\\{}", medium);
                     match try_save_sok(&sokc, &path, 2) {
                         Ok(mut log) => {
                             sok_log.append(&mut log);

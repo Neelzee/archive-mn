@@ -3,10 +3,13 @@ use std::{
     time::Instant,
 };
 
-use crate::modules::webpage::{Link, Webpage};
 use crate::{
     error::ArchiveError, parse_args, parser::wp::get_sok_collection_tmf, scraper::get_html_content,
     xl::save_sok,
+};
+use crate::{
+    modules::webpage::{Link, Webpage},
+    parser::medium,
 };
 use itertools::Itertools;
 use reqwest::Client;
@@ -32,11 +35,10 @@ pub async fn mf_app(args: Vec<String>) -> Result<(), ArchiveError> {
     for medium_link in medium_links {
         let raw_html = get_html_content(&client, medium_link.to_string()).await?;
         let html = Html::parse_document(&raw_html);
-        for link in get_links_from_medium(html)? {
+        for (medium, link) in get_links_from_medium(html)? {
             let mut sok_log: Vec<ArchiveError> = Vec::new();
 
             let mut wp = Webpage::from_link(link.clone()).await?;
-            let medium = wp.get_medium();
             let id = wp.get_id().clone();
 
             let time_start = Instant::now();
