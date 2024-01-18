@@ -30,7 +30,7 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
         .set_align(FormatAlign::Right)
-        .set_background_color(Color::RGB(0x69A9BD))
+        .set_background_color(Color::RGB(0xA2CAD6))
         .set_font_size(FONT_SIZE)
 });
 
