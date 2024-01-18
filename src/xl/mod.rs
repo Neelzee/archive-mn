@@ -37,7 +37,7 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_align(FormatAlign::Right)
-        .set_num_format("#,##") // Should give 10 000 formatting
+        .set_num_format("#,##0") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xcee8f1))
         .set_font_size(FONT_SIZE)
 });
@@ -45,7 +45,7 @@ const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_align(FormatAlign::Right)
-        .set_num_format("#,##") // Should give 10 000 formatting
+        .set_num_format("#,##0") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xe6f3f8))
         .set_font_size(FONT_SIZE)
 });
@@ -371,10 +371,10 @@ fn write_tables(
             for cell in row {
                 if let Some(width) = column_width.get(&c) {
                     if width.clone() as usize <= cell.len() {
-                        column_width.insert(c, cell.len() as f64);
+                        column_width.insert(c, (cell.len() as f64) + 3.0);
                     }
                 } else {
-                    column_width.insert(c, cell.len() as f64);
+                    column_width.insert(c, (cell.len() as f64) + 3.0);
                 }
 
                 // Try to parse as int, header is most likley some year
@@ -414,6 +414,11 @@ fn write_tables(
                 // Try to parse as int
                 match cell.parse::<i32>() {
                     Ok(i) => {
+                        if i > 999 {
+                            update_width(&mut column_width, &c, (cell.len() + 2) as f64);
+                        } else if i > 999_999 {
+                            update_width(&mut column_width, &c, (cell.len() + 3) as f64);
+                        }
                         sheet.write_number_with_format(r, c, i, &row_format)?;
                     }
                     Err(_) => {
@@ -422,6 +427,11 @@ fn write_tables(
                         match s.split_whitespace().join("").parse::<i32>() {
                             Ok(i) => {
                                 sheet.write_number_with_format(r, c, i, &row_format)?;
+                                if i > 999 {
+                                    update_width(&mut column_width, &c, (cell.len() + 2) as f64);
+                                } else if i > 999_999 {
+                                    update_width(&mut column_width, &c, (cell.len() + 3) as f64);
+                                }
                             }
                             Err(_) => {
                                 // Lets try again with trim, and replace . with ,
@@ -433,6 +443,19 @@ fn write_tables(
                                     .replace(",", ".");
                                 match res.parse::<f32>() {
                                     Ok(i) => {
+                                        if i > 999.0 {
+                                            update_width(
+                                                &mut column_width,
+                                                &c,
+                                                (cell.len() + 2) as f64,
+                                            );
+                                        } else if i > 999_999.0 {
+                                            update_width(
+                                                &mut column_width,
+                                                &c,
+                                                (cell.len() + 3) as f64,
+                                            );
+                                        }
                                         sheet.write_number_with_format(
                                             r,
                                             c,
@@ -468,7 +491,6 @@ fn write_tables(
             r += 1;
         }
     }
-
     for (k, v) in column_width {
         if v > MAX_COL_WIDTH {
             sheet.set_column_width(k, MAX_COL_WIDTH)?;
@@ -478,6 +500,16 @@ fn write_tables(
     }
 
     Ok((sheet, r))
+}
+
+fn update_width(widths: &mut HashMap<u16, f64>, key: &u16, val: f64) {
+    if let Some(ref width) = widths.get(key) {
+        if width <= &&val {
+            widths.insert(*key, val);
+        }
+    } else {
+        widths.insert(*key, val);
+    }
 }
 
 pub fn split_string(input: String) -> Vec<String> {
