@@ -36,8 +36,16 @@ impl Webpage {
         Ok(self
             .get_content()
             .select(&text_selector)
-            .map(|e| trim_string(&e.text().collect::<String>()))
-            .collect::<Vec<String>>())
+            .map(|e| {
+                e.select(&Selector::parse("p").unwrap())
+                    .into_iter()
+                    .map(|e| trim_string(&e.text().collect::<String>()))
+                    .collect::<Vec<String>>()
+            })
+            .fold(Vec::new(), |mut acc, mut e| {
+                acc.append(&mut e);
+                acc
+            }))
     }
 
     pub fn get_forms(&self) -> Result<Form, ArchiveError> {
