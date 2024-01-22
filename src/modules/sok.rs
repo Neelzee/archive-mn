@@ -20,7 +20,7 @@ impl Table {
 
         for r in &self.rows {
             if let Some(cell) = r.get(c) {
-                col.push(cell);
+                col.push(cell.as_str());
             } else {
                 return None;
             }

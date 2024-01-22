@@ -29,7 +29,6 @@ const FONT_SIZE: f64 = 12.0;
 const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
     Format::new()
         .set_bold()
-        .set_align(FormatAlign::Right)
         .set_background_color(Color::RGB(0xA2CAD6))
         .set_font_size(FONT_SIZE)
 });
@@ -165,7 +164,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
         // Table Title
         for title in &sub_sok.titles {
-            sheet.write_with_format(r, 0, &title, &BOLD)?;
+            sheet.write_with_format(r, 0, title, &BOLD)?;
             r += 1;
         }
         // Tables
@@ -265,18 +264,28 @@ fn header_format(table: &Table) -> Vec<Format> {
         return formats;
     }
 
-    for c in 0..table.rows.get(0).unwrap().len() {
-        if let Some(col) = table.get_col(c) {
-            for c in col {
-                match c.parse::<f64>() {
-                    Ok(_) => formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right)),
-                    Err(_) => formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left)),
-                }
+    // From 0 to end of a row
+    for col_ind in 0..table.rows.get(0).unwrap().len() {
+        // Get the column at the index
+        if let Some(col) = table.get_col(col_ind.clone())
+            && let Some(cell) = col.get(0)
+        {
+            if is_num(cell) {
+                formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right));
+            } else {
+                formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left));
             }
         }
     }
 
     formats
+}
+
+fn is_num(cell: &str) -> bool {
+    match cell.parse::<f64>() {
+        Ok(_) => true,
+        Err(_) => cell.contains("-") && cell.trim().chars().count() == 1,
+    }
 }
 
 /// Metode, Kilde, Merknad
@@ -362,12 +371,12 @@ fn write_tables(
                     column_width.insert(c, (cell.len() as f64) + 3.0);
                 }
 
-                // Try to parse as int, header is most likley some year
                 let format = match header_format.pop() {
                     Some(format) => format,
                     _ => HEADER_FORMAT.clone(),
                 };
 
+                // Try to parse as int, header is most likley some year
                 match cell.parse::<f64>() {
                     Ok(i) => {
                         sheet.write_number_with_format(r, c, i, &format)?;
