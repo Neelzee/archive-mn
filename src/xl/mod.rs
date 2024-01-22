@@ -253,40 +253,23 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 /// A header cell should be left aligned if it's column contains only text.
 /// A header cell should be right aligned if it's column contains numbers or '-'.
 fn header_format(table: &Table) -> Vec<Format> {
+    let mut formats: Vec<Format> = Vec::new();
+
     if table.header.is_empty() {
-        return Vec::new();
+        return formats;
     }
 
     if table.rows.is_empty() {
-        return Vec::new();
+        return formats;
     }
 
-    let row = table.rows.get(0).unwrap();
-
-    let mut formats: Vec<Format> = Vec::new();
-
-    // Iterate over last header row.
-    for i in 0..table.header.get(table.header.len() - 1).unwrap().len() {
-        match row.get(i) {
-            Some(i) => match i.trim() {
-                "-" => {
-                    formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right));
-                    continue;
+    for c in 0..table.rows.get(0).unwrap().len() {
+        if let Some(col) = table.get_col(c) {
+            for c in col {
+                match c.parse::<f64>() {
+                    Ok(_) => formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right)),
+                    Err(_) => formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left)),
                 }
-                _ => match i.parse::<u32>() {
-                    Ok(_) => {
-                        formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Right));
-                        continue;
-                    }
-                    _ => {
-                        formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left));
-                        continue;
-                    }
-                },
-            },
-            None => {
-                formats.push(HEADER_FORMAT.clone().set_align(FormatAlign::Left));
-                continue;
             }
         }
     }

@@ -13,6 +13,21 @@ impl Table {
             rows: Vec::new(),
         }
     }
+
+    /// No head?
+    pub fn get_col(&self, c: usize) -> Option<Vec<&str>> {
+        let mut col = Vec::new();
+
+        for r in &self.rows {
+            if let Some(cell) = r.get(c) {
+                col.push(cell);
+            } else {
+                return None;
+            }
+        }
+
+        return Some(col);
+    }
 }
 
 #[derive(Debug, Clone)]
