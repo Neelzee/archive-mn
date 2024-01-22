@@ -423,6 +423,106 @@ pub async fn get_sok_collection_tmf(
     Ok((sok_collection, errors))
 }
 
+/// Creates on req
+pub async fn get_sok_collection(
+    wp: Webpage,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+    let mut errors: Vec<ArchiveError> = Vec::new();
+
+    let client = Client::default();
+
+    let request = client.post(wp.get_url());
+
+    let mut forms = wp.get_forms()?;
+
+    // No need to send requests if form is empty, but we have to get the first sok.
+    if forms.is_empty() {
+        let mut sok = wp.get_sok().await?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+    } else {
+        let mut form_data: HashMap<String, String> = HashMap::new();
+
+        forms.order();
+
+        for (form, disps) in forms.combinations() {
+            let mut title = String::new();
+            for (k, (v, d)) in form {
+                title += &d;
+                title += " ";
+                form_data.insert(k, v);
+            }
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+
+            let req = request
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()?;
+
+            match client.execute(req).await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let raw_html = response.text().await?;
+
+                        let html = Html::parse_document(&raw_html);
+
+                        let sub_wp = Webpage::from_html(
+                            wp.get_id(),
+                            wp.get_url(),
+                            html.clone(),
+                            wp.get_medium(),
+                        );
+
+                        match sub_wp.clone().get_sok().await {
+                            Ok(mut sok) => {
+                                sok.display_names = disps;
+                                sok.header_title = title.trim().to_string();
+                                sok_collection.add_sok(sok);
+                            }
+                            Err(err) => {
+                                errors.push(err.into());
+                            }
+                        }
+                    } else {
+                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                    }
+                }
+                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+                Err(err) => {
+                    errors.push(err.into());
+                }
+            }
+        }
+    }
+
+    sok_collection.title = wp.get_title()?;
+    let _ = wp
+        .get_text()?
+        .into_iter()
+        .map(|e| sok_collection.add_text(e))
+        .collect::<Vec<_>>();
+
+    for metode in get_metode(&wp).await? {
+        sok_collection.add_metode(metode.into());
+    }
+
+    for kilde in get_kilde(&wp).await? {
+        sok_collection.add_kilde(kilde.into());
+    }
+
+    sok_collection.add_merknad(Merknad {
+        title: "Merk".to_string(),
+        content: wp.get_merknad()?,
+    });
+
+    Ok((sok_collection, errors))
+}
+
 pub async fn get_sok_collection_form(
     wp: Webpage,
     forms: Form,

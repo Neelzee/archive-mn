@@ -199,6 +199,14 @@ async fn main() -> Result<(), ArchiveError> {
         return Ok(());
     }
 
+    if args.contains(&"-tmf".to_string()) {
+        match parse_args(args.into_iter().filter(|e| e != "-tmf").collect_vec()) {
+            Ok(links) => app::tmf::run_app(links).await?,
+            Err(err) => println!("Failed parsing args: {}", err),
+        }
+        return Ok(());
+    }
+
     let time_start = Instant::now();
     let r = run_app(args).await;
     let time_end = Instant::now();
