@@ -33,6 +33,7 @@ impl Table {
 #[derive(Debug, Clone)]
 pub struct Sok {
     pub title: String,
+    pub titles: Vec<String>,
     pub header_title: String,
     pub tables: Vec<Table>,
     pub display_names: Vec<String>,
@@ -45,6 +46,7 @@ impl Sok {
     pub fn new() -> Sok {
         Sok {
             title: String::new(),
+            titles: Vec::new(),
             header_title: String::new(),
             tables: Vec::new(),
             display_names: Vec::new(),

@@ -164,8 +164,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         sheet.set_name(sheet_name)?;
 
         // Table Title
-        sheet.write_with_format(r, 0, &sub_sok.title, &BOLD)?;
-        r += 1;
+        for title in &sub_sok.titles {
+            sheet.write_with_format(r, 0, &title, &BOLD)?;
+            r += 1;
+        }
         // Tables
         let (sheet, mut r) = write_tables(sub_sok.clone(), r, sheet)?;
         r += 1;

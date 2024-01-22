@@ -100,6 +100,10 @@ impl Webpage {
             break;
         }
 
+        for t in self.get_content().select(&title_selector) {
+            sok.titles.push(trim_string(&t.text().collect::<String>()));
+        }
+
         let mut tables: Vec<Table> = Vec::new();
 
         for table in self.get_content().select(&table_selector) {
