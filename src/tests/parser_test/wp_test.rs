@@ -76,8 +76,6 @@ async fn test_get_sok() {
         assert!(res.is_ok());
 
         let _sok = res.unwrap();
-
-        println!("{:?}", sok);
     } else {
         eprintln!("Could not get webpage to test");
     }
@@ -169,5 +167,5 @@ async fn test_get_medium_links() {
 
     let links = res.unwrap();
 
-    println!("Count: {}, {:?}", links.len(), links);
+    println!("{:?}", links);
 }
