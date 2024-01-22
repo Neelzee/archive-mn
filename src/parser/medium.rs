@@ -12,7 +12,6 @@ pub fn get_links_from_medium(html: Html) -> Result<Vec<(String, Link)>, ArchiveE
     let a_selector = Selector::parse("a")?;
 
     for div in html.select(&div_sel) {
-        println!("{:?}", div.html());
         for a in div.select(&a_selector) {
             if let Some(l) = a.attr("href") {
                 let l = Link::new(l.to_string()).create_full();
