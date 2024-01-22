@@ -25,7 +25,12 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
         let raw_html = get_html_content(&client, medium_link.to_string()).await?;
         let html = Html::parse_document(&raw_html);
         for (m, link) in get_links_from_medium(html)? {
-            let medium = medium_link.to_string().split("/").last().unwrap_or(&m);
+            let medium = medium_link
+                .to_string()
+                .split("/")
+                .last()
+                .and_then(|e| Some(e.to_string()))
+                .unwrap_or(m);
             wp_count += 1;
             match main_fn(&link).await {
                 Ok((mut sokc, mut sok_log)) => {

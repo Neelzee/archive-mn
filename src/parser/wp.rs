@@ -31,21 +31,13 @@ impl Webpage {
     }
 
     pub fn get_text(&self) -> Result<Vec<String>, ArchiveError> {
-        let text_selector = Selector::parse(r#"div[id="forklaringTxt"]"#)?;
+        let text_selector = Selector::parse("#forklaringTxt p")?;
 
         Ok(self
             .get_content()
             .select(&text_selector)
-            .map(|e| {
-                e.select(&Selector::parse("p").unwrap())
-                    .into_iter()
-                    .map(|e| trim_string(&e.text().collect::<String>()))
-                    .collect::<Vec<String>>()
-            })
-            .fold(Vec::new(), |mut acc, mut e| {
-                acc.append(&mut e);
-                acc
-            }))
+            .map(|e| e.text().collect_vec().join(""))
+            .collect_vec())
     }
 
     pub fn get_forms(&self) -> Result<Form, ArchiveError> {
