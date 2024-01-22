@@ -145,7 +145,7 @@ async fn test_get_medium_links() {
     }
     let client = Client::default();
     let res = client
-        .get("https://medienorge.uib.no/statistikk/medium/boker")
+        .get("https://medienorge.uib.no/statistikk/medium/avis")
         .send()
         .await;
 
@@ -167,5 +167,8 @@ async fn test_get_medium_links() {
 
     let links = res.unwrap();
 
-    println!("{:?}", links);
+    for l in links {
+        // assert!(l.1.is_sok())
+        println!("{:?}", l);
+    }
 }

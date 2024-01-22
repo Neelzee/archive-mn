@@ -28,6 +28,22 @@ impl Link {
         self.url.contains("metode")
     }
 
+    pub fn is_sok(&self) -> bool {
+        if let Some(id) = self.url.clone().split("/").last() {
+            self.url.contains("statistikk/medium") && id.parse::<u32>().is_ok()
+        } else {
+            false
+        }
+    }
+
+    pub fn is_aspekt(&self) -> bool {
+        if let Some(id) = self.url.clone().split("/").last() {
+            self.url.contains("statistikk/aspekt") && id.parse::<u32>().is_ok()
+        } else {
+            false
+        }
+    }
+
     pub fn to_string(&self) -> String {
         return self.url.clone();
     }
