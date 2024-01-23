@@ -132,8 +132,16 @@ impl Form {
                 break;
             }
         }
+
         for el in self.options() {
-            if el.option_name != "variabel" {
+            if el.option_name == "min_pro" {
+                vec.push(el);
+                break;
+            }
+        }
+
+        for el in self.options() {
+            if el.option_name != "variabel" || el.option_name != "min_pro" {
                 vec.push(el);
             }
         }
