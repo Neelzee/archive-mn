@@ -134,6 +134,13 @@ impl Form {
         }
 
         for el in self.options() {
+            if el.option_name == "info" {
+                vec.push(el);
+                break;
+            }
+        }
+
+        for el in self.options() {
             if el.option_name == "variabel" {
                 vec.push(el);
                 break;
@@ -141,7 +148,10 @@ impl Form {
         }
 
         for el in self.options() {
-            if el.option_name != "variabel" && el.option_name != "min_pro" {
+            if el.option_name != "variabel"
+                && el.option_name != "min_pro"
+                && el.option_name != "info"
+            {
                 vec.push(el);
             }
         }
