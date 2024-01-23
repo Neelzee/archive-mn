@@ -449,11 +449,35 @@ pub async fn get_sok_collection(
 
         for (form, disps) in forms.combinations() {
             let mut title = String::new();
+            let mut possible_titles: Vec<(String, String)> = Vec::new();
             for (k, (v, d)) in form {
-                title += &d;
-                title += " ";
+                possible_titles.push((k, d));
                 form_data.insert(k, v);
             }
+
+            // First variabel
+            for (ref k, ref d) in &possible_titles {
+                match k.as_str() {
+                    "variabel" => {
+                        title += d;
+                        title += " ";
+                        continue;
+                    }
+                    _ => continue,
+                }
+            }
+            // Remainder
+            for (ref k, ref d) in &possible_titles {
+                match k.as_str() {
+                    "variabel" => continue,
+                    _ => {
+                        title += d;
+                        title += " ";
+                        continue;
+                    }
+                }
+            }
+
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
             title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
