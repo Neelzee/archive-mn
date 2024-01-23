@@ -127,6 +127,13 @@ impl Form {
     pub fn order(&mut self) {
         let mut vec = Vec::new();
         for el in self.options() {
+            if el.option_name == "fordeling" {
+                vec.push(el);
+                break;
+            }
+        }
+
+        for el in self.options() {
             if el.option_name == "min_pro" {
                 vec.push(el);
                 break;
@@ -151,6 +158,7 @@ impl Form {
             if el.option_name != "variabel"
                 && el.option_name != "min_pro"
                 && el.option_name != "info"
+                && el.option_name != "fordeling"
             {
                 vec.push(el);
             }
