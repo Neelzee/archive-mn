@@ -125,45 +125,11 @@ impl Form {
     }
 
     pub fn order(&mut self) {
-        let mut vec = Vec::new();
-        for el in self.options() {
-            if el.option_name == "fordeling" {
-                vec.push(el);
-                break;
-            }
-        }
-
-        for el in self.options() {
-            if el.option_name == "min_pro" {
-                vec.push(el);
-                break;
-            }
-        }
-
-        for el in self.options() {
-            if el.option_name == "info" {
-                vec.push(el);
-                break;
-            }
-        }
-
-        for el in self.options() {
-            if el.option_name == "variabel" {
-                vec.push(el);
-                break;
-            }
-        }
-
-        for el in self.options() {
-            if el.option_name != "variabel"
-                && el.option_name != "min_pro"
-                && el.option_name != "info"
-                && el.option_name != "fordeling"
-            {
-                vec.push(el);
-            }
-        }
-        self.options = vec;
+        self.options = sort_by_vec!(
+            self.options.map(|fo| (fo.option_name(), fo.options())),
+            vec!["fordeling", "min_pro", "pro_ant", "info", "variabel"]
+        )
+        .map(|(on, ops)| FormOption::new(on, ops));
     }
 
     pub fn options(&self) -> Vec<FormOption> {
@@ -183,6 +149,32 @@ impl Form {
             }
         }
         self.options.push(fo);
+    }
+
+    /// Splits a large Form into several smaller once.
+    pub fn split(mut self) -> impl Iterator<Item = Self> {
+        let mut vec: Vec<Self> = Vec::new();
+
+        self.order();
+
+        if let Some(op) = self.options().last() {
+            let nm = op.option_name();
+            for fo in op.clone().options {
+                let mut form = Self::new();
+
+                form.add_options(FormOption::new(nm.clone(), vec![fo]));
+
+                for ops in self.options() {
+                    if ops.option_name == nm {
+                        continue;
+                    }
+                    form.add_options(ops);
+                }
+                vec.push(form);
+            }
+        }
+
+        vec.into_iter()
     }
 
     pub fn combinations(
@@ -218,4 +210,15 @@ impl Form {
         }
         return "MISSING".to_string();
     }
+}
+
+macro_rules! sort_by_vec {
+    ($input:expr, $order:expr) => {{
+        let mut zipped: Vec<_> = $input.into_iter().zip($order.into_iter()).collect();
+        zipped.sort_by(|(_, a), (_, b)| a.cmp(b));
+        zipped
+            .into_iter()
+            .map(|(tuple, _)| tuple)
+            .collect::<Vec<_>>()
+    }};
 }
