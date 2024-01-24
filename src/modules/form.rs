@@ -137,7 +137,7 @@ impl Form {
 
     pub fn order(&mut self) {
         self.options = sort_by_vec!(
-            self.options
+            self.options()
                 .into_iter()
                 .map(|fo| (fo.option_name(), fo.options())),
             vec!["fordeling", "min_pro", "pro_ant", "info", "variabel"]
