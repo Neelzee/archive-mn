@@ -1,6 +1,17 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 
+macro_rules! sort_by_vec {
+    ($input:expr, $order:expr) => {{
+        let mut zipped: Vec<_> = $input.into_iter().zip($order.into_iter()).collect();
+        zipped.sort_by(|(_, a), (_, b)| a.cmp(b));
+        zipped
+            .into_iter()
+            .map(|(tuple, _)| tuple)
+            .collect::<Vec<_>>()
+    }};
+}
+
 #[derive(Debug, Clone)]
 pub struct Form {
     /// List of (option name, all options)
@@ -210,15 +221,4 @@ impl Form {
         }
         return "MISSING".to_string();
     }
-}
-
-macro_rules! sort_by_vec {
-    ($input:expr, $order:expr) => {{
-        let mut zipped: Vec<_> = $input.into_iter().zip($order.into_iter()).collect();
-        zipped.sort_by(|(_, a), (_, b)| a.cmp(b));
-        zipped
-            .into_iter()
-            .map(|(tuple, _)| tuple)
-            .collect::<Vec<_>>()
-    }};
 }
