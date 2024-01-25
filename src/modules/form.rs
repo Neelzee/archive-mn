@@ -140,7 +140,7 @@ impl Form {
             self.options()
                 .into_iter()
                 .map(|fo| (fo.option_name(), fo.options())),
-            vec!["fordeling", "min_pro", "pro_ant", "kroner_prosent", "info", "variabel", "aar"]
+            vec!["fordeling", "min_pro", "pro_ant", "kroner_prosent", "prosent_antall", "info", "variabel", "aar"]
         )
         .into_iter()
         .map(|(on, ops)| FormOption::new(on, ops))
