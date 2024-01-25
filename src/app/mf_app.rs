@@ -4,8 +4,8 @@ use std::{
 };
 
 use crate::{
-    error::ArchiveError, parse_args, parser::wp::get_sok_collection_tmf, scraper::get_html_content,
-    xl::save_sok,
+    error::ArchiveError, parse_args, parser::wp::get_sok_collection_tmf, parser::wp::get_sokc_n,
+    scraper::get_html_content, xl::save_sok,
 };
 use crate::{
     modules::webpage::{Link, Webpage},
@@ -54,37 +54,43 @@ pub async fn mf_app(args: Vec<String>) -> Result<(), ArchiveError> {
                     println!("Sok: {}", wp.get_id());
                     println!("Form Combo: {:?}", count);
                     let _ = write_failed_sok(format!("Had to many forms: {}", count), &id);
-                    match get_sok_collection_tmf(wp).await {
-                        Ok((sokc, mut errs)) => {
-                            sok_log.append(&mut errs);
+                    match get_sokc_n(wp).await {
+                        Ok((sokcs, mut errs)) => {
+                            for sokc in sokcs {
+                                sok_log.append(&mut errs);
 
-                            let path = format!("arkiv\\many_form\\{}", medium.clone());
-                            if !mediums.contains(&medium) {
-                                mediums.push(medium.clone());
-                                let r = fs::create_dir_all(path.clone());
-                                if r.is_err() {
-                                    println!(
-                                        "Could not create path: {}, got error: {}",
-                                        path.clone(),
-                                        r.unwrap_err()
-                                    );
+                                let path = format!("arkiv\\many_form\\{}", medium.clone());
+                                if !mediums.contains(&medium) {
+                                    mediums.push(medium.clone());
+                                    let r = fs::create_dir_all(path.clone());
+                                    if r.is_err() {
+                                        println!(
+                                            "Could not create path: {}, got error: {}",
+                                            path.clone(),
+                                            r.unwrap_err()
+                                        );
+                                    }
                                 }
-                            }
 
-                            match save_sok(&sokc, &path) {
-                                Ok(mut err) => {
-                                    sok_log.append(&mut err);
-                                    println!("Saved sok: {}", &id);
-                                }
-                                Err(e) => {
-                                    println!("Failed saving sok: {}, With Error: {}", &id, &e);
-                                    sok_log.push(e.clone());
-                                    let _ = write_failed_sok(e.to_string(), &id);
+                                match save_sok(&sokc, &path) {
+                                    Ok(mut err) => {
+                                        sok_log.append(&mut err);
+                                        println!("Saved sok: {}", &id);
+                                    }
+                                    Err(e) => {
+                                        println!("Failed saving sok: {}, With Error: {}", &id, &e);
+                                        sok_log.push(e.clone());
+                                        let _ = write_failed_sok(e.to_string(), &id);
+                                    }
                                 }
                             }
                             continue;
                         }
-                        Err(_) => todo!(),
+                        Err(e) => {
+                            // TODO
+                            eprintln!("{}", e);
+                            continue;
+                        }
                     }
                 }
             }

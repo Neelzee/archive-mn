@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::{self, Error, Read};
@@ -5,10 +6,11 @@ use std::io::{self, Error, Read};
 use ego_tree::{NodeId, NodeRef};
 use rand::distributions::Uniform;
 use rand::Rng;
-use reqwest::Client;
+use reqwest::{Client, Request};
 use scraper::Html;
 use scraper::Node;
 
+use crate::error::ArchiveError;
 use crate::modules::webpage::{Link, Webpage};
 
 use super::constants::{ROOT_URL, VALID_SOKS};
@@ -145,5 +147,12 @@ pub async fn can_reqwest() -> bool {
     match Client::default().get("https://www.uib.no/").send().await {
         Ok(res) => res.status().is_success(),
         Err(_) => false,
+    }
+}
+
+pub async fn send_req(req: Request) -> Result<bool, ArchiveError> {
+    match Client::default().execute(req).await {
+        Ok(res) => Ok(res.status().is_success()),
+        Err(err) => Err(err.into()),
     }
 }

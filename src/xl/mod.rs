@@ -358,10 +358,12 @@ fn write_tables(
     let mut column_width: HashMap<u16, f64> = HashMap::new();
     for t in sok.tables {
         let mut header_format = header_format(&t);
+        let mut prev_form = HEADER_FORMAT.clone();
         r += 1;
         // Header
         for row in t.header {
             let mut c = 0;
+            let rl = row.len();
             for cell in row {
                 if let Some(width) = column_width.get(&c) {
                     if width.clone() as usize <= cell.len() {
@@ -371,10 +373,18 @@ fn write_tables(
                     column_width.insert(c, (cell.len() as f64) + 3.0);
                 }
 
-                let format = match header_format.pop() {
-                    Some(format) => format,
-                    _ => HEADER_FORMAT.clone(),
-                };
+                let format: Format;
+
+                if c as usize == rl - 2 {
+                    format = HEADER_FORMAT.clone().set_align(FormatAlign::Right);
+                } else {
+                    format = match header_format.pop() {
+                        Some(format) => format,
+                        _ => prev_form.clone(),
+                    };
+                }
+
+                prev_form = format.clone();
 
                 // Try to parse as int, header is most likley some year
                 match cell.parse::<f64>() {

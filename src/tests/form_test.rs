@@ -5,8 +5,56 @@ use scraper::Html;
 
 use crate::{
     modules::webpage::{Link, Webpage},
-    utils::funcs::{can_reqwest, get_html_content_test, get_random_link, get_random_webpage},
+    utils::funcs::{
+        can_reqwest, get_html_content_test, get_random_link, get_random_webpage, send_req,
+    },
 };
+
+#[tokio::test]
+async fn test_form_split() {
+    let lnk =
+        Link::new("https://medienorge.uib.no/statistikk/medium/avis,oppdatering/219".to_string());
+    let res = Webpage::from_link(lnk.clone()).await;
+
+    if let Ok(wp) = res.clone() {
+        let res = wp.get_forms();
+
+        assert!(res.is_ok());
+
+        let mut form = res.unwrap();
+
+        assert!(!form.is_empty());
+
+        form.order();
+
+        for f in form.split() {
+            for (form, _) in f.combinations() {
+                let mut form_data: HashMap<String, String> = HashMap::new();
+
+                for (k, (v, d)) in form {
+                    form_data.insert(k, v);
+                }
+                form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+                let req = Client::default()
+                    .post(wp.get_url())
+                    .try_clone()
+                    .expect("Should not be a stream")
+                    .form(&form_data)
+                    .build()
+                    .unwrap();
+
+                let res = send_req(req).await;
+
+                println!("{:?}", res);
+                assert!(res.is_ok());
+                assert!(res.unwrap());
+            }
+        }
+    } else {
+        eprintln!("{:?}, link: {}", res.unwrap_err(), lnk.to_string());
+    }
+}
 
 #[tokio::test]
 async fn test_form() {

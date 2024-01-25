@@ -449,7 +449,7 @@ pub async fn get_sok_collection_tmf(
     Ok((sok_collection, errors))
 }
 
-/// Creates on req
+#[deprecated]
 pub async fn get_sok_collection(
     wp: Webpage,
 ) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
@@ -550,6 +550,7 @@ pub async fn get_sok_collection(
     Ok((sok_collection, errors))
 }
 
+#[deprecated]
 pub async fn get_sok_collection_form(
     wp: Webpage,
     forms: Form,
@@ -663,4 +664,186 @@ pub async fn get_sok_collection_form(
     });
 
     Ok((sok_collection, errors))
+}
+
+#[deprecated]
+pub async fn get_sokc_n(
+    wp: Webpage,
+) -> Result<(Vec<SokCollection>, Vec<ArchiveError>), ArchiveError> {
+    let mut sokc = Vec::new();
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+    let mut errors: Vec<ArchiveError> = Vec::new();
+
+    let forms = wp.get_forms()?;
+
+    // No need to send requests if form is empty, but we have to get the first sok.
+    if forms.is_empty() {
+        let mut sok = wp.get_sok().await?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+        sokc.push(sok_collection);
+    } else if forms.clone().combinations().count() >= 744 {
+        for fr in forms.clone().split() {
+            let (sc, mut errs) = tmf(sok_collection.clone(), wp.clone(), fr).await?;
+
+            sokc.push(sc);
+            errors.append(&mut errs);
+        }
+    } else {
+        let (sc, mut errs) = tmf(sok_collection, wp.clone(), forms.clone()).await?;
+
+        sokc.push(sc);
+        errors.append(&mut errs);
+    }
+    let mut vec = Vec::new();
+    for (mut sc) in sokc {
+        sc.title = wp.get_title().clone()?;
+        let _ = wp
+            .get_text()?
+            .into_iter()
+            .map(|e| sc.add_text(e))
+            .collect::<Vec<_>>();
+
+        for metode in get_metode(&wp).await? {
+            sc.add_metode(metode.into());
+        }
+
+        for kilde in get_kilde(&wp).await? {
+            sc.add_kilde(kilde.into());
+        }
+
+        sc.add_merknad(Merknad {
+            title: "Merk".to_string(),
+            content: wp.get_merknad()?,
+        });
+        vec.push(sc);
+    }
+
+    Ok((vec, errors))
+}
+
+async fn tmf(
+    mut sok_collection: SokCollection,
+    wp: Webpage,
+    forms: Form,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+    let mut form_data: HashMap<String, String> = HashMap::new();
+    let mut new_fo = Form::new();
+    let mut errors: Vec<ArchiveError> = Vec::new();
+    let client = Client::default();
+
+    let request = client.post(wp.get_url());
+
+    for fo in forms.options() {
+        if fo.get_multiple() {
+            form_data.insert(
+                fo.option_name(),
+                fo.options()
+                    .into_iter()
+                    .map(|(e, _)| e.trim().to_string())
+                    .collect::<Vec<String>>()
+                    .join(","),
+            );
+        } else {
+            new_fo.add_options(fo);
+        }
+    }
+
+    println!(
+        "New Form Combo: {} singles, {} multiple",
+        new_fo.clone().combinations().count(),
+        form_data.len()
+    );
+
+    new_fo.order();
+
+    let mut combinations = new_fo.combinations().collect::<Vec<_>>();
+
+    if combinations.is_empty() {
+        combinations.push((
+            forms.form_data(),
+            vec![forms.options().pop().unwrap().option_name()],
+        ));
+    }
+
+    for (form, mut disps) in combinations {
+        let mut title = String::new();
+        let mut pos_titles: Vec<(String, String)> = Vec::new();
+        disps.clear();
+        for (k, (v, d)) in form {
+            pos_titles.push((k.clone(), d));
+            form_data.insert(k, v);
+        }
+        form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+        // First variabel
+        for (ref k, ref d) in &pos_titles {
+            match k.as_str() {
+                "variabel" => {
+                    disps.push(d.to_string());
+                    title += d;
+                    title += " ";
+                    continue;
+                }
+                _ => continue,
+            }
+        }
+        // Remainder
+        for (k, d) in pos_titles {
+            match k.as_str() {
+                "variabel" => continue,
+                _ => {
+                    title += &d;
+                    title += " ";
+                    disps.push(d);
+                    continue;
+                }
+            }
+        }
+
+        title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+
+        let req = request
+            .try_clone()
+            .expect("Should not be a stream")
+            .form(&form_data)
+            .build()?;
+
+        match client.execute(req).await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    let raw_html: String = response.text().await?.to_string();
+
+                    let html = Html::parse_document(&raw_html);
+
+                    let sub_wp = Webpage::from_html(
+                        wp.get_id(),
+                        wp.get_url(),
+                        html.clone(),
+                        wp.get_medium(),
+                    );
+
+                    match sub_wp.clone().get_sok().await {
+                        Ok(mut sok) => {
+                            sok.display_names = disps;
+                            sok.header_title = title.trim().to_string();
+                            sok_collection.add_sok(sok);
+                        }
+                        Err(err) => {
+                            errors.push(err.into());
+                        }
+                    }
+                } else {
+                    errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                }
+            }
+            // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+            Err(err) => {
+                errors.push(err.into());
+            }
+        }
+    }
+
+    return Ok((sok_collection, errors));
 }

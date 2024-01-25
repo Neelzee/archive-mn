@@ -184,10 +184,13 @@ async fn main() -> Result<(), ArchiveError> {
     if args.contains(&"-offline".to_string()) {
         let time_start = Instant::now();
         let r = get_soks_offline().await;
+        if r.is_err() {
+            eprintln!("{}", r.unwrap_err());
+        }
         let time_end = Instant::now();
         let duration = time_end - time_start;
         println!("That took: {} seconds", duration.as_secs());
-        return r;
+        return Ok(());
     }
 
     if args.contains(&"-sok".to_string()) {
