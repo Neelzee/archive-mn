@@ -349,41 +349,13 @@ pub async fn get_sok_collection_tmf(
 
         for (form, mut disps) in combinations {
             let mut title = String::new();
-            let mut pos_titles: Vec<(String, String)> = Vec::new();
-            disps.clear();
             for (k, (v, d)) in form {
-                pos_titles.push((k.clone(), d));
                 form_data.insert(k, v);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
-            // First variabel
-            for (ref k, ref d) in &pos_titles {
-                match k.as_str() {
-                    "variabel" => {
-                        disps.push(d.to_string());
-                        title += d;
-                        title += " ";
-                        continue;
-                    }
-                    _ => continue,
-                }
-            }
-            // Remainder
-            for (k, d) in pos_titles {
-                match k.as_str() {
-                    "variabel" => continue,
-                    _ => {
-                        title += &d;
-                        title += " ";
-                        disps.push(d);
-                        continue;
-                    }
-                }
-            }
 
-            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
-
+            title = disps.clone().join(" ").split_whitespace().collect::<Vec<&str>>().join(" ");
             let req = request
                 .try_clone()
                 .expect("Should not be a stream")
