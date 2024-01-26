@@ -127,6 +127,8 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             i += 1;
         }
 
+        sheets.push((full_name.clone(), full_name.clone()));
+
         sheet.set_name(full_name)?;
 
         // Table Title
