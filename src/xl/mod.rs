@@ -16,6 +16,7 @@ pub const MAX_STR_LEN: usize = 150;
 
 const MAX_COL_WIDTH: f64 = 50.0;
 const DEFAULT_COL_WIDTH: f64 = 8.43;
+const MAX_SHEET_NAME: usize = 31;
 
 const BOLD: Lazy<Format> = Lazy::new(|| {
     Format::new()
@@ -65,9 +66,9 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     let wb_path: String;
     let mut errors: Vec<ArchiveError> = Vec::new();
     let id = soks.id.clone();
-    let title = validify_excel_string(&soks.title.clone());
-    wb_path = format!("{}\\{}.xlsx", path.to_string(), title);
+    wb_path = format!("{}\\{}.xlsx", path.to_string(), validify_excel_string(&soks.title.clone()));
 
+    // Creates TOC Sheet, ensures its infront
     {
         let sheet = wb.add_worksheet();
         sheet.set_name("Framside")?;
@@ -92,75 +93,41 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             r += 1;
         }
 
-        let full_name: String;
-        if sub_sok.display_names.is_empty() {
-            full_name = sub_sok.header_title.clone().trim().to_string();
-        } else {
-            full_name = sub_sok.display_names.clone().join(" ").trim().to_string();
+        // Prefer using display names
+        let mut full_name = sub_sok.display_names.clone().join(" ").trim().to_string();
+
+        // But can settle for header_title
+        if full_name.is_empty() {
+            full_name = sub_sok.header_title.clone();
         }
 
-        let name: String;
+        // Ensures that full_name is valid.
+        full_name = validify_excel_string(&full_name);
 
-        if let Some(l) = full_name.split_terminator(",").last() {
-            let partial_name = l.trim();
-            let mut n = String::new();
-            let split_point = min(31, partial_name.chars().count());
-            for c in partial_name.chars() {
-                if n.chars().count() + c.len_utf16() <= split_point {
-                    n.push(c);
+        // Ensures its of the correct length
+        if full_name.len() > MAX_SHEET_NAME {
+            // Can't use split, since there are non-ascii-chars
+            let mut fl = String::new();
+            for c in full_name.clone().chars() {
+                if fl.len() == MAX_SHEET_NAME - 1 {
+                    break;
                 }
+                fl.push(c);
             }
-            name = n;
-        } else {
-            let mut n = String::new();
-            let split_point = min(31, full_name.chars().count());
-            for c in full_name.chars() {
-                if n.chars().count() + c.len_utf16() <= split_point {
-                    n.push(c);
-                }
-            }
-            name = n.trim().to_owned();
-        }
+            full_name = fl;
+        } 
 
-        // This is garbage code
-        let mut sheet_name = capitalize_first(&validify_excel_string(&name));
-
-        if sheets.clone().into_iter().any(|(_, dp)| dp == sheet_name) {
-            errors.push(ArchiveError::XlSheetError(
-                format!(
-                    "Skipping: {}, {}. '{}' already a sheetname",
-                    sub_sok.title, sub_sok.header_title, &sheet_name
-                ),
-                id.clone().to_string(),
-            ));
-            continue;
-        }
-        if !&sheet_name.is_empty() {
-            if wb
-                .worksheets()
-                .into_iter()
-                .map(|e| e.name())
-                .collect::<Vec<String>>()
-                .contains(&sheet_name)
-            {
-                errors.push(ArchiveError::XlSheetError(
-                    format!(
-                        "Error: {}, {}. '{}' already a sheetname",
-                        sub_sok.title, sub_sok.header_title, &sheet_name
-                    ),
-                    id.clone().to_string(),
-                ));
-                sheet_name = format!("Sheet{}", i);
-                i += 1;
-            }
-            sheets.push((sheet_name.clone(), full_name));
-        } else {
-            let sheet_name = format!("Sheet{}", i);
-            sheets.push((sheet_name.clone(), full_name));
+        let mut i = 1;
+        // Checks if this sheet name has been used before
+        while let Ok(_) = wb.worksheet_from_name(&full_name) {
+            // Reverses string, removes first (now last) char, reveres string again
+            let mut chrs = full_name.chars().collect::<Vec<_>>();
+            chrs.pop();
+            full_name = format!("{}{}", chrs.into_iter().fold(String::new(), |mut acc, c| {acc.push(c); acc}), i);
             i += 1;
         }
 
-        sheet.set_name(sheet_name)?;
+        sheet.set_name(full_name)?;
 
         // Table Title
         for title in &sub_sok.titles {
