@@ -18,6 +18,7 @@ use std::time::Instant;
 use std::{env, io};
 
 mod app;
+mod conc;
 mod error;
 mod modules;
 mod parser;
