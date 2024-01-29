@@ -16,7 +16,7 @@ To achive this in a satisfactory manner, there were several `MVP`s.
   - `kilde`
   - `metode`
 - List all successes
-- Give satisfactory error messages
+- Give verbose error messages
 
 Which, for web-scraping, was easy. Most of the wanted information from any `sok`, is in id-specifc html-tags, so using the crate [scraper](https://docs.rs/scraper/latest/scraper/), getting `merknad`, title, text and tables was piece of cake.
 
