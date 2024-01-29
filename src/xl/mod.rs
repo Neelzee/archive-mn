@@ -1,3 +1,4 @@
+use core::panic;
 use std::cmp::min;
 use std::collections::HashMap;
 
@@ -120,6 +121,18 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         let mut i = 1;
         // Checks if this sheet name has been used before
         while let Ok(_) = wb.worksheet_from_name(&full_name) {
+            if full_name.len() >= MAX_SHEET_NAME {
+                // Can't use split, since there are non-ascii-chars
+                let mut fl = String::new();
+                for c in full_name.clone().chars() {
+                    if fl.len() == MAX_SHEET_NAME - 2 {
+                        break;
+                    }
+                    fl.push(c);
+                }
+                full_name = fl;
+            } 
+
             // Reverses string, removes first (now last) char, reveres string again
             let mut chrs = full_name.chars().collect::<Vec<_>>();
             chrs.pop();
@@ -127,10 +140,26 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             i += 1;
         }
 
+        let mut counter = 0;
+        const MAX: i32 = 50;
+        while let Err(err) = sheet.set_name(&full_name) {
+            if counter >= MAX {
+                panic!("Exceded {} iterations, on {:?}", MAX, soks);
+            }
+            counter += 1;
+            match err {
+                XlsxError::SheetnameCannotBeBlank(_) => full_name = "MANGLER_TITTEL".to_string(),
+                XlsxError::SheetnameLengthExceeded(_) | XlsxError::SheetnameReused(_) => {
+                    let mut chrs = full_name.chars().collect_vec();
+                    chrs.pop();
+                    full_name = chrs.into_iter().fold(String::new(), |mut acc, c| {acc.push(c); acc});
+                }
+                XlsxError::SheetnameContainsInvalidCharacter(_) | XlsxError::SheetnameStartsOrEndsWithApostrophe(_) => full_name = validify_excel_string(&full_name),
+                _ => return Err(err.into()),
+            }
+        }
+        
         sheets.push((full_name.clone(), full_name.clone()));
-
-        sheet.set_name(full_name)?;
-
         // Table Title
         for title in &sub_sok.titles {
             sheet.write_with_format(r, 0, title, &BOLD)?;

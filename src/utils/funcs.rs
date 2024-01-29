@@ -44,6 +44,8 @@ pub fn validify_excel_string(str: &str) -> String {
         .replace("*", "")
         .replace("?", "")
         .replace("/", "-")
+        .replace("\'", "")
+        .replace("\"", "")
         .replace("\\", "")
 }
 

@@ -75,7 +75,7 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
 
 pub async fn main_fn_tmf(
     link: &Link,
-) -> Result<(SokCollection, Vec<ArchiveError>), Vec<ArchiveError>> {
+) -> Result<(Vec<SokCollection>, Vec<ArchiveError>), Vec<ArchiveError>> {
     let mut sok_log: Vec<ArchiveError> = Vec::new();
 
     let res = Webpage::from_link(link.clone()).await;
@@ -106,16 +106,15 @@ pub async fn main_fn_tmf(
 
     println!("Sok: {}", id);
 
-    match get_sok_collection(wp).await {
-        Ok((sokc, mut errs)) => {
+    match get_sokc_n(wp).await {
+        Ok((sokcs, mut errs)) => {
             sok_log.append(&mut errs);
 
             let path = format!("arkiv\\{}", medium.clone());
             if let Err(r) = fs::create_dir_all(path.clone()) {
                 sok_log.push(r.into());
             }
-
-            return Ok((sokc, sok_log));
+            return Ok((sokcs, sok_log));
         }
         Err(err) => {
             return Err(vec![err]);
