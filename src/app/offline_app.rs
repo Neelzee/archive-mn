@@ -17,7 +17,7 @@ use crate::{
     },
     parser::{
         get_merknad, medium,
-        wp::{get_kilde, get_metode, get_sok_collection},
+        wp::{get_kilde, get_metode},
     },
     utils::constants::ROOT_URL,
     xl::save_sok,

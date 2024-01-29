@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use itertools::Itertools;
+use itertools::{Combinations, Itertools};
 use reqwest::Client;
-use scraper::{Element, Html, Selector};
+use scraper::{Html, Selector};
 
 use crate::{
     error::ArchiveError,
@@ -11,11 +11,9 @@ use crate::{
         sok::{Kilde, Merknad, Metode, Sok, SokCollection, Table},
         webpage::{Link, Webpage},
     },
+    parser::get_merknad,
     scraper::get_html_content,
-    utils::{
-        constants::ROOT_URL,
-        funcs::{has_ancestor, trim_string},
-    },
+    utils::{constants::ROOT_URL, funcs::trim_string},
 };
 
 // TODO: Change these from methods to functions
@@ -33,13 +31,13 @@ impl Webpage {
     }
 
     pub fn get_text(&self) -> Result<Vec<String>, ArchiveError> {
-        let text_selector = Selector::parse(r#"div[id="forklaringTxt"] p"#)?;
+        let text_selector = Selector::parse("#forklaringTxt p")?;
 
         Ok(self
             .get_content()
             .select(&text_selector)
-            .map(|e| trim_string(&e.text().collect::<String>()))
-            .collect::<Vec<String>>())
+            .map(|e| e.text().collect_vec().join(""))
+            .collect_vec())
     }
 
     pub fn get_forms(&self) -> Result<Form, ArchiveError> {
@@ -52,26 +50,23 @@ impl Webpage {
             if let Some(option_name) = select.attr("name") {
                 let mut options: Vec<(String, String)> = Vec::new();
                 for option in self.get_content().select(&option_selector) {
-                    if let Some(p) = option.parent() {
-                        if p.id() != select.id() {
-                            continue;
-                        }
-
-                        if let Some(v) = option.attr("value") {
-                            options.push((
-                                v.to_string(),
-                                trim_string(&option.text().collect::<String>()),
-                            ));
-                        }
+                    if let Some(p) = option.parent()
+                        && p.id() == select.id()
+                        && let Some(v) = option.attr("value")
+                    {
+                        options.push((
+                            v.to_string(),
+                            trim_string(&option.text().collect::<String>()),
+                        ));
                     }
                 }
                 let mut fo = FormOption::new(option_name.to_string(), options);
 
                 // Checks if it can has multiple
-                if let Some(v) = select.attr("multiple") {
-                    if v == "multiple" {
-                        fo.multiple();
-                    }
+                if let Some(v) = select.attr("multiple")
+                    && v == "multiple"
+                {
+                    fo.multiple();
                 }
 
                 form.add_options(fo);
@@ -95,6 +90,10 @@ impl Webpage {
         for t in self.get_content().select(&title_selector) {
             sok.title = trim_string(&t.text().collect::<String>());
             break;
+        }
+
+        for t in self.get_content().select(&title_selector) {
+            sok.titles.push(trim_string(&t.text().collect::<String>()));
         }
 
         let mut tables: Vec<Table> = Vec::new();
@@ -190,11 +189,10 @@ impl Webpage {
 pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, ArchiveError> {
     let mut metoder: Vec<(String, Vec<String>)> = Vec::new();
 
-    let mut links = Vec::new();
+    let mut links: HashSet<Link> = HashSet::new();
 
     let merknad_head_selector = Selector::parse(".merknadHeader")?;
     let merknad_fragment = Selector::parse(".metode-tekst")?;
-    let p_selector = Selector::parse("p")?;
     let h3_selector = Selector::parse("h3")?;
 
     // METODE
@@ -207,7 +205,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
             if let Some(el) = child.value().as_element() {
                 if el.name() == "a" {
                     if let Some(a) = el.attr("href") {
-                        links.push(Link::new(a.to_owned()));
+                        links.insert(Link::new(a.to_owned()));
                     }
                 }
             }
@@ -230,7 +228,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
         metoder.push((
             title.clone(),
             Html::parse_document(&content)
-                .select(&merknad_fragment)
+                .select(&Selector::parse("p")?)
                 .into_iter()
                 .filter(|e| !e.text().collect::<String>().contains(&title))
                 .map(|p| trim_string(&p.text().collect::<String>()))
@@ -241,7 +239,7 @@ pub async fn get_metode(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Arch
     // TODO: Probably not needed
     if metoder.len() >= 20 {
         return Err(ArchiveError::InvalidMetode {
-            link: links,
+            link: links.into_iter().collect_vec(),
             id: wp.get_id(),
         });
     }
@@ -294,7 +292,8 @@ pub async fn get_kilde(wp: &Webpage) -> Result<Vec<(String, Vec<String>)>, Archi
     Ok(kilder)
 }
 
-pub async fn get_sok_collection(
+/// Creates on req
+pub async fn get_sok_collection_tmf(
     wp: Webpage,
 ) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
@@ -305,26 +304,58 @@ pub async fn get_sok_collection(
 
     let request = client.post(wp.get_url());
 
-    let mut forms = wp.get_forms()?;
+    let forms = wp.get_forms()?;
 
+    // No need to send requests if form is empty, but we have to get the first sok.
     if forms.is_empty() {
         let mut sok = wp.get_sok().await?;
         sok.header_title = sok.title.clone();
         sok_collection.add_sok(sok);
     } else {
-        forms.order();
-        for (form, disps) in forms.combinations() {
-            let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut form_data: HashMap<String, String> = HashMap::new();
+        let mut new_fo = Form::new();
+
+        for fo in forms.options() {
+            if fo.get_multiple() {
+                form_data.insert(
+                    fo.option_name(),
+                    fo.options()
+                        .into_iter()
+                        .map(|(e, _)| e.trim().to_string())
+                        .collect::<Vec<String>>()
+                        .join(","),
+                );
+            } else {
+                new_fo.add_options(fo);
+            }
+        }
+
+        println!(
+            "New Form Combo: {} singles, {} multiple",
+            new_fo.clone().combinations().count(),
+            form_data.len()
+        );
+
+        new_fo.order();
+
+        let mut combinations = new_fo.combinations().collect::<Vec<_>>();
+
+        if combinations.is_empty() {
+            combinations.push((
+                forms.form_data(),
+                vec![forms.options().pop().unwrap().option_name()],
+            ));
+        }
+
+        for (form, mut disps) in combinations {
             let mut title = String::new();
             for (k, (v, d)) in form {
-                title += &d;
-                title += " ";
                 form_data.insert(k, v);
             }
             form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
 
-            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
 
+            title = disps.clone().join(" ").split_whitespace().collect::<Vec<&str>>().join(" ");
             let req = request
                 .try_clone()
                 .expect("Should not be a stream")
@@ -338,9 +369,14 @@ pub async fn get_sok_collection(
 
                         let html = Html::parse_document(&raw_html);
 
-                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                        let sub_wp = Webpage::from_html(
+                            wp.get_id(),
+                            wp.get_url(),
+                            html.clone(),
+                            wp.get_medium(),
+                        );
 
-                        match sub_wp.get_sok().await {
+                        match sub_wp.clone().get_sok().await {
                             Ok(mut sok) => {
                                 sok.display_names = disps;
                                 sok.header_title = title.trim().to_string();
@@ -378,15 +414,15 @@ pub async fn get_sok_collection(
     }
 
     sok_collection.add_merknad(Merknad {
-        title: "Merknad".to_string(),
+        title: "Merk".to_string(),
         content: wp.get_merknad()?,
     });
 
     Ok((sok_collection, errors))
 }
 
-/// Creates on req
-pub async fn get_sok_collection_tmf(
+#[deprecated]
+pub async fn get_sok_collection(
     wp: Webpage,
 ) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
     let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
@@ -397,7 +433,107 @@ pub async fn get_sok_collection_tmf(
 
     let request = client.post(wp.get_url());
 
-    let forms = wp.get_forms()?;
+    let mut forms = wp.get_forms()?;
+
+    // No need to send requests if form is empty, but we have to get the first sok.
+    if forms.is_empty() {
+        let mut sok = wp.get_sok().await?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+    } else {
+        let mut form_data: HashMap<String, String> = HashMap::new();
+
+        forms.order();
+
+        for (form, disps) in forms.combinations() {
+            let mut title = String::new();
+            let mut possible_titles: Vec<(String, String)> = Vec::new();
+            for (k, (v, d)) in form {
+                possible_titles.push((k.clone(), d));
+                form_data.insert(k, v);
+            }
+
+            form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+            title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+
+            let req = request
+                .try_clone()
+                .expect("Should not be a stream")
+                .form(&form_data)
+                .build()?;
+
+            match client.execute(req).await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let raw_html = response.text().await?;
+
+                        let html = Html::parse_document(&raw_html);
+
+                        let sub_wp = Webpage::from_html(
+                            wp.get_id(),
+                            wp.get_url(),
+                            html.clone(),
+                            wp.get_medium(),
+                        );
+
+                        match sub_wp.clone().get_sok().await {
+                            Ok(mut sok) => {
+                                sok.display_names = disps;
+                                sok.header_title = title.trim().to_string();
+                                sok_collection.add_sok(sok);
+                            }
+                            Err(err) => {
+                                errors.push(err.into());
+                            }
+                        }
+                    } else {
+                        errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                    }
+                }
+                // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+                Err(err) => {
+                    errors.push(err.into());
+                }
+            }
+        }
+    }
+
+    sok_collection.title = wp.get_title()?;
+    let _ = wp
+        .get_text()?
+        .into_iter()
+        .map(|e| sok_collection.add_text(e))
+        .collect::<Vec<_>>();
+
+    for metode in get_metode(&wp).await? {
+        sok_collection.add_metode(metode.into());
+    }
+
+    for kilde in get_kilde(&wp).await? {
+        sok_collection.add_kilde(kilde.into());
+    }
+
+    sok_collection.add_merknad(Merknad {
+        title: "Merk".to_string(),
+        content: wp.get_merknad()?,
+    });
+
+    Ok((sok_collection, errors))
+}
+
+#[deprecated]
+pub async fn get_sok_collection_form(
+    wp: Webpage,
+    forms: Form,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+    let mut errors: Vec<ArchiveError> = Vec::new();
+
+    let client = Client::default();
+
+    let request = client.post(wp.get_url());
 
     if forms.is_empty() {
         let mut sok = wp.get_sok().await?;
@@ -454,7 +590,8 @@ pub async fn get_sok_collection_tmf(
 
                         let html = Html::parse_document(&raw_html);
 
-                        let sub_wp = Webpage::from_html(346, wp.get_url(), html, wp.get_medium());
+                        let sub_wp =
+                            Webpage::from_html(wp.get_id(), wp.get_url(), html, wp.get_medium());
 
                         match sub_wp.get_sok().await {
                             Ok(mut sok) => {
@@ -494,9 +631,191 @@ pub async fn get_sok_collection_tmf(
     }
 
     sok_collection.add_merknad(Merknad {
-        title: "Merknad".to_string(),
+        title: "Merk".to_string(),
         content: wp.get_merknad()?,
     });
 
     Ok((sok_collection, errors))
+}
+
+#[deprecated]
+pub async fn get_sokc_n(
+    wp: Webpage,
+) -> Result<(Vec<SokCollection>, Vec<ArchiveError>), ArchiveError> {
+    let mut sokc = Vec::new();
+    let mut sok_collection = SokCollection::new(wp.get_id(), wp.get_medium());
+
+    let mut errors: Vec<ArchiveError> = Vec::new();
+
+    let forms = wp.get_forms()?;
+
+    // No need to send requests if form is empty, but we have to get the first sok.
+    if forms.is_empty() {
+        let mut sok = wp.get_sok().await?;
+        sok.header_title = sok.title.clone();
+        sok_collection.add_sok(sok);
+        sokc.push(sok_collection);
+    } else if forms.clone().combinations().count() >= 744 {
+        for fr in forms.clone().split() {
+            let (sc, mut errs) = tmf(sok_collection.clone(), wp.clone(), fr).await?;
+
+            sokc.push(sc);
+            errors.append(&mut errs);
+        }
+    } else {
+        let (sc, mut errs) = tmf(sok_collection, wp.clone(), forms.clone()).await?;
+
+        sokc.push(sc);
+        errors.append(&mut errs);
+    }
+    let mut vec = Vec::new();
+    for (mut sc) in sokc {
+        sc.title = wp.get_title().clone()?;
+        let _ = wp
+            .get_text()?
+            .into_iter()
+            .map(|e| sc.add_text(e))
+            .collect::<Vec<_>>();
+
+        for metode in get_metode(&wp).await? {
+            sc.add_metode(metode.into());
+        }
+
+        for kilde in get_kilde(&wp).await? {
+            sc.add_kilde(kilde.into());
+        }
+
+        sc.add_merknad(Merknad {
+            title: "Merk".to_string(),
+            content: wp.get_merknad()?,
+        });
+        vec.push(sc);
+    }
+
+    Ok((vec, errors))
+}
+
+async fn tmf(
+    mut sok_collection: SokCollection,
+    wp: Webpage,
+    forms: Form,
+) -> Result<(SokCollection, Vec<ArchiveError>), ArchiveError> {
+    let mut form_data: HashMap<String, String> = HashMap::new();
+    let mut new_fo = Form::new();
+    let mut errors: Vec<ArchiveError> = Vec::new();
+    let client = Client::default();
+
+    let request = client.post(wp.get_url());
+
+    for fo in forms.options() {
+        if fo.get_multiple() {
+            form_data.insert(
+                fo.option_name(),
+                fo.options()
+                    .into_iter()
+                    .map(|(e, _)| e.trim().to_string())
+                    .collect::<Vec<String>>()
+                    .join(","),
+            );
+        } else {
+            new_fo.add_options(fo);
+        }
+    }
+
+    println!(
+        "New Form Combo: {} singles, {} multiple",
+        new_fo.clone().combinations().count(),
+        form_data.len()
+    );
+
+    new_fo.order();
+
+    let mut combinations = new_fo.combinations().collect::<Vec<_>>();
+
+    if combinations.is_empty() {
+        combinations.push((
+            forms.form_data(),
+            vec![forms.options().pop().unwrap().option_name()],
+        ));
+    }
+
+    for (form, mut disps) in combinations {
+        let mut title = String::new();
+        let mut pos_titles: Vec<(String, String)> = Vec::new();
+        disps.clear();
+        for (k, (v, d)) in form {
+            pos_titles.push((k.clone(), d));
+            form_data.insert(k, v);
+        }
+        form_data.insert("btnSubmit".to_string(), "Vis+tabell".to_string());
+
+        // First variabel
+        for (ref k, ref d) in &pos_titles {
+            match k.as_str() {
+                "variabel" => {
+                    disps.push(d.to_string());
+                    title += d;
+                    title += " ";
+                    continue;
+                }
+                _ => continue,
+            }
+        }
+        // Remainder
+        for (k, d) in pos_titles {
+            match k.as_str() {
+                "variabel" => continue,
+                _ => {
+                    title += &d;
+                    title += " ";
+                    disps.push(d);
+                    continue;
+                }
+            }
+        }
+
+        title = title.split_whitespace().collect::<Vec<&str>>().join(" ");
+
+        let req = request
+            .try_clone()
+            .expect("Should not be a stream")
+            .form(&form_data)
+            .build()?;
+
+        match client.execute(req).await {
+            Ok(response) => {
+                if response.status().is_success() {
+                    let raw_html: String = response.text().await?.to_string();
+
+                    let html = Html::parse_document(&raw_html);
+
+                    let sub_wp = Webpage::from_html(
+                        wp.get_id(),
+                        wp.get_url(),
+                        html.clone(),
+                        wp.get_medium(),
+                    );
+
+                    match sub_wp.clone().get_sok().await {
+                        Ok(mut sok) => {
+                            sok.display_names = disps;
+                            sok.header_title = title.trim().to_string();
+                            sok_collection.add_sok(sok);
+                        }
+                        Err(err) => {
+                            errors.push(err.into());
+                        }
+                    }
+                } else {
+                    errors.push(ArchiveError::ResponseError(response.status().to_string()));
+                }
+            }
+            // TODO: This happens because some of the requests are invalid (most likley due to incorrect mixing of args)
+            Err(err) => {
+                errors.push(err.into());
+            }
+        }
+    }
+
+    return Ok((sok_collection, errors));
 }

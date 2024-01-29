@@ -1,15 +1,30 @@
+use std::borrow::BorrowMut;
+
 use scraper::{Html, Selector};
 
-use crate::{modules::webpage::Link, error::ArchiveError};
+use crate::{error::ArchiveError, modules::webpage::Link};
 
-pub fn get_links_from_medium(html: Html) -> Result<Vec<Link>, ArchiveError> {
+pub fn get_links_from_medium(html: Html) -> Result<Vec<(String, Link)>, ArchiveError> {
     let mut links = Vec::new();
 
-    let a_selector = Selector::parse(r#"a[class="d-inline"]"#)?;
+    let div_sel = Selector::parse(".listBox a")?;
 
-    for a in html.select(&a_selector) {
+    for a in html.select(&div_sel) {
         if let Some(l) = a.attr("href") {
-            links.push(Link::new(l.to_string()).create_full());
+            let l = Link::new(l.to_string()).create_full();
+
+            if !l.is_sok() && !l.is_aspekt() {
+                continue;
+            }
+
+            let mut iter = l
+                .clone()
+                .to_string()
+                .split("/")
+                .map(|e| e.to_string())
+                .collect::<Vec<String>>();
+            iter.pop();
+            links.push((iter.pop().unwrap_or("UNKNOWN".to_string()), l));
         }
     }
 

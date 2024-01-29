@@ -1,16 +1,20 @@
+use std::{fs::OpenOptions, io::Write};
+
+use crate::app::try_save_sok;
+use crate::{app::main_fn_tmf, modules::webpage::Link};
+use crate::{error::ArchiveError, parse_args, scraper::get_html_content, xl::save_sok};
 use itertools::Itertools;
+use reqwest::Client;
+use scraper::Html;
 
-use crate::{
-    app::main_app::{write_failed_sok, write_log},
-    error::ArchiveError,
-    modules::webpage::Link,
-};
+use crate::app::main_app::write_log;
+use crate::app::mf_app::write_failed_sok;
+use crate::parser::medium::get_links_from_medium;
+use crate::parser::wp::get_sok_collection;
 
-use super::{main_fn, try_save_sok};
-
-pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
+pub async fn run_app(links: Vec<Link>) -> Result<(), ArchiveError> {
     for link in links {
-        match main_fn(&link).await {
+        match main_fn_tmf(&link).await {
             Ok((sokc, mut sok_log)) => {
                 let path = format!("arkiv\\{}", sokc.medium);
                 match try_save_sok(&sokc, &path, 2) {
@@ -56,7 +60,6 @@ pub async fn get_soks(links: Vec<Link>) -> Result<(), ArchiveError> {
                 if let Err(e) = write_failed_sok(
                     err.clone().into_iter().map(|e| e.to_string()).join("\n"),
                     &id,
-                    "UNKNOWN".to_string(),
                 ) {
                     eprintln!(
                         "Error writing to error logs: {}, dumping log to terminal",

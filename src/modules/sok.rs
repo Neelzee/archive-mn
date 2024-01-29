@@ -13,11 +13,27 @@ impl Table {
             rows: Vec::new(),
         }
     }
+
+    /// No head?
+    pub fn get_col(&self, c: usize) -> Option<Vec<&str>> {
+        let mut col = Vec::new();
+
+        for r in &self.rows {
+            if let Some(cell) = r.get(c) {
+                col.push(cell.as_str());
+            } else {
+                return None;
+            }
+        }
+
+        return Some(col);
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Sok {
     pub title: String,
+    pub titles: Vec<String>,
     pub header_title: String,
     pub tables: Vec<Table>,
     pub display_names: Vec<String>,
@@ -30,6 +46,7 @@ impl Sok {
     pub fn new() -> Sok {
         Sok {
             title: String::new(),
+            titles: Vec::new(),
             header_title: String::new(),
             tables: Vec::new(),
             display_names: Vec::new(),
@@ -120,7 +137,12 @@ macro_rules! impl_ie {
     ($struct_name:ident) => {
         impl IsEmpty for $struct_name {
             fn is_empty(&self) -> bool {
-                self.content.is_empty() || self.content.clone().into_iter().all(|e| e.is_empty())
+                self.content.is_empty()
+                    || self
+                        .content
+                        .clone()
+                        .into_iter()
+                        .all(|e| e.is_empty() || e.split_whitespace().count() == 0)
             }
         }
     };
@@ -139,6 +161,12 @@ pub trait IsEmpty {
 
 impl IsEmpty for Merknad {
     fn is_empty(&self) -> bool {
-        self.content.is_empty() || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
+        self.content.is_empty()
+        || self
+            .content
+            .clone()
+            .into_iter()
+            .all(|e| e.is_empty() || e.split_whitespace().count() == 0)
+        || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
     }
 }

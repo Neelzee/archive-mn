@@ -8,7 +8,7 @@ use crate::{
         sok::SokCollection,
         webpage::{Link, Webpage},
     },
-    parser::wp::{get_sok_collection, get_sok_collection_tmf},
+    parser::wp::{get_sok_collection, get_sok_collection_tmf, get_sokc_n},
     xl::save_sok,
     ALLOW_DUPS, CHECKED_SOK_ID, CHECKED_SOK_TITLE,
 };
@@ -22,6 +22,8 @@ pub mod offline_app;
 pub mod interactive_app;
 
 pub mod mf_app;
+
+pub mod tmf;
 
 pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), Vec<ArchiveError>> {
     let mut sok_log: Vec<ArchiveError> = Vec::new();
@@ -38,6 +40,7 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
 
     let id = wp.get_id().clone();
 
+    // Checks if dups are allowed
     if let Ok(allow_dup) = ALLOW_DUPS.lock() {
         if let Ok(title) = wp.get_title() {
             if !*allow_dup {
@@ -53,28 +56,55 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
 
     println!("Sok: {}", id);
 
-    if let Some(com) = wp.get_forms().ok() {
-        let count = com.combinations().collect::<Vec<_>>().len();
-        if count >= 30 {
-            println!("Form Combo: {:?}", count);
+    match get_sok_collection_tmf(wp).await {
+        Ok((sokc, mut errs)) => {
+            sok_log.append(&mut errs);
 
-            match get_sok_collection_tmf(wp).await {
-                Ok((sokc, mut errs)) => {
-                    sok_log.append(&mut errs);
+            let path = format!("arkiv\\{}", medium.clone());
+            if let Err(r) = fs::create_dir_all(path.clone()) {
+                sok_log.push(r.into());
+            }
 
-                    let path = format!("error\\{}", medium.clone());
-                    if let Err(r) = fs::create_dir_all(path.clone()) {
-                        sok_log.push(r.into());
-                    }
+            return Ok((sokc, sok_log));
+        }
+        Err(err) => {
+            return Err(vec![err]);
+        }
+    }
+}
 
-                    return Ok((sokc, sok_log));
-                }
-                Err(err) => {
-                    return Err(vec![err]);
+pub async fn main_fn_tmf(
+    link: &Link,
+) -> Result<(SokCollection, Vec<ArchiveError>), Vec<ArchiveError>> {
+    let mut sok_log: Vec<ArchiveError> = Vec::new();
+
+    let res = Webpage::from_link(link.clone()).await;
+
+    if res.is_err() {
+        return Err(vec![res.unwrap_err()]);
+    }
+
+    let wp = res.unwrap();
+
+    let medium = wp.get_medium();
+
+    let id = wp.get_id().clone();
+
+    // Checks if dups are allowed
+    if let Ok(allow_dup) = ALLOW_DUPS.lock() {
+        if let Ok(title) = wp.get_title() {
+            if !*allow_dup {
+                if skip_sok(Some(&id), Some(&title)) {
+                    println!("Skipping sok: {}, is duplicate", id);
+                    return Err(vec![ArchiveError::DuplicateSok]);
+                } else {
+                    add_sok(Some(id), Some(title));
                 }
             }
         }
     }
+
+    println!("Sok: {}", id);
 
     match get_sok_collection(wp).await {
         Ok((sokc, mut errs)) => {
@@ -85,20 +115,10 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
                 sok_log.push(r.into());
             }
 
-            // Failed
-            if sokc.sok.len() == 0 {
-                println!("Sok: {}, had 0 tables.", &sokc.id);
-                sok_log.push(ArchiveError::FailedParsing(
-                    sokc.id.clone(),
-                    link.to_string().clone(),
-                ));
-            }
-
-            Ok((sokc, sok_log))
+            return Ok((sokc, sok_log));
         }
-        Err(e) => {
-            sok_log.push(e);
-            Err(sok_log)
+        Err(err) => {
+            return Err(vec![err]);
         }
     }
 }
@@ -132,35 +152,83 @@ pub fn try_save_sok(
 }
 
 pub fn skip_sok(id: Option<&usize>, title: Option<&str>) -> bool {
-    if let Some(id) = id {
-        if let Ok(map) = CHECKED_SOK_ID.lock() {
-            if map.contains_key(id) {
-                return true;
-            }
-        }
+    if let Some(id) = id
+        && let Ok(map) = CHECKED_SOK_ID.lock()
+        && map.contains_key(id)
+    {
+        return true;
     }
 
-    if let Some(title) = title {
-        if let Ok(map) = CHECKED_SOK_TITLE.lock() {
-            if map.contains_key(title) {
-                return true;
-            }
-        }
+    if let Some(title) = title
+        && let Ok(map) = CHECKED_SOK_TITLE.lock()
+        && map.contains_key(title)
+    {
+        return true;
     }
 
     return false;
 }
 
 pub fn add_sok(id: Option<usize>, title: Option<String>) {
-    if let Some(id) = id {
-        if let Ok(mut map_id) = CHECKED_SOK_ID.lock() {
-            map_id.insert(id, true);
+    if let Some(id) = id
+        && let Ok(mut map_id) = CHECKED_SOK_ID.lock()
+    {
+        map_id.insert(id, true);
+    }
+
+    if let Some(title) = title
+        && let Ok(mut map_title) = CHECKED_SOK_TITLE.lock()
+    {
+        map_title.insert(title, true);
+    }
+}
+
+pub async fn main_fn_n(
+    link: &Link,
+) -> Result<(Vec<SokCollection>, Vec<ArchiveError>), Vec<ArchiveError>> {
+    let mut sok_log: Vec<ArchiveError> = Vec::new();
+
+    let res = Webpage::from_link(link.clone()).await;
+
+    if res.is_err() {
+        return Err(vec![res.unwrap_err()]);
+    }
+
+    let wp = res.unwrap();
+
+    let medium = wp.get_medium();
+
+    let id = wp.get_id().clone();
+
+    // Checks if dups are allowed
+    if let Ok(allow_dup) = ALLOW_DUPS.lock() {
+        if let Ok(title) = wp.get_title() {
+            if !*allow_dup {
+                if skip_sok(Some(&id), Some(&title)) {
+                    println!("Skipping sok: {}, is duplicate", id);
+                    return Err(vec![ArchiveError::DuplicateSok]);
+                } else {
+                    add_sok(Some(id), Some(title));
+                }
+            }
         }
     }
 
-    if let Some(title) = title {
-        if let Ok(mut map_title) = CHECKED_SOK_TITLE.lock() {
-            map_title.insert(title, true);
+    println!("Sok: {}", id);
+
+    match get_sokc_n(wp).await {
+        Ok((sokc, mut errs)) => {
+            sok_log.append(&mut errs);
+
+            let path = format!("arkiv\\{}", medium.clone());
+            if let Err(r) = fs::create_dir_all(path.clone()) {
+                sok_log.push(r.into());
+            }
+
+            return Ok((sokc, sok_log));
+        }
+        Err(err) => {
+            return Err(vec![err]);
         }
     }
 }
