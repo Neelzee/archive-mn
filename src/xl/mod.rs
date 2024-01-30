@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::error::ArchiveError;
 use crate::modules::form::{self, Form};
@@ -74,7 +74,7 @@ const ROW_HEIGHT: f64 = 17.0;
 const COLUMN_FORMAT: Lazy<Format> = Lazy::new(|| Format::new().set_border(FormatBorder::Thin).set_border_color(Color::White));
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
-    let mut sheets: Vec<(String, String)> = Vec::new();
+    let mut sheets: Vec<String> = Vec::new();
     let mut wb = Workbook::new();
     
     let wb_path: String;
@@ -122,6 +122,9 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         // Ensures that full_name is valid.
         full_name = validify_excel_string(&full_name);
 
+        // I hate Excel
+        full_name = full_name.to_lowercase();
+
         // Ensures its of the correct length
         if full_name.len() > MAX_SHEET_NAME {
             // Can't use split, since there are non-ascii-chars
@@ -137,12 +140,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
         let mut i = 1;
         // Checks if this sheet name has been used before
-        while let Ok(_) = wb.worksheet_from_name(&full_name) {
+        while sheets.contains(&full_name) {
             if full_name.len() >= MAX_SHEET_NAME {
                 // Can't use split, since there are non-ascii-chars
                 let mut fl = String::new();
                 for c in full_name.clone().chars() {
-                    if fl.len() == MAX_SHEET_NAME - 2 {
+                    if fl.len() <= MAX_SHEET_NAME - 2 {
                         break;
                     }
                     fl.push(c);
@@ -150,33 +153,14 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                 full_name = fl;
             } 
 
-            // Reverses string, removes first (now last) char, reveres string again
             let mut chrs = full_name.chars().collect::<Vec<_>>();
             chrs.pop();
             full_name = format!("{}{}", chrs.into_iter().fold(String::new(), |mut acc, c| {acc.push(c); acc}), i);
             i += 1;
         }
-
-        let mut counter = 0;
-        const MAX: i32 = 50;
-        while let Err(err) = sheet.set_name(&full_name) {
-            if counter >= MAX {
-                panic!("Exceded {} iterations, on {:?}", MAX, soks);
-            }
-            counter += 1;
-            match err {
-                XlsxError::SheetnameCannotBeBlank(_) => full_name = "MANGLER_TITTEL".to_string(),
-                XlsxError::SheetnameLengthExceeded(_) | XlsxError::SheetnameReused(_) => {
-                    let mut chrs = full_name.chars().collect_vec();
-                    chrs.pop();
-                    full_name = chrs.into_iter().fold(String::new(), |mut acc, c| {acc.push(c); acc});
-                }
-                XlsxError::SheetnameContainsInvalidCharacter(_) | XlsxError::SheetnameStartsOrEndsWithApostrophe(_) => full_name = validify_excel_string(&full_name),
-                _ => return Err(err.into()),
-            }
-        }
-        
-        sheets.push((full_name.clone(), full_name.clone()));
+    
+        sheet.set_name(&full_name)?;
+        sheets.push(full_name.clone());
 
         // Table Title
         for title in &sub_sok.titles {
@@ -203,7 +187,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         format_sheet(&mut info_sheet)?;
         let sheet_name = String::from("Metode");
         info_sheet.set_name(&sheet_name)?;
-        sheets.push((sheet_name.clone(), sheet_name));
+        sheets.push(sheet_name);
         let mut r = 0;
         // Metode
         for metode in soks.metode.clone() {
@@ -237,9 +221,9 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     // Table of Contents
     {
         let mut temp = Vec::new();
-        for (nm, dp) in sheets {
+        for nm in sheets {
             if wb.worksheet_from_name(&nm).is_ok() {
-                temp.push((nm, dp));
+                temp.push(nm);
             }
         }
 
@@ -248,13 +232,13 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             let mut has_merk = false;
             sheet.write_with_format(0, 0, soks.title.clone(), &BOLD)?;
 
-            for (nm, dp) in temp {
-                if dp.contains("Metode") {
+            for nm in temp {
+                if nm.contains("Metode") {
                     has_merk = true;
                     continue;
                 }
-                let link: &str = &format!("internal:'{}'!A1", nm);
-                sheet.write_with_format(r, 0, Url::new(link).set_text(dp), &URL_FORMAT)?;
+                let link: &str = &format!("internal:'{}'!A1", &nm);
+                sheet.write_with_format(r, 0, Url::new(link).set_text(nm), &URL_FORMAT)?;
                 r += 1;
             }
 
