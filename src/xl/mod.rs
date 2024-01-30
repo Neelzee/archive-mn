@@ -35,7 +35,7 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
         .set_background_color(Color::RGB(0xA2CAD6))
         .set_font_size(FONT_SIZE)
         .set_border(FormatBorder::Thin)
-        .set_border_color(Color::White)
+        .set_border_color(Color::RGB(0xA2CAD6))
 });
 
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
@@ -45,7 +45,7 @@ const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
         .set_background_color(Color::RGB(0xcee8f1))
         .set_font_size(FONT_SIZE)
         .set_border(FormatBorder::Thin)
-        .set_border_color(Color::White)
+        .set_border_color(Color::RGB(0xcee8f1))
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
@@ -55,7 +55,7 @@ const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
         .set_background_color(Color::RGB(0xe6f3f8))
         .set_font_size(FONT_SIZE)
         .set_border(FormatBorder::Thin)
-        .set_border_color(Color::White)
+        .set_border_color(Color::RGB(0xe6f3f8))
 });
 
 const URL_FORMAT: Lazy<Format> = Lazy::new(|| {
@@ -86,7 +86,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     {
         let mut sheet = wb.add_worksheet();
 
-        format_sheet(&mut sheet);
+        format_sheet(&mut sheet)?;
 
         sheet.set_name("Framside")?;
         sheet.write_with_format(0, 0, "Innhold", &BOLD)?;
@@ -95,7 +95,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     let mut i = 0;
     for sub_sok in soks.sok.clone() {
         let mut sheet = Worksheet::new();
-        format_sheet(&mut sheet);
+        format_sheet(&mut sheet)?;
         let mut r = 0;
 
         // Title
@@ -138,6 +138,18 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         let mut i = 1;
         // Checks if this sheet name has been used before
         while let Ok(_) = wb.worksheet_from_name(&full_name) {
+            if full_name.len() >= MAX_SHEET_NAME {
+                // Can't use split, since there are non-ascii-chars
+                let mut fl = String::new();
+                for c in full_name.clone().chars() {
+                    if fl.len() == MAX_SHEET_NAME - 2 {
+                        break;
+                    }
+                    fl.push(c);
+                }
+                full_name = fl;
+            } 
+
             // Reverses string, removes first (now last) char, reveres string again
             let mut chrs = full_name.chars().collect::<Vec<_>>();
             chrs.pop();
@@ -145,9 +157,26 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
             i += 1;
         }
 
+        let mut counter = 0;
+        const MAX: i32 = 50;
+        while let Err(err) = sheet.set_name(&full_name) {
+            if counter >= MAX {
+                panic!("Exceded {} iterations, on {:?}", MAX, soks);
+            }
+            counter += 1;
+            match err {
+                XlsxError::SheetnameCannotBeBlank(_) => full_name = "MANGLER_TITTEL".to_string(),
+                XlsxError::SheetnameLengthExceeded(_) | XlsxError::SheetnameReused(_) => {
+                    let mut chrs = full_name.chars().collect_vec();
+                    chrs.pop();
+                    full_name = chrs.into_iter().fold(String::new(), |mut acc, c| {acc.push(c); acc});
+                }
+                XlsxError::SheetnameContainsInvalidCharacter(_) | XlsxError::SheetnameStartsOrEndsWithApostrophe(_) => full_name = validify_excel_string(&full_name),
+                _ => return Err(err.into()),
+            }
+        }
+        
         sheets.push((full_name.clone(), full_name.clone()));
-
-        sheet.set_name(full_name)?;
 
         // Table Title
         for title in &sub_sok.titles {
@@ -171,7 +200,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     // Info sheet
     if !soks.metode.is_empty() && !soks.metode.clone().into_iter().all(|e| e.is_empty()) {
         let mut info_sheet = Worksheet::new();
-        format_sheet(&mut info_sheet);
+        format_sheet(&mut info_sheet)?;
         let sheet_name = String::from("Metode");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
@@ -549,10 +578,12 @@ pub fn split_string(input: String) -> Vec<String> {
     result
 }
 
-fn format_sheet(sheet: &mut Worksheet) {
+fn format_sheet(sheet: &mut Worksheet) -> Result<(), ArchiveError> {
     sheet.set_print_gridlines(false);
     for i in 0..75u32 {
-        sheet.set_column_format((i as u16), &COLUMN_FORMAT);
-        sheet.set_row_height(i.into(), ROW_HEIGHT);
+        sheet.set_column_format((i as u16), &COLUMN_FORMAT)?;
+        sheet.set_row_height(i.into(), ROW_HEIGHT)?;
     }
+
+    Ok(())
 }
