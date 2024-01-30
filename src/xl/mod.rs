@@ -551,7 +551,7 @@ pub fn split_string(input: String) -> Vec<String> {
 
 fn format_sheet(sheet: &mut Worksheet) {
     sheet.set_print_gridlines(false);
-    for i in 0..30u32 {
+    for i in 0..75u32 {
         sheet.set_column_format((i as u16), &COLUMN_FORMAT);
         sheet.set_row_height(i.into(), ROW_HEIGHT);
     }
