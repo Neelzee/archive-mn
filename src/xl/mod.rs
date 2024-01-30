@@ -16,7 +16,7 @@ pub const MAX_STR_LEN: usize = 150;
 
 const MAX_COL_WIDTH: f64 = 50.0;
 const DEFAULT_COL_WIDTH: f64 = 8.43;
-const MAX_SHEET_NAME: usize = 31;
+const MAX_SHEET_NAME: usize = 30;
 
 const BOLD: Lazy<Format> = Lazy::new(|| {
     Format::new()

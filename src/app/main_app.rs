@@ -59,8 +59,13 @@ pub async fn run_app(args: Vec<String>) -> Result<(), ArchiveError> {
                                 "Failed saving sok: {};{}, due too errors: {}, dumping it to root",
                                 &sokc.id,
                                 &sokc.title,
-                                err.into_iter().map(|e| e.to_string()).join("\n")
+                                err.clone().into_iter().map(|e| e.to_string()).join("\n")
                             );
+                            let _ = write_failed_sok(format!("Failed saving sok: {};{}, due too errors: {}, dumping it to root",
+                            &sokc.id,
+                            &sokc.title,
+                            err.into_iter().map(|e| e.to_string()).join("\n")
+                        ), &sokc.id, sokc.title);
                         }
                     }
                 }
