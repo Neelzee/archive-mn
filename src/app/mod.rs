@@ -47,8 +47,6 @@ pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), 
                 if skip_sok(Some(&id), Some(&title)) {
                     println!("Skipping sok: {}, is duplicate", id);
                     return Err(vec![ArchiveError::DuplicateSok]);
-                } else {
-                    add_sok(Some(id), Some(title));
                 }
             }
         }
