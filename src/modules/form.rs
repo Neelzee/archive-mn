@@ -20,10 +20,10 @@ pub struct Form {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FormOption {
-    option_name: String,
+    pub option_name: String,
     /// Request Name, Display Name
-    options: Vec<(String, String)>,
-    multiple: bool,
+    pub options: Vec<(String, String)>,
+    pub multiple: bool,
 }
 
 impl FormOption {
@@ -103,12 +103,6 @@ impl Form {
             }
         }
         None
-    }
-
-    pub fn missing_options(&self, form: &Form) -> bool {
-        self.options()
-            .into_iter()
-            .any(|op| form.options.contains(&op))
     }
 
     pub fn fill_form_data(&self, form: &Form) -> Form {
@@ -224,5 +218,11 @@ impl Form {
             }
         }
         return "MISSING".to_string();
+    }
+
+    pub fn show(&self) {
+        for op in &self.options {
+            println!("[{}, {}]", op.option_name, op.options().into_iter().map(|(d, _)| d).collect_vec().join(", "));
+        }
     }
 }

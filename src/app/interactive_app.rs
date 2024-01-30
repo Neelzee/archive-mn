@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     fmt::format,
     fs::File,
-    io::{self, Read},
+    io::{self, Read, Write},
     path::Path,
 };
 
@@ -37,6 +37,7 @@ enum Cmd {
     CreateRequest(usize),
     Display(usize),
     Help,
+    Clear,
     Quit,
 }
 
@@ -48,6 +49,7 @@ impl Cmd {
             Cmd::CreateRequest(0),
             Cmd::Display(0),
             Cmd::Help,
+            Cmd::Clear,
             Cmd::Quit,
         ]
         .into_iter()
@@ -59,7 +61,12 @@ pub async fn interactive() {
 
     let mut wps: Vec<Webpage> = Vec::new();
 
+
     loop {
+        print!("> ");
+        if let Err(err) = io::stdout().flush() {
+            eprintln!("Failed manually flushing stdout: {}", err);
+        }
         let stdin = io::stdin();
         if let Err(err) = stdin.read_line(&mut buffer) {
             eprintln!("Failed reading input: {}", err);
@@ -134,6 +141,8 @@ pub async fn interactive() {
                         }
                     }
                 }
+                Cmd::Clear => print!("{}[2J", 27 as char),
+                
             }
         } else {
             println!("Didn't understand: '{:?}'", &buffer);
@@ -142,6 +151,7 @@ pub async fn interactive() {
     }
 }
 
+// Creates the requests
 async fn create_req(wp: Option<&Webpage>) {
     if let None = wp {
         eprintln!("Expected webpage, got None");
@@ -155,7 +165,7 @@ async fn create_req(wp: Option<&Webpage>) {
     match wp.get_forms() {
         Ok(forms) => loop {
             buffer.clear();
-            println!("{:?}", &new_form);
+            new_form.show();
             let stdin = io::stdin();
             if let Err(err) = stdin.read_line(&mut buffer) {
                 eprintln!("Failed reading input: {}", err);
@@ -177,16 +187,8 @@ async fn create_req(wp: Option<&Webpage>) {
                         op.show();
                     }
                 }
-                ["fill"] => {
-                    if forms.missing_options(&new_form) {
-                        new_form = forms.fill_form_data(&new_form);
-                    }
-                }
                 ["clear"] => new_form.clear(),
                 ["send"] => {
-                    if forms.missing_options(&new_form) {
-                        new_form = forms.fill_form_data(&new_form);
-                    }
                     match get_sok_collection_form(wp.clone(), new_form.clone()).await {
                         Ok((sokc, mut errs)) => {
                             let path = format!("arkiv\\{}", sokc.medium);
@@ -235,28 +237,30 @@ async fn create_req(wp: Option<&Webpage>) {
                                 op.add_options((r, d));
                             }
                         }
+
+                        if let Some(og) = forms.get_option(option.to_string()) {
+                            op.multiple = og.multiple;
+                        }
+
                         new_form.add_options(op);
                     }
                 }
                 [option, ref choices @ ..] => {
                     if forms.contains_option(option.to_string())
-                        && choices
+                        && forms.contains_choice(choices
                             .into_iter()
-                            .all(|e| forms.contains_choice(e.to_string()))
+                            .map(|e| e.trim())
+                            .join(" "))
                     {
                         new_form.add_options(FormOption::new(
                             option.to_string(),
-                            choices
-                                .into_iter()
-                                .map(|e| (e.to_string(), forms.get_display(e.to_string())))
-                                .collect_vec(),
+                            vec![(choices.join(" "), forms.get_display(choices.join(" ")))]
                         ));
                         println!("Updated forms");
                     } else {
                         println!("could not understand: '{:?}', '{:?}'", option, choices);
                     }
                 }
-
                 _ => eprintln!("Failed parsing buffer: {}", buffer),
             }
         },
@@ -275,6 +279,7 @@ fn parse_input(str: &str) -> Option<Cmd> {
                 None
             }
         },
+        ["clear"] => Some(Cmd::Clear),
         ["load", ref links @ ..] => Some(Cmd::Load(
             links
                 .into_iter()
