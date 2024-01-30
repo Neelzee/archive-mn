@@ -8,7 +8,7 @@ use crate::utils::funcs::{capitalize_first, validify_excel_string};
 
 use itertools::Itertools;
 use once_cell::sync::Lazy;
-use rust_xlsxwriter::{Color, Format, FormatAlign, Worksheet};
+use rust_xlsxwriter::{Color, DocProperties, Format, FormatAlign, FormatBorder, Worksheet};
 use rust_xlsxwriter::{FormatUnderline, Url};
 use rust_xlsxwriter::{Workbook, XlsxError};
 
@@ -23,6 +23,8 @@ const BOLD: Lazy<Format> = Lazy::new(|| {
         .set_bold()
         .set_align(FormatAlign::Left)
         .set_font_size(FONT_SIZE)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::White)
 });
 
 const FONT_SIZE: f64 = 12.0;
@@ -32,6 +34,8 @@ const HEADER_FORMAT: Lazy<Format> = Lazy::new(|| {
         .set_bold()
         .set_background_color(Color::RGB(0xA2CAD6))
         .set_font_size(FONT_SIZE)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::White)
 });
 
 const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
@@ -40,6 +44,8 @@ const ROW_FORMAT_EVEN: Lazy<Format> = Lazy::new(|| {
         .set_num_format("#,##0") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xcee8f1))
         .set_font_size(FONT_SIZE)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::White)
 });
 
 const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
@@ -48,6 +54,8 @@ const ROW_FORMAT_ODD: Lazy<Format> = Lazy::new(|| {
         .set_num_format("#,##0") // Should give 10 000 formatting
         .set_background_color(Color::RGB(0xe6f3f8))
         .set_font_size(FONT_SIZE)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::White)
 });
 
 const URL_FORMAT: Lazy<Format> = Lazy::new(|| {
@@ -55,14 +63,20 @@ const URL_FORMAT: Lazy<Format> = Lazy::new(|| {
         .set_font_size(FONT_SIZE)
         .set_font_color(Color::Blue)
         .set_underline(FormatUnderline::Single)
+        .set_border(FormatBorder::Thin)
+        .set_border_color(Color::White)
 });
 
-const PLAIN_FORMAT: Lazy<Format> = Lazy::new(|| Format::new().set_font_size(FONT_SIZE));
+const PLAIN_FORMAT: Lazy<Format> = Lazy::new(|| Format::new().set_font_size(FONT_SIZE).set_border(FormatBorder::Thin).set_border_color(Color::White));
+
+const ROW_HEIGHT: f64 = 17.0;
+
+const COLUMN_FORMAT: Lazy<Format> = Lazy::new(|| Format::new().set_border(FormatBorder::Thin).set_border_color(Color::White));
 
 pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, ArchiveError> {
     let mut sheets: Vec<(String, String)> = Vec::new();
     let mut wb = Workbook::new();
-
+    
     let wb_path: String;
     let mut errors: Vec<ArchiveError> = Vec::new();
     let id = soks.id.clone();
@@ -70,7 +84,10 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
 
     // Creates TOC Sheet, ensures its infront
     {
-        let sheet = wb.add_worksheet();
+        let mut sheet = wb.add_worksheet();
+
+        format_sheet(&mut sheet);
+
         sheet.set_name("Framside")?;
         sheet.write_with_format(0, 0, "Innhold", &BOLD)?;
     }
@@ -78,6 +95,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     let mut i = 0;
     for sub_sok in soks.sok.clone() {
         let mut sheet = Worksheet::new();
+        format_sheet(&mut sheet);
         let mut r = 0;
 
         // Title
@@ -139,7 +157,13 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
         // Tables
         let (sheet, mut r) = write_tables(sub_sok.clone(), r, sheet)?;
         r += 1;
-        let (sheet, _) = write_mkm(sheet, sub_sok.metode, sub_sok.kilde, sub_sok.merknad, r)?;
+        let (mut sheet, r) = write_mkm(sheet, sub_sok.metode, sub_sok.kilde, sub_sok.merknad, r)?;
+
+        if r >= 30 {
+            for i in 30..r {
+                sheet.set_row_height(i.into(), ROW_HEIGHT);
+            }
+        }
 
         wb.push_worksheet(sheet);
     }
@@ -147,6 +171,7 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
     // Info sheet
     if !soks.metode.is_empty() && !soks.metode.clone().into_iter().all(|e| e.is_empty()) {
         let mut info_sheet = Worksheet::new();
+        format_sheet(&mut info_sheet);
         let sheet_name = String::from("Metode");
         info_sheet.set_name(&sheet_name)?;
         sheets.push((sheet_name.clone(), sheet_name));
@@ -169,6 +194,12 @@ pub fn save_sok(soks: &SokCollection, path: &str) -> Result<Vec<ArchiveError>, A
                 r += 1;
             }
             r += 1;
+        }
+
+        if r > 30 {
+            for i in 30..r {
+                info_sheet.set_row_height(i, ROW_HEIGHT);
+            }
         }
 
         wb.push_worksheet(info_sheet);
@@ -516,4 +547,12 @@ pub fn split_string(input: String) -> Vec<String> {
     }
 
     result
+}
+
+fn format_sheet(sheet: &mut Worksheet) {
+    sheet.set_print_gridlines(false);
+    for i in 0..30u32 {
+        sheet.set_column_format((i as u16), &COLUMN_FORMAT);
+        sheet.set_row_height(i.into(), ROW_HEIGHT);
+    }
 }
