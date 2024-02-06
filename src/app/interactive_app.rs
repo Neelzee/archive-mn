@@ -68,6 +68,7 @@ pub async fn interactive() {
             eprintln!("Failed manually flushing stdout: {}", err);
         }
         let stdin = io::stdin();
+
         if let Err(err) = stdin.read_line(&mut buffer) {
             eprintln!("Failed reading input: {}", err);
         }
