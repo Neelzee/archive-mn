@@ -25,8 +25,6 @@ use crate::{
     utils::constants::ROOT_URL,
 };
 
-use strum::IntoEnumIterator;
-
 use super::offline_app::visit_dirs;
 
 #[derive(Debug)]

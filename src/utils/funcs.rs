@@ -3,7 +3,6 @@ use std::fs;
 use std::fs::File;
 use std::io::{self, Error, Read};
 
-use ego_tree::{NodeId, NodeRef};
 use rand::distributions::Uniform;
 use rand::Rng;
 use reqwest::{Client, Request};
@@ -51,22 +50,6 @@ pub fn trim_string(str: &str) -> String {
     str.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 
-pub fn has_ancestor(node: NodeRef<Node>, id: NodeId) -> bool {
-    if node.ancestors().collect::<Vec<_>>().len() == 0 {
-        return false;
-    }
-
-    for ancestor in node.ancestors().into_iter() {
-        if ancestor.id() == id {
-            return true;
-        }
-    }
-
-    node.ancestors()
-        .into_iter()
-        .flat_map(|e| e.ancestors())
-        .any(|e| has_ancestor(e, id))
-}
 
 pub fn get_random_link() -> Link {
     let mut rng = rand::thread_rng();
