@@ -25,8 +25,6 @@ pub mod mf_app;
 
 pub mod tmf;
 
-pub mod pretty_app;
-
 pub async fn main_fn(link: &Link) -> Result<(SokCollection, Vec<ArchiveError>), Vec<ArchiveError>> {
     let mut sok_log: Vec<ArchiveError> = Vec::new();
 

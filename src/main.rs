@@ -1,5 +1,4 @@
 #![feature(let_chains)]
-use crate::app::pretty_app::pretty_run;
 use crate::app::{
     interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
     single_app::get_soks,
@@ -179,27 +178,6 @@ async fn main() -> Result<(), ArchiveError> {
         let time_end = Instant::now();
         let duration = time_end - time_start;
         println!("That took: {} seconds", duration.as_secs());
-        return r;
-    }
-
-    if args.contains(&"-pretty".to_string()) {
-        let time_start = Instant::now();
-        let r = pretty_run(vec![
-            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
-        ])
-        .await;
-        let time_end = Instant::now();
-        let duration = time_end - time_start;
-        // println!("That took: {} seconds", duration.as_secs());
         return r;
     }
 
