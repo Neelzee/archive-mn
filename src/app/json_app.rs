@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write};
+use std::{fs::{File, OpenOptions}, io::Write};
 
 use itertools::Itertools;
 use reqwest::Client;
@@ -28,10 +28,12 @@ pub async fn jsonify_soks(medium_links: Vec<Link>) -> Result<(), ArchiveError> {
                     
                     match serde_json::to_string_pretty(&JsonSok::new(sokc, sok_log)) {
                         Ok(content) => {
-                            let mut file = File::create(path)?;
+                            let mut file = OpenOptions::new().write(true).create(true).open(path)?;
+                            println!("{}", content);
                             file.write_all(content.as_bytes())?;
                         },
                         Err(e) => {
+                            eprintln!("{}", e);
                             log.push(e);
                             continue;
                         },
