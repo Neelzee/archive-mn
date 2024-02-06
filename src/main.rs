@@ -104,6 +104,7 @@ async fn main() -> Result<(), ArchiveError> {
     }
 
     if args.contains(&"-json".to_string()) {
+        println!("Jsoning");
         return jsonify_soks(vec![
             "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
             "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
@@ -115,7 +116,8 @@ async fn main() -> Result<(), ArchiveError> {
             "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
             "https://medienorge.uib.no/statistikk/medium/video".to_string(),
             "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
-        ].into_iter().map(|l| Link::new(l)).collect_vec()).await;
+            ].into_iter().map(|l| Link::new(l)).collect_vec()).await;
+        println!("Jsoned");
     }
 
     if args.contains(&"-cli".to_string()) {
