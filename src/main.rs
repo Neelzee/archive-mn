@@ -1,4 +1,5 @@
 #![feature(let_chains)]
+use crate::app::json_app::{self, jsonify_soks};
 use crate::app::{
     interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
     single_app::get_soks,
@@ -100,6 +101,21 @@ async fn main() -> Result<(), ArchiveError> {
         if let Ok(mut dups) = ALLOW_DUPS.lock() {
             *dups = false;
         }
+    }
+
+    if args.contains(&"-json".to_string()) {
+        return jsonify_soks(vec![
+            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
+            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
+        ].into_iter().map(|l| Link::new(l)).collect_vec()).await;
     }
 
     if args.contains(&"-cli".to_string()) {

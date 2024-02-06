@@ -1,6 +1,10 @@
 use std::cmp::max;
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+use crate::error::ArchiveError;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Table {
     pub header: Vec<Vec<String>>,
     pub rows: Vec<Vec<String>>,
@@ -30,7 +34,7 @@ impl Table {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sok {
     pub title: String,
     pub titles: Vec<String>,
@@ -103,19 +107,19 @@ impl SokCollection {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Merknad {
     pub title: String,
     pub content: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Kilde {
     pub title: String,
     pub content: Vec<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metode {
     pub title: String,
     pub content: Vec<String>,
@@ -168,5 +172,35 @@ impl IsEmpty for Merknad {
             .into_iter()
             .all(|e| e.is_empty() || e.split_whitespace().count() == 0)
         || (self.content.len() == 1 && self.content.clone().pop().unwrap().trim() == "Alle data kan fritt benyttes såfremt både originalkilde og Medienorge oppgis som kilder.")
+    }
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JsonSok {
+    pub id: usize,
+    pub medium: String,
+    pub title: String,
+    pub text: Vec<String>,
+    pub sok: Vec<Sok>,
+    pub merknad: Vec<Merknad>,
+    pub kilde: Vec<Kilde>,
+    pub metode: Vec<Metode>,
+    pub log: Vec<ArchiveError>
+}
+
+impl JsonSok {
+    pub fn new(soks: SokCollection, log: Vec<ArchiveError>) -> Self {
+        Self {
+            id: soks.id,
+            medium: soks.medium,
+            title: soks.title,
+            text: soks.text,
+            sok: soks.sok,
+            merknad: soks.merknad,
+            kilde: soks.kilde,
+            metode: soks.metode,
+            log,
+        }
     }
 }

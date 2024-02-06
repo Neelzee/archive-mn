@@ -1,10 +1,11 @@
 use itertools::Itertools;
 use scraper::error::SelectorErrorKind;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 use crate::modules::webpage::Link;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ArchiveError {
     ScraperError(String),
     XlError(String),
@@ -19,6 +20,7 @@ pub enum ArchiveError {
     FailedParsing(usize, String),
     DuplicateSok,
     InvalidMetode { link: Vec<Link>, id: usize },
+    JsonError(String),
 }
 
 unsafe impl Sync for ArchiveError {}
@@ -50,6 +52,7 @@ impl Display for ArchiveError {
                 link.into_iter().map(|e| e.to_string()).join(", "),
                 id
             ),
+            ArchiveError::JsonError(s) => write!(f, "Failed parsing: {}", s),
         }
     }
 }

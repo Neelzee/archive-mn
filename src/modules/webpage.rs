@@ -1,9 +1,10 @@
 use reqwest::Client;
 use scraper::Html;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::ArchiveError, scraper::get_html_content, utils::constants::ROOT_URL};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Link {
     url: String,
 }
