@@ -1,4 +1,4 @@
-pub const ROOT_URL: &str = "https://medienorge.uib.no";
+pub const ROOT_URL: &str = "http://test.medienorge.uib.no";
 
 pub const VALID_SOKS: [usize; 265] = [
     70, 71, 72, 74, 75, 85, 86, 87, 89, 90, 91, 92, 93, 95, 96, 98, 99, 101, 102, 103, 104, 108,
@@ -15,4 +15,17 @@ pub const VALID_SOKS: [usize; 265] = [
     389, 391, 392, 394, 395, 397, 398, 400, 402, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413,
     414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 425, 426, 427, 428, 429, 430, 431, 433, 434,
     435, 436, 437, 438, 439, 440, 442, 443, 445, 446, 447, 448, 449, 450, 451,
+];
+
+pub const MEDIUM: [&str; 10] = [
+    "http://test.medienorge.uib.no/statistikk/medium/avis",
+    "http://test.medienorge.uib.no/statistikk/medium/fagpresse",
+    "http://test.medienorge.uib.no/statistikk/medium/ukepresse",
+    "http://test.medienorge.uib.no/statistikk/medium/boker",
+    "http://test.medienorge.uib.no/statistikk/medium/radio",
+    "http://test.medienorge.uib.no/statistikk/medium/fonogram",
+    "http://test.medienorge.uib.no/statistikk/medium/tv",
+    "http://test.medienorge.uib.no/statistikk/medium/kino",
+    "http://test.medienorge.uib.no/statistikk/medium/video",
+    "http://test.medienorge.uib.no/statistikk/medium/ikt",
 ];

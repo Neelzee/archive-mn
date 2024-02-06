@@ -4,7 +4,7 @@ use crate::app::{
     interactive_app::interactive, main_app::run_app, mf_app::mf_app, offline_app::get_soks_offline,
     single_app::get_soks,
 };
-use crate::utils::constants::VALID_SOKS;
+use crate::utils::constants::{MEDIUM, VALID_SOKS};
 
 use error::ArchiveError;
 use itertools::Itertools;
@@ -105,19 +105,7 @@ async fn main() -> Result<(), ArchiveError> {
 
     if args.contains(&"-json".to_string()) {
         println!("Jsoning");
-        return jsonify_soks(vec![
-            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
-            ].into_iter().map(|l| Link::new(l)).collect_vec()).await;
-        println!("Jsoned");
+        return jsonify_soks(MEDIUM.into_iter().map(|l| Link::new(l.to_string())).collect_vec()).await;
     }
 
     if args.contains(&"-cli".to_string()) {
@@ -159,18 +147,7 @@ async fn main() -> Result<(), ArchiveError> {
 
     args.remove(0); // First argument is path to the exe
     if args.len() == 0 {
-        args.append(&mut vec![
-            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
-        ]);
+        args.append(&mut MEDIUM.into_iter().map(|e| e.to_string()).collect_vec());
     }
 
     if args.contains(&"-err".to_string()) {
@@ -180,18 +157,7 @@ async fn main() -> Result<(), ArchiveError> {
     if args.contains(&"-mf".to_string()) {
         println!("Archiving many-form-soks");
         let time_start = Instant::now();
-        let r = mf_app(vec![
-            "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-            "https://medienorge.uib.no/statistikk/medium/ikt".to_string(),
-        ])
+        let r = mf_app(MEDIUM.into_iter().map(|e| e.to_string()).collect_vec())
         .await;
         let time_end = Instant::now();
         let duration = time_end - time_start;

@@ -33,6 +33,7 @@ pub async fn jsonify_soks(medium_links: Vec<Link>) -> Result<(), ArchiveError> {
                         },
                         Err(e) => {
                             log.push(e);
+                            continue;
                         },
                     }
 
