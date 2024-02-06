@@ -6,6 +6,7 @@ use crate::conc::logger_conc::logger_conc;
 use crate::conc::medium_conc::medium_conc;
 use crate::conc::sok_conc::sok_conc;
 use crate::modules::webpage::Link;
+use crate::utils::constants::MEDIUM;
 use futures::future::JoinAll;
 
 mod sok_conc;
@@ -33,19 +34,8 @@ pub async fn main_conc() {
         error_conc(err_recv)
     );
 
-    let mediums = vec![
-        "https://medienorge.uib.no/statistikk/medium/avis".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/fagpresse".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/ukepresse".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/boker".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/radio".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/fonogram".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/tv".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/kino".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/video".to_string(),
-        "https://medienorge.uib.no/statistikk/medium/ikt".to_string()
-    ].into_iter()
-        .map(|e| Link::new(e))
+    let mediums = MEDIUM.into_iter()
+        .map(|e| Link::new(e.to_string()))
         .collect::<Vec<Link>>();
 
     let mut med_handlers = Vec::new();
